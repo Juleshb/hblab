@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import aipi from "../assets/bambe.png";
 import andela from "../assets/COOPEDHU.png";
 import bict from "../assets/CRAT.png";
-import ict from "../assets/NBHS.png";
+import ict from "../assets/nbhs.png";
 import itek from "../assets/umuhuza.png";
 import klab from "../assets/emmaus.png";
 
