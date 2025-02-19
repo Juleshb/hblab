@@ -14,7 +14,7 @@ const Courses = () => {
             transition={{ duration: 1 }}
             className="my-3"
           >
-           <h1 className="lg:text-3xl text-2xl md:font-bold font-black mb-8 lg:w-full text-center">Career</h1>
+            <h1 className="lg:text-3xl text-2xl md:font-bold font-black mb-8 lg:w-full text-center">Career</h1>
           </motion.div>
 
           <div className="grid lg:grid-cols-2 grid-cols-1 flex justify-center items-center gap-15 p-4">
@@ -31,9 +31,26 @@ const Courses = () => {
                   {
                     title: "Software Development",
                     description: [
-                      "Programming languages (JavaScript, Python, etc.)",
-                      "Web and mobile app development",
-                      "Hands-on coding projects",
+                      "At HB Lab, we provide hands-on, industry-focused training in Software Development, covering all essential aspects needed to become a skilled developer. Our program includes:",
+                      "1. Frontend Development",
+                      "Learn to create visually appealing and responsive web applications using modern technologies:",
+                      "HTML, CSS, JavaScript, React.js, Vue.js and more – Build structured, styled, and interactive user interfaces and Work with component-based frameworks for scalable applications.",
+                      "2. Backend Development",
+                      "Understand server-side development and databases to create dynamic web applications:",
+                      "Node.js, Express.js, Django, Flask and more – Develop server-side logic and connect your application to databases.",
+                      "3. Full Stack Development",
+                      "Combine frontend and backend technologies to create full-fledged web applications:",
+                      "MERN Stack, MEAN Stack, Django + React and more – Develop end-to-end applications and deploy them to the cloud.",
+                      "4. Mobile Development",
+                      "Learn to build cross-platform mobile applications using React Native, Flutter and more ...",
+                      "5. Software Engineering Best Practices",
+                      "Understand software development methodologies, version control, testing, debugging, and more.",
+                      "6. Databases",
+                      "Learn to work with SQL and NoSQL databases to store and manage application data.",
+                      "7. DevOps",
+                      "Understand CI/CD, Docker, Kubernetes, and cloud computing to deploy and manage applications.",
+                      "8 UX/UI Design",
+                      "Learn to design user-friendly interfaces and create engaging user experiences.",
                     ],
                   },
                   {
@@ -41,15 +58,15 @@ const Courses = () => {
                     description: [
                       "Graphic design and video editing",
                       "Animation and motion graphics",
-                      "Digital content creation",
+                      "Digital content creation"
                     ],
                   },
                   {
                     title: "Networking",
                     description: [
-                      "Network setup and security",
-                      "Server management",
-                      "Cloud computing fundamentals",
+                      "Network setup and security: Learn how to design, implement, and secure networks to protect data and optimize performance.",
+                      "Server management: Gain expertise in configuring and maintaining servers, including Linux and Windows environments.",
+                      "Cloud computing fundamentals: Understand cloud infrastructure, virtualization, and services such as AWS, Google Cloud, and Azure."
                     ],
                   },
                   {
@@ -57,7 +74,7 @@ const Courses = () => {
                     description: [
                       "Hardware and software troubleshooting",
                       "System administration",
-                      "Cybersecurity basics",
+                      "Cybersecurity basics"
                     ],
                   },
                 ].map((course, index) => (

@@ -6,6 +6,7 @@ import Draft from './components/Footer'
 import LeadershipTeam from './components/LeadershipTeam'
 import GetStartedForm from "./components/GetStartedForm";
 import TermsAndConditions from './components/Terms&Conditions'
+import PrivacyPolicy from './components/PrivacyPolicy'
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
           <Route path='/leadership' element={<LeadershipTeam/>}/>
           <Route path="/get-started" element={<GetStartedForm />} />
           <Route path="/terms-of-use" element={<TermsAndConditions />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
       </Router>
     </div>
