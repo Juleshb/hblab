@@ -2,8 +2,10 @@ import React from "react";
 import { motion } from "framer-motion";
 import CountUp from "react-countup";
 import banner from "../assets/bg3.jpg";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   return (
     <div className="relative w-full h-screen flex items-center">
       {/* Background Image */}
@@ -32,6 +34,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.6 }}
+          onClick={() => navigate("/get-started")} 
           className="mt-4 py-3 px-5 bg-transparent border-2 rounded border-white text-gray-50 text-sm hover:bg-white hover:text-green-900 hover:font-semibold"
         >
           Get Started Now &rarr;

@@ -23,7 +23,7 @@ const ContactUs = () => {
           <a href="#" className=" font-bold "> +250 789 028 283 / +250 792 445 913</a><br></br>
           <a href="#" className=" font-bold mt-2 "> hblabltd@gmail.com</a>
 
-          <address className="mt-2 not-italic">Our office located: Rubavu,Gisenyi Rugerero Parking</address>
+          <address className="mt-2 not-italic">or viste our office at Rubavu/Rugero front of Erica Motel</address>
         </div>
       </div>
 
