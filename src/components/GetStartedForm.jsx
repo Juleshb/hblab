@@ -4,10 +4,13 @@ import { motion } from "framer-motion";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import banner from "../assets/kk1.jpg";
+import toast, { Toaster } from "react-hot-toast";
+
 
 const GetStartedForm = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -23,6 +26,7 @@ const GetStartedForm = () => {
     agreePrivacy: false,
   });
 
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -33,15 +37,50 @@ const GetStartedForm = () => {
 
   const nextStep = () => setStep((prev) => prev + 1);
   const prevStep = () => setStep((prev) => prev - 1);
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log(formData);
-    navigate("/success");
-  };
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    const response = await fetch("https://hblab-be.onrender.com/submit-form", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      toast.success("Application submitted successfully! Check your email for confirmation. ");
+      setFormData({ firstName: "",
+    lastName: "",
+    email: "",
+    location: "",
+    career: "",
+    language: "English",
+    basicSkills: "",
+    role: "",
+    educationLevel: "",
+    studyField: "",
+    agreeTerms: false,
+    agreePrivacy: false, });
+    } else {
+      toast.error("Submission failed. Please try again. ");
+    }
+  } catch (error) {
+    toast.error("Network error. Try again later. ");
+  }
+  finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="bg-gray-200">
       <Navbar />
+            <Toaster position="top-center" reverseOrder={false} />
+      
       <div className="relative w-full min-h-screen mt-8 flex items-center justify-center">
         <img src={banner} alt="background" className="absolute inset-0 w-full h-full object-cover contrast-70" />
         <div className="absolute inset-0 bg-gradient-to-r from-green-900 bg-opacity-60"></div>
@@ -89,7 +128,7 @@ const GetStartedForm = () => {
           </div>
           <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} transition={{ duration: 0.5 }} className="w-full md:w-1/2 bg-white opacity-70 p-6 md:p-8 rounded-lg shadow-lg">
           <div className="flex justify-between mb-4">
-            {["Account", "Experience", "Resume"].map((label, index) => (
+            {["Account", "Experience", "Document"].map((label, index) => (
               <div key={index} className={`w-1/3 text-center ${step >= index + 1 ? "font-bold text-green-500" : "text-gray-400"}`}>
                 {index + 1}. {label}
               </div>
@@ -154,11 +193,36 @@ const GetStartedForm = () => {
 
               {step === 3 && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <h2 className="text-xl font-semibold mb-4">Upload Resume</h2>
+                  <h2 className="text-xl font-semibold mb-4">Upload documents if any</h2>
+                   <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 1, delay: 0.3 }}
+                            className="flex"
+                          >
+                            <p className="break-words text-black p-4">
+                            NB: TVET/RTB Students  documents will submited at office (hard copy) 
+                            </p>
+                          </motion.div>
                   <input type="file" className="w-full rounded-lg border p-3 text-sm mb-2" />
                   <div className="flex justify-between mt-4">
                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="button" onClick={prevStep} className="bg-gray-300 p-2 rounded">Back</motion.button>
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" className="bg-green-500 text-white p-2 rounded">Submit</motion.button>
+                     <motion.button
+                                          initial={{ opacity: 0, scale: 0.8 }}
+                                          animate={{ opacity: 1, scale: 1 }}
+                                          whileHover={{ scale: 1.1 }}
+                                          whileTap={{ scale: 0.9 }}
+                                          transition={{ duration: 0.5 }}
+                                          className=" py-3 px-5 bg-green-900 text-white text-sm rounded hover:bg-green-700 flex items-center justify-center"
+                                          type="submit"
+                                          disabled={loading}
+                                        >
+                                          {loading ? (
+                                            <span className="loader animate-spin border-t-2 border-white border-solid rounded-full h-5 w-5"></span>
+                                          ) : (
+                                            "Submit →"
+                                          )}
+                                        </motion.button>
                   </div>
                 </motion.div>
               )}
