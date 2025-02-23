@@ -15,6 +15,7 @@ const GetStartedForm = () => {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     location: "",
     career: "",
     language: "English",
@@ -51,12 +52,13 @@ const GetStartedForm = () => {
 
     const data = await response.json();
     if (data.success) {
-      toast.success("Application submitted successfully! Check your email for confirmation. ");
+      toast.success(data.message);
       setFormData({ firstName: "",
     lastName: "",
     email: "",
     location: "",
     career: "",
+    phone: "",
     language: "English",
     basicSkills: "",
     role: "",
@@ -65,10 +67,10 @@ const GetStartedForm = () => {
     agreeTerms: false,
     agreePrivacy: false, });
     } else {
-      toast.error("Submission failed. Please try again. ");
+      toast.error(data.message);
     }
   } catch (error) {
-    toast.error("Network error. Try again later. ");
+    toast.error(data.message);
   }
   finally {
     setLoading(false);
@@ -95,31 +97,26 @@ const GetStartedForm = () => {
 
           <p className="text-base">You can join us from anywhere in the world and learn at your own pace! (only peaple in Rubavu/Rwanda use physical space)</p>
 
-{/* Requirements Section */}
 <h3 className="text-lg font-bold mt-6">What You Need to Get Started</h3>
 <ul className="mt-2 space-y-2 text-base">
   <li> A PC/Laptop</li>
   <li>A Stable Internet Connection (Remotely peaple only)</li>
 </ul>
 
-{/* Fees Section */}
 <h3 className="text-lg font-bold mt-6">Program Fees</h3>
 <p className="text-base">Our programs are affordable, with fees ranging from 25,000 up 50,000 RWF per month, depending on the program you choose.</p>
 
-{/* Certification & Internship Section */}
 <h3 className="text-lg font-bold mt-6">What You Get After the Program</h3>
 <ul className="mt-2 space-y-2 text-base">
   <li>A Certificate of Completion</li>
   <li>Real-World Internship Experience</li>
 </ul>
 
-{/* Work & Team Opportunity Section */}
 <h3 className="text-lg font-bold mt-6">Work & Team Opportunities</h3>
 <p className="text-base">
   After completing your internship, you’ll have a chance to work with our companies if there is an opportunity. You can also join our team and gain hands-on experience
 </p>
 
-{/* Final Call to Action */}
 <h3 className="text-lg font-bold mt-6">Get Started Today!</h3>
 <p className="mt-2 text-lg">
   Don't miss this opportunity to kickstart your career and be part of an amazing team! 🚀
@@ -141,6 +138,7 @@ const GetStartedForm = () => {
                   <input type="text" name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange} className="w-full mb-2 rounded-lg border border-green-200 p-3 text-sm" required />
                 <input type="text" name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange} className="w-full mb-2 rounded-lg border border-green-200 p-3 text-sm" required />
                 <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="w-full mb-2 rounded-lg border border-green-200 p-3 text-sm" required />
+                <input type="phone" name="phone" placeholder="Telephone" value={formData.phone} onChange={handleChange} className="w-full mb-2 rounded-lg border border-green-200 p-3 text-sm" required />
                 <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleChange} className="w-full mb-2 rounded-lg border border-green-200 p-3 text-sm" required />
                 {/* Career Selection */}
                 <select name="career" value={formData.career} onChange={handleChange} className="w-full mb-2 rounded-lg border border-green-200 p-3 text-sm">
