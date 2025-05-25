@@ -87,7 +87,7 @@ const Navbar = () => {
           >
             <div
               id="nav-links"
-              className={`flex flex-col lg:flex-row items-start lg:items-center lg:gap-10 gap-3 font-small ${
+              className={`flex flex-col lg:flex-row items-start lg:items-center lg:gap-5 gap-2 font-small ${
                 isScrolled ? "text-green-900" : "lg:text-white text-green-900"
               }`}
             >
@@ -95,6 +95,7 @@ const Navbar = () => {
               <button onClick={() => handleNavClick("about-us")}>About Us</button>
               <button onClick={() => handleNavClick("our-services")}>Services</button>
               <button onClick={() => handleNavClick("contact-us")}>Contact Us</button>
+               <a href="/Carrier" onClick={() => navigate("/Carrier")} >Carrier</a>
               <a href="#" onClick={() => navigate("/get-started")} >Join Us</a>
             </div>
 
