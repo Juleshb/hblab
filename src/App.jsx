@@ -7,7 +7,7 @@ import LeadershipTeam from './components/LeadershipTeam'
 import GetStartedForm from "./components/GetStartedForm";
 import TermsAndConditions from './components/Terms&Conditions'
 import PrivacyPolicy from './components/PrivacyPolicy'
-
+import Carrier from './components/Carrier'
 const App = () => {
   return (
     <div className="font-Poppins bg-Solitude text-sm">
@@ -20,6 +20,7 @@ const App = () => {
           <Route path="/get-started" element={<GetStartedForm />} />
           <Route path="/terms-of-use" element={<TermsAndConditions />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/carrier" element={<Carrier />} />
         </Routes>
       </Router>
     </div>
