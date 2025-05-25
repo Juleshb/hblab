@@ -95,8 +95,9 @@ const Navbar = () => {
               <button onClick={() => handleNavClick("about-us")}>About Us</button>
               <button onClick={() => handleNavClick("our-services")}>Services</button>
               <button onClick={() => handleNavClick("contact-us")}>Contact Us</button>
-               <a href="/Carrier" onClick={() => navigate("/Carrier")} >Carrier</a>
-              <a href="#" onClick={() => navigate("/get-started")} >Join Us</a>
+               <a href="#" onClick={() => navigate("/get-started")} >Join Us</a>
+                <a href="/Carrier" onClick={() => navigate("/Carrier")} >Carrier</a>
+             
             </div>
 
             {/* Search Bar */}
