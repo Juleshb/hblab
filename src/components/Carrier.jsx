@@ -1,9 +1,11 @@
+// Carrier.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
-import Navbar from "./Navbar";
-import Footer from "./Footer";
-import axios from 'axios'; // Make sure axios is installed
+import Navbar from './Navbar';
+import Footer from './Footer';
+import axios from 'axios';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const Carrier = () => {
   const navigate = useNavigate();
@@ -12,9 +14,9 @@ const Carrier = () => {
   const [error, setError] = useState(null);
 
   const benefits = [
-    { icon: "carbon:group", title: "Great Team", description: "Work with talented, passionate people" },
-    { icon: "carbon:growth", title: "Growth Opportunities", description: "Continuous learning and development" },
-    { icon: "carbon:money", title: "Competitive Pay", description: "We value and reward your contributions" }
+    { icon: 'carbon:group', title: 'Great Team', description: 'Work with talented, passionate people' },
+    { icon: 'carbon:growth', title: 'Growth Opportunities', description: 'Continuous learning and development' },
+    { icon: 'carbon:money', title: 'Competitive Pay', description: 'We value and reward your contributions' },
   ];
 
   const formatDate = (dateString) => {
@@ -29,11 +31,11 @@ const Carrier = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/carriers");
+        const response = await axios.get('http://localhost:3000/carriers');
         setJobOpenings(response.data);
         setLoading(false);
       } catch (err) {
-        setError("Failed to load jobs");
+        setError('Failed to load jobs');
         setLoading(false);
       }
     };
@@ -45,6 +47,8 @@ const Carrier = () => {
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
 
+      {loading && <LoadingSpinner />}
+
       <main className="flex-grow py-12 px-4 sm:px-6 lg:px-8 mt-16">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
@@ -54,7 +58,6 @@ const Carrier = () => {
             </p>
           </div>
 
-          {loading && <p className="text-center text-gray-500">Loading jobs...</p>}
           {error && <p className="text-center text-red-500">{error}</p>}
 
           {!loading && !error && (
