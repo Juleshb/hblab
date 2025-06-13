@@ -11,6 +11,11 @@ import Carrier from './components/Carrier'
 import ApplyCarrier from './components/ApplyCarrier'
 import AddCarrier from './components/AddCarrier'
 import AdminCarrier from './components/AdminCarrier'
+import LoginForm from './components/LoginForm'
+import SignUpForm from './components/SignUpForm'
+import HBLCertificateGenerator from './components/HBLCertificateGenerator'
+import HBLCertificateModal from './components/HBLCertificateModal'
+import Certificates from './components/Certificate' 
 const App = () => {
   return (
     <div className="font-Poppins bg-Solitude text-sm">
@@ -26,8 +31,12 @@ const App = () => {
           <Route path="/carrier" element={<Carrier />} />
           <Route path="/apply/:id" element={<ApplyCarrier />} />
           <Route path="/AddCarrier" element={<AddCarrier/>}/>
-          <Route path="AdminCarrier" element={<AdminCarrier/>} />
-
+          <Route path="/AdminCarrier" element={<AdminCarrier/>} />
+          <Route path="/LoginForm" element = {<LoginForm />} />
+          <Route path="/SignUpForm" element = {<SignUpForm />} />
+          <Route path="/CertificateModal" element={<HBLCertificateModal />} />
+          <Route path="/CertificateGenerator" element= {<HBLCertificateGenerator />} />
+          <Route path="/Certficates" element={<Certificates />} />
         </Routes>
       </Router>
     </div>

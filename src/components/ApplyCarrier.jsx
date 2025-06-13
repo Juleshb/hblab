@@ -28,8 +28,9 @@ const ApplyCarrier = () => {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/jobs/${id}`);
+        const response = await axios.get(`http://localhost:3000/carriers/${id}`);
         setJob(response.data);
+        console.log(response.data)
         setFormData(response.data);
         setLoading(false);
       } catch (err) {

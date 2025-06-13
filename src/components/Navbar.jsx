@@ -6,6 +6,7 @@ import { FaSearch } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
 import { Icon } from "@iconify/react";
 
+
 const Navbar = () => {
   const [isToggleOpen, setIsToggleOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -81,7 +82,7 @@ const Navbar = () => {
 
           {/* Navigation Links */}
           <div
-            className={`col-span-2 flex flex-col lg:flex-row items-start lg:items-center gap-5 ${
+            className={`col-span-2 flex flex-col lg:flex-row items-start lg:items-center gap-3 ${
               isToggleOpen ? "" : "hidden"
             } lg:flex`}
           >
@@ -95,20 +96,30 @@ const Navbar = () => {
               <button onClick={() => handleNavClick("about-us")}>About Us</button>
               <button onClick={() => handleNavClick("our-services")}>Services</button>
               <button onClick={() => handleNavClick("contact-us")}>Contact Us</button>
-               <a href="#" onClick={() => navigate("/get-started")} >Join Us</a>
-                <a href="/Carrier" onClick={() => navigate("/Carrier")} >Carrier</a>
-             
+              <a href="#" onClick={() => navigate("/get-started")}>Join Us</a>
+              <a href="/Carrier" onClick={() => navigate("/Carrier")}>Carrier</a>
             </div>
 
-            {/* Search Bar */}
-            <div className="flex items-center rounded bg-gray-300 w-full lg:w-1/3 max-w-md p-2">
-              <input
-                type="search"
-                className="bg-transparent flex-grow outline-none placeholder-gray-600 p-2"
-                placeholder="What are you looking for?"
-              />
-              <button className="p-2 text-gray-600 hover:text-blue-600">
-                <FaSearch size={18} />
+            {/* Search Bar and Login Button Container */}
+            <div className="flex items-center gap-2 w-full lg:w-auto">
+              {/* Search Bar */}
+              <div className="flex items-center rounded bg-gray-300 w-full lg:w-64 max-w-md p-2">
+                <input
+                  type="search"
+                  className="bg-transparent flex-grow outline-none placeholder-gray-600 p-1"
+                  placeholder="What are you looking for?"
+                />
+                <button className="p-1 text-gray-600 hover:text-blue-600">
+                  <FaSearch size={18} />
+                </button>
+              </div>
+              
+              {/* Login Button */}
+              <button 
+                onClick={() => navigate("/LoginForm")}
+                className="bg-green-900 hover:bg--800 text-white px-3 py-1.5 rounded-sm h-[42px] flex items-center"
+              >
+                Login
               </button>
             </div>
           </div>
