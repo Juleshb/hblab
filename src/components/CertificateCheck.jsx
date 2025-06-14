@@ -45,7 +45,6 @@ const CertificateRetrieval = () => {
     }
   };
 
-  // Shared PDF generation function (can be moved to a separate utility file)
   const generatePDF = async (data) => {
     if (!data || isGeneratingPDF) return;
     
@@ -61,75 +60,93 @@ const CertificateRetrieval = () => {
       certificateContainer.style.padding = '40px';
       certificateContainer.style.background = 'white';
       
-      // Certificate HTML template (consistent with generator)
+      // Certificate HTML template - updated to match HB-Lab design
       certificateContainer.innerHTML = `
-        <div style="border: 8px solid #1a365d; padding: 40px; font-family: 'Times New Roman', serif; position: relative; width: 100%;">
+        <div style="font-family: 'Times New Roman', serif; position: relative; width: 100%; text-align: center; padding: 40px; border: 8px solid #1a365d;">
+          <!-- Watermark background -->
           <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-45deg); 
-                     font-size: 48px; font-weight: bold; color: #1a365d; opacity: 0.1; white-space: nowrap;">
+                     font-size: 48px; font-weight: bold; color: #1a365d; opacity: 0.1; white-space: nowrap; z-index: 0;">
             HBLAB CERTIFIED
           </div>
           
-          <div style="position: absolute; inset: 10px; border: 2px solid #1a365d; pointer-events: none;"></div>
-          
-          <div style="text-align: center; margin-bottom: 30px;">
-            <div style="height: 80px; margin-bottom: 10px; display: flex; justify-content: center; align-items: center;">
-              <span style="font-size: 24px; font-weight: bold;">HBLAB LOGO</span>
-            </div>
-            <div style="font-size: 12px; font-weight: bold; color: #1a365d;">HBLAB ACADEMY</div>
-          </div>
-          
-          <h1 style="text-align: center; font-size: 32px; font-weight: bold; color: #1a365d; margin-bottom: 20px;">
-            Certificate of Completion
-          </h1>
-          
-          <p style="text-align: center; font-size: 16px; margin-bottom: 20px;">
-            This is to certify that
-          </p>
-          
-          <h2 style="text-align: center; font-size: 24px; font-weight: bold; text-decoration: underline; 
-                     color: #1a365d; margin-bottom: 20px;">
-            ${data.recipientName}
-          </h2>
-          
-          <p style="text-align: center; font-size: 16px; margin-bottom: 20px;">
-            has successfully completed the course
-          </p>
-          
-          <h3 style="text-align: center; font-size: 20px; font-weight: bold; color: #1a365d; margin-bottom: 30px;">
-            "${data.courseName}"
-          </h3>
-          
-          <div style="text-align: center; margin-bottom: 30px;">
-            <p style="margin: 5px 0;"><strong>Duration:</strong> ${data.duration || 'N/A'}</p>
-            <p style="margin: 5px 0;"><strong>Completion Date:</strong> ${new Date(data.completionDate).toLocaleDateString()}</p>
-            ${data.dateRange ? `<p style="margin: 5px 0;"><strong>Date Range:</strong> ${data.dateRange}</p>` : ''}
-          </div>
-          
-          ${data.skills?.length > 0 ? `
+          <!-- Main content -->
+          <div style="position: relative; z-index: 1;">
+            <!-- Header with logo -->
             <div style="margin-bottom: 30px;">
-              <h4 style="text-align: center; font-size: 18px; font-weight: bold; color: #1a365d; margin-bottom: 10px;">
-                Skills Covered:
-              </h4>
-              <ul style="text-align: left; width: 80%; margin: 0 auto; padding-left: 20px;">
-                ${data.skills.map(skill => `<li style="margin-bottom: 5px;">${skill}</li>`).join('')}
-              </ul>
-            </div>
-          ` : ''}
-          
-          <div style="display: flex; justify-content: space-between; margin-top: 50px;">
-            <div style="width: 150px; border-top: 2px solid #1a365d; padding-top: 5px; text-align: center;">
-              <div style="font-weight: bold;">Director</div>
-              <div style="font-size: 12px;">HBLAB Academy</div>
+              <div style="font-size: 24px; font-weight: bold; color: #1a365d; margin-bottom: 5px;">
+                HB-Lab 
+              </div>
+              <div style="width: 100%; height: 2px; background: #1a365d; margin: 10px auto;"></div>
             </div>
             
-            <div style="width: 150px; border-top: 2px solid #1a365d; padding-top: 5px; text-align: center;">
-              <div style="font-weight: bold;">Date</div>
-              <div style="font-size: 12px;">${new Date(data.completionDate).toLocaleDateString()}</div>
+            <!-- Title -->
+            <h1 style="font-size: 32px; font-weight: bold; color: #1a365d; margin-bottom: 30px;">
+              Certificate of Completion
+            </h1>
+            
+            <!-- Introductory text -->
+            <p style="font-size: 16px; margin-bottom: 20px;">
+              This is to certify that
+            </p>
+            
+            <!-- Recipient name -->
+            <h2 style="font-size: 24px; font-weight: bold; color: #1a365d; margin-bottom: 30px; text-decoration: underline;">
+              ${data.recipientName}
+            </h2>
+            
+            <!-- Course completion text -->
+            <p style="font-size: 16px; margin-bottom: 20px;">
+              has successfully completed the course
+            </p>
+            
+            <h3 style="font-size: 20px; font-weight: bold; color: #1a365d; margin-bottom: 30px;">
+              "${data.courseName}"
+            </h3>
+            
+            <div style="text-align: center; margin-bottom: 30px;">
+              ${data.duration ? `<p style="margin: 5px 0;"><strong>Duration:</strong> ${data.duration}</p>` : ''}
+              <p style="margin: 5px 0;"><strong>Completion Date:</strong> ${new Date(data.completionDate).toLocaleDateString()}</p>
+              ${data.dateRange ? `<p style="margin: 5px 0;"><strong>Date Range:</strong> ${data.dateRange}</p>` : ''}
             </div>
-          </div>
-          
-          <div style="text-align: center; margin-top: 20px; font-size: 10px; color: #666;">
-            Verification ID: ${data.certificateId}
+            
+            ${data.skills?.length > 0 ? `
+              <div style="margin-bottom: 30px;">
+                <h4 style="font-size: 18px; font-weight: bold; color: #1a365d; margin-bottom: 10px;">
+                  Skills Covered:
+                </h4>
+                <ul style="text-align: left; width: 80%; margin: 0 auto; padding-left: 20px;">
+                  ${data.skills.map(skill => `<li style="margin-bottom: 5px;">${skill}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+            
+            <!-- Signatures section -->
+            <div style="display: flex; justify-content: space-around; margin-top: 60px;">
+              <div style="width: 200px; text-align: center;">
+                <div style="height: 80px; margin-bottom: 10px;">
+                  <!-- Replace with actual signature image -->
+                  <img src="../assets/Jules Signture.png" style="height: 50px; width: auto;" alt="Director's Signature" />
+                </div>
+                <div style="font-weight: bold;">Mr.Jules HABARUREMA</div>
+                <div style="font-size: 12px;">CEO</div>
+                <div style="font-size: 12px;">HB-Lab </div>
+              </div>
+              
+              <div style="width: 200px; text-align: center;">
+                <div style="height: 80px; margin-bottom: 10px;">
+                  <!-- Replace with actual signature image -->
+                  <img src="../assets/Ferdnard Signature.png" style="height: 50px; width: auto;" alt="Manager's Signature" />
+                </div>
+                <div style="font-weight: bold;">Mr.Ferdnard KWIZERA</div>
+                <div style="font-size: 12px;">Training Cordinator</div>
+                <div style="font-size: 12px;">HB-Lab </div>
+              </div>
+            </div>
+            
+            <!-- Verification ID -->
+            <div style="text-align: center; margin-top: 40px; font-size: 10px; color: #666;">
+              Verification ID: ${data.certificateId}
+            </div>
           </div>
         </div>
       `;
@@ -153,7 +170,7 @@ const CertificateRetrieval = () => {
       
       // Create PDF
       const pdf = new jsPDF({
-        orientation: 'landscape',
+        orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
@@ -184,7 +201,7 @@ const CertificateRetrieval = () => {
       );
       
       // Save the PDF
-      pdf.save(`HBL-Certificate-${data.recipientName.replace(/\s+/g, '-')}.pdf`);
+      pdf.save(`HB-Lab-Certificate-${data.recipientName.replace(/\s+/g, '-')}.pdf`);
       setMessage('Certificate downloaded successfully!');
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -210,7 +227,7 @@ const CertificateRetrieval = () => {
               <div className="flex-1 flex flex-col justify-between">
                 <div>
                   <p className="mb-6 text-gray-700">
-                    Welcome to HBLAB Academy's certificate verification portal. Retrieve your digital certificate 
+                    Welcome to HB-Lab 's certificate verification portal. Retrieve your digital certificate 
                     of completion using the email address you registered with.
                   </p>
                   
