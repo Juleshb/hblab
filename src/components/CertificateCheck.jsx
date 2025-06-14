@@ -52,100 +52,105 @@ const CertificateRetrieval = () => {
     setMessage('Generating PDF...');
 
     try {
-      // Create a temporary container for the certificate
       const certificateContainer = document.createElement('div');
       certificateContainer.style.position = 'absolute';
       certificateContainer.style.left = '-9999px';
-      certificateContainer.style.width = '1000px';
-      certificateContainer.style.padding = '40px';
+      certificateContainer.style.width = '1200px';
+      certificateContainer.style.padding = '60px';
       certificateContainer.style.background = 'white';
       
-      // Certificate HTML template - updated to match HB-Lab design
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(data.certificateId)}`;
+      
       certificateContainer.innerHTML = `
-        <div style="font-family: 'Times New Roman', serif; position: relative; width: 100%; text-align: center; padding: 40px; border: 8px solid #1a365d;">
-          <!-- Watermark background -->
+        <div style="font-family: 'Times New Roman', serif; position: relative; width: 100%; text-align: center; padding: 60px; border: 10px solid #14532d; min-height: 800px; display: flex; flex-direction: column;">
           <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-45deg); 
-                     font-size: 48px; font-weight: bold; color: #1a365d; opacity: 0.1; white-space: nowrap; z-index: 0;">
+                     font-size: 72px; font-weight: bold; color: #14532d; opacity: 0.1; white-space: nowrap; z-index: 0;">
             HBLAB CERTIFIED
           </div>
           
-          <!-- Main content -->
-          <div style="position: relative; z-index: 1;">
-            <!-- Header with logo -->
-            <div style="margin-bottom: 30px;">
-              <div style="font-size: 24px; font-weight: bold; color: #1a365d; margin-bottom: 5px;">
-                HB-Lab 
-              </div>
-              <div style="width: 100%; height: 2px; background: #1a365d; margin: 10px auto;"></div>
-            </div>
-            
-            <!-- Title -->
-            <h1 style="font-size: 32px; font-weight: bold; color: #1a365d; margin-bottom: 30px;">
-              Certificate of Completion
+          <div style="margin-bottom: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <img src="/images/hb-lab-logo.png" style="height: 100px; margin-bottom: 15px;" alt="HB-Lab Logo" />
+            <div style="font-size: 18px; font-weight: bold; color: #14532d; letter-spacing: 1px;">HB-Lab</div>
+            <div style="width: 80%; height: 2px; background: #14532d; margin: 15px auto;"></div>
+          </div>
+          
+          <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+            <h1 style="font-size: 42px; font-weight: bold; color: #14532d; margin-bottom: 30px; letter-spacing: 1px;">
+              CERTIFICATE OF COMPLETION
             </h1>
             
-            <!-- Introductory text -->
-            <p style="font-size: 16px; margin-bottom: 20px;">
+            <p style="font-size: 20px; margin-bottom: 20px;">
               This is to certify that
             </p>
             
-            <!-- Recipient name -->
-            <h2 style="font-size: 24px; font-weight: bold; color: #1a365d; margin-bottom: 30px; text-decoration: underline;">
+            <h2 style="font-size: 36px; font-weight: bold; color: #14532d; margin: 20px 0; text-decoration: underline; line-height: 1.2;">
               ${data.recipientName}
             </h2>
             
-            <!-- Course completion text -->
-            <p style="font-size: 16px; margin-bottom: 20px;">
-              has successfully completed the course
+            <p style="font-size: 20px; margin-bottom: 20px;">
+              has successfully completed the training program
             </p>
             
-            <h3 style="font-size: 20px; font-weight: bold; color: #1a365d; margin-bottom: 30px;">
+            <h3 style="font-size: 28px; font-weight: bold; color: #14532d; margin: 20px 0 30px; line-height: 1.3;">
               "${data.courseName}"
             </h3>
             
-            <div style="text-align: center; margin-bottom: 30px;">
-              ${data.duration ? `<p style="margin: 5px 0;"><strong>Duration:</strong> ${data.duration}</p>` : ''}
-              <p style="margin: 5px 0;"><strong>Completion Date:</strong> ${new Date(data.completionDate).toLocaleDateString()}</p>
-              ${data.dateRange ? `<p style="margin: 5px 0;"><strong>Date Range:</strong> ${data.dateRange}</p>` : ''}
+            <div style="text-align: center; margin-bottom: 40px; font-size: 18px; line-height: 1.6;">
+              ${data.duration ? `<p style="margin: 8px 0;"><strong>Duration:</strong> ${data.duration}</p>` : ''}
+              <p style="margin: 8px 0;"><strong>Date of Completion:</strong> ${new Date(data.completionDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              ${data.dateRange ? `<p style="margin: 8px 0;"><strong>Training Period:</strong> ${data.dateRange}</p>` : ''}
             </div>
             
             ${data.skills?.length > 0 ? `
-              <div style="margin-bottom: 30px;">
-                <h4 style="font-size: 18px; font-weight: bold; color: #1a365d; margin-bottom: 10px;">
-                  Skills Covered:
+              <div style="margin-bottom: 40px;">
+                <h4 style="font-size: 22px; font-weight: bold; color: #14532d; margin-bottom: 15px;">
+                  Skills Acquired:
                 </h4>
-                <ul style="text-align: left; width: 80%; margin: 0 auto; padding-left: 20px;">
-                  ${data.skills.map(skill => `<li style="margin-bottom: 5px;">${skill}</li>`).join('')}
+                <ul style="display: inline-block; text-align: left; margin: 0 auto; padding-left: 20px; font-size: 18px; line-height: 1.6;">
+                  ${data.skills.map(skill => `<li style="margin-bottom: 6px;">${skill}</li>`).join('')}
                 </ul>
               </div>
             ` : ''}
-            
-            <!-- Signatures section -->
-            <div style="display: flex; justify-content: space-around; margin-top: 60px;">
-              <div style="width: 200px; text-align: center;">
-                <div style="height: 80px; margin-bottom: 10px;">
-                  <!-- Replace with actual signature image -->
-                  <img src="../assets/Jules Signture.png" style="height: 50px; width: auto;" alt="Director's Signature" />
+          </div>
+          
+          <div style="margin-top: auto; padding-top: 40px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+              <div style="display: flex; gap: 80px; flex: 1;">
+                <div style="width: 250px; text-align: center;">
+                  <div style="margin-bottom: 10px;">
+                    <div style="font-weight: bold; font-size: 18px; color: #14532d;">Mr. Jules HABARUREMA</div>
+                    <div style="font-size: 16px; color: #555;">Chief Executive Officer</div>
+                    <div style="font-size: 16px; color: #555;">HB-Lab</div>
+                  </div>
+                  <div style="height: 1px; background: #ccc; margin: 10px 0;"></div>
+                  <div style="height: 80px; display: flex; justify-content: center; align-items: center;">
+                    <img src="/signatures/jules-signature.png" style="height: 60px; width: auto;" alt="CEO's Signature" />
+                  </div>
                 </div>
-                <div style="font-weight: bold;">Mr.Jules HABARUREMA</div>
-                <div style="font-size: 12px;">CEO</div>
-                <div style="font-size: 12px;">HB-Lab </div>
+                
+                <div style="width: 250px; text-align: center;">
+                  <div style="margin-bottom: 10px;">
+                    <div style="font-weight: bold; font-size: 18px; color: #14532d;">Mr. Ferdnard KWIZERA</div>
+                    <div style="font-size: 16px; color: #555;">Training Coordinator</div>
+                    <div style="font-size: 16px; color: #555;">HB-Lab</div>
+                  </div>
+                  <div style="height: 1px; background: #ccc; margin: 10px 0;"></div>
+                  <div style="height: 80px; display: flex; justify-content: center; align-items: center;">
+                    <img src="/signatures/ferdinard-signature.png" style="height: 60px; width: auto;" alt="Coordinator's Signature" />
+                  </div>
+                </div>
               </div>
               
               <div style="width: 200px; text-align: center;">
-                <div style="height: 80px; margin-bottom: 10px;">
-                  <!-- Replace with actual signature image -->
-                  <img src="../assets/Ferdnard Signature.png" style="height: 50px; width: auto;" alt="Manager's Signature" />
+                <img src="${qrCodeUrl}" style="width: 120px; height: 120px;" alt="Verification QR Code" />
+                <div style="font-size: 14px; color: #666; margin-top: 8px;">
+                  Scan to verify authenticity
                 </div>
-                <div style="font-weight: bold;">Mr.Ferdnard KWIZERA</div>
-                <div style="font-size: 12px;">Training Cordinator</div>
-                <div style="font-size: 12px;">HB-Lab </div>
               </div>
             </div>
             
-            <!-- Verification ID -->
-            <div style="text-align: center; margin-top: 40px; font-size: 10px; color: #666;">
-              Verification ID: ${data.certificateId}
+            <div style="text-align: center; margin-top: 30px; font-size: 14px; color: #666;">
+              Certificate ID: ${data.certificateId}
             </div>
           </div>
         </div>
@@ -153,10 +158,8 @@ const CertificateRetrieval = () => {
       
       document.body.appendChild(certificateContainer);
       
-      // Wait for rendering to complete
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Generate canvas from HTML
       const canvas = await html2canvas(certificateContainer, {
         scale: 2,
         useCORS: true,
@@ -165,42 +168,16 @@ const CertificateRetrieval = () => {
         allowTaint: true
       });
       
-      // Remove temporary container
       document.body.removeChild(certificateContainer);
       
-      // Create PDF
       const pdf = new jsPDF({
-        orientation: 'portrait',
+        orientation: 'landscape',
         unit: 'mm',
         format: 'a4'
       });
       
-      // Calculate dimensions to fit the PDF page
-      const imgData = canvas.toDataURL('image/png');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgRatio = canvas.width / canvas.height;
-      const pdfRatio = pdfWidth / pdfHeight;
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
       
-      let finalWidth, finalHeight;
-      
-      if (imgRatio > pdfRatio) {
-        finalWidth = pdfWidth;
-        finalHeight = pdfWidth / imgRatio;
-      } else {
-        finalHeight = pdfHeight;
-        finalWidth = pdfHeight * imgRatio;
-      }
-      
-      // Add image to PDF
-      pdf.addImage(imgData, 'PNG', 
-        (pdfWidth - finalWidth) / 2,
-        (pdfHeight - finalHeight) / 2,
-        finalWidth,
-        finalHeight
-      );
-      
-      // Save the PDF
       pdf.save(`HB-Lab-Certificate-${data.recipientName.replace(/\s+/g, '-')}.pdf`);
       setMessage('Certificate downloaded successfully!');
     } catch (error) {
@@ -217,17 +194,16 @@ const CertificateRetrieval = () => {
       <main className="flex-grow py-12 px-4 sm:px-6 lg:px-8 mt-16">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Description Section */}
             <div className="flex-1 bg-white p-8 rounded-lg shadow-md flex flex-col">
               <div className="flex items-center mb-6">
-                <Icon icon="carbon:certificate" className="text-green-800 text-3xl mr-4" />
+                <Icon icon="carbon:certificate" className="text-green-900 text-3xl mr-4" />
                 <h2 className="text-2xl font-bold text-green-900">About Your Certificate</h2>
               </div>
               
               <div className="flex-1 flex flex-col justify-between">
                 <div>
                   <p className="mb-6 text-gray-700">
-                    Welcome to HB-Lab 's certificate verification portal. Retrieve your digital certificate 
+                    Welcome to HB-Lab Academy's certificate verification portal. Retrieve your digital certificate 
                     of completion using the email address you registered with.
                   </p>
                   
@@ -249,7 +225,7 @@ const CertificateRetrieval = () => {
                 
                 <div className="bg-green-50 p-4 rounded-lg">
                   <div className="flex items-start">
-                    <Icon icon="carbon:information" className="text-green-800 mr-3 mt-0.5 flex-shrink-0" />
+                    <Icon icon="carbon:information" className="text-green-900 mr-3 mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-gray-700">
                       If you can't find your certificate, please contact support with your registration details.
                     </p>
@@ -258,19 +234,18 @@ const CertificateRetrieval = () => {
               </div>
             </div>
 
-            {/* Certificate Retrieval Form */}
             <div className="flex-1 bg-white p-8 rounded-lg shadow-md">
               <div className="flex items-center justify-between mb-8">
                 <h1 className="text-2xl font-bold text-green-900">Retrieve Your Certificate</h1>
                 <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <Icon icon="carbon:search" className="text-green-800 text-xl" />
+                  <Icon icon="carbon:search" className="text-green-900 text-xl" />
                 </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="flex flex-col space-y-2">
                   <label htmlFor="email" className="flex items-center text-gray-700">
-                    <Icon icon="carbon:email" className="mr-2 text-green-800" />
+                    <Icon icon="carbon:email" className="mr-2 text-green-900" />
                     <span>Your Registered Email</span>
                   </label>
                   <div className="flex">
@@ -287,7 +262,7 @@ const CertificateRetrieval = () => {
                       type="submit"
                       disabled={loading}
                       className={`flex items-center justify-center px-6 py-3 border border-transparent rounded-r-lg shadow-sm font-medium text-white ${
-                        loading ? 'bg-green-400' : 'bg-green-600 hover:bg-green-700'
+                        loading ? 'bg-green-400' : 'bg-green-900 hover:bg-green-800'
                       } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500`}
                     >
                       {loading ? (
@@ -303,10 +278,9 @@ const CertificateRetrieval = () => {
                 </div>
               </form>
 
-              {/* Message Display */}
               {message && (
                 <div className={`flex items-start mt-6 p-4 rounded-lg text-sm ${
-                  certificateFound ? 'bg-green-100 text-green-800' : 
+                  certificateFound ? 'bg-green-100 text-green-900' : 
                   message.includes('error') ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
                 }`}>
                   <Icon 
@@ -320,10 +294,9 @@ const CertificateRetrieval = () => {
                 </div>
               )}
 
-              {/* Certificate Preview */}
               {certificateData && certificateFound && (
                 <div className="mt-8 border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-green-800 p-4 flex items-center justify-between">
+                  <div className="bg-green-900 p-4 flex items-center justify-between">
                     <h3 className="font-medium text-lg text-white">Certificate Details</h3>
                     <div className="flex items-center text-green-200 text-sm">
                       <Icon icon="carbon:id" className="mr-1" />
@@ -350,7 +323,7 @@ const CertificateRetrieval = () => {
                         onClick={() => generatePDF(certificateData)}
                         disabled={isGeneratingPDF}
                         className={`w-full flex items-center justify-center py-3 px-6 rounded-lg text-white ${
-                          isGeneratingPDF ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                          isGeneratingPDF ? 'bg-blue-400 cursor-not-allowed' : 'bg-green-900 hover:bg-green-800'
                         }`}
                       >
                         <Icon 
