@@ -1,247 +1,107 @@
-import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useState } from 'react';
 import { Icon } from '@iconify/react';
-import QRCode from 'qrcode.react';
-import Navbar from './Navbar';
-import Footer from './Footer';
-import QrScanner from 'qr-scanner';
+import axios from 'axios';
 
-const VerifyCertificate = () => {
-  const { certificateId } = useParams();
-  const navigate = useNavigate();
-  const videoRef = useRef(null);
-  const [certificate, setCertificate] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [verificationStatus, setVerificationStatus] = useState('pending');
-  const [scanActive, setScanActive] = useState(false);
-  const [scannerError, setScannerError] = useState(null);
-  const [scannedData, setScannedData] = useState(null);
-  const qrScannerRef = useRef(null);
+const CertificateVerification = () => {
+  const [certificateId, setCertificateId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [verificationDetails, setVerificationDetails] = useState(null);
 
-  // Verify certificate on mount
-  useEffect(() => {
-    const verifyCertificate = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`https://www.hblab.rw/api/certificates/verify/${certificateId}`);
-        
-        const issueDate = new Date(response.data.createdAt);
-        const expirationDate = new Date(issueDate);
-        expirationDate.setFullYear(issueDate.getFullYear() + 1);
-        const isExpired = new Date() > expirationDate;
+  const verifyCertificate = async (e) => {
+    e.preventDefault();
+    if (!certificateId) return;
 
-        if (isExpired) {
-          setVerificationStatus('expired');
-          setError('This certificate has expired');
-        } else {
-          setVerificationStatus('valid');
-          setCertificate(response.data);
-        }
-        
-        setError(null);
-      } catch (err) {
-        setVerificationStatus('invalid');
-        setError(err.response?.data?.error || 'Certificate not found or invalid');
-        setCertificate(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    setResult(null);
+    setVerificationDetails(null);
 
-    verifyCertificate();
-  }, [certificateId]);
-
-  // Handle QR scanning
-  const startScanner = () => {
-    setScanActive(true);
-    setScannerError(null);
-    
-    qrScannerRef.current = new QrScanner(
-      videoRef.current,
-      result => {
-        setScannedData(result);
-        stopScanner();
-        navigate(`/verify-certificate/${result}`);
-      },
-      {
-        preferredCamera: 'environment',
-        highlightScanRegion: true,
-        highlightCodeOutline: true,
-      }
-    );
-
-    qrScannerRef.current.start().catch(err => {
-      setScannerError(err.message);
-      setScanActive(false);
-    });
-  };
-
-  const stopScanner = () => {
-    if (qrScannerRef.current) {
-      qrScannerRef.current.stop();
-      qrScannerRef.current = null;
-    }
-    setScanActive(false);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex flex-col min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <Icon 
-              icon="eos-icons:loading" 
-              className="w-12 h-12 mx-auto text-green-800 animate-spin" 
-            />
-            <p className="mt-4 text-lg text-gray-700">Verifying certificate...</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  const getStatusIcon = () => {
-    switch (verificationStatus) {
-      case 'valid': return { icon: 'carbon:checkmark-filled', color: 'text-green-500' };
-      case 'invalid': return { icon: 'carbon:warning', color: 'text-red-500' };
-      case 'expired': return { icon: 'carbon:time', color: 'text-yellow-500' };
-      default: return { icon: 'carbon:warning', color: 'text-red-500' };
-    }
-  };
-
-  const getStatusMessage = () => {
-    switch (verificationStatus) {
-      case 'valid': return 'Certificate Verified';
-      case 'invalid': return 'Verification Failed';
-      case 'expired': return 'Certificate Expired';
-      default: return 'Verification Failed';
-    }
-  };
-
-  const getStatusDescription = () => {
-    switch (verificationStatus) {
-      case 'valid': return 'This certificate is valid and issued by HBLAB Academy';
-      case 'invalid': return error || 'The certificate could not be verified';
-      case 'expired': return 'This certificate is no longer valid as it has expired';
-      default: return 'There was an issue verifying this certificate';
+    try {
+      const response = await axios.get(
+        `https://umuhuza.store/api/certificates/verify/${certificateId}`
+      );
+      
+      setResult(response.data.isValid);
+      setVerificationDetails({
+        name: response.data.recipientName,
+        issueDate: response.data.issueDate,
+        verificationSticker: response.data.hasVerificationSticker
+      });
+    } catch (error) {
+      console.error('Verification error:', error);
+      setResult(false);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <Navbar />
+    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-xl font-bold mb-4 flex items-center">
+        <Icon icon="carbon:certificate" className="mr-2 text-blue-600" />
+        Certificate Verification
+      </h2>
       
-      <main className="flex-grow py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto space-y-8">
-          {/* QR Scanner Modal */}
-          {scanActive && (
-            <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-lg overflow-hidden shadow-xl max-w-md w-full">
-                <div className="p-4 relative">
-                  <video 
-                    ref={videoRef} 
-                    className="w-full h-auto rounded-md border-2 border-green-500"
-                    playsInline
-                  />
-                  {scannerError && (
-                    <div className="mt-2 text-red-500 text-center">{scannerError}</div>
-                  )}
-                </div>
-                <div className="bg-gray-50 px-4 py-3 flex justify-end">
-                  <button
-                    onClick={stopScanner}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                  >
-                    Cancel Scan
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Certificate Verification Card */}
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <div className="p-6 sm:p-8">
-              <div className="text-center mb-6">
-                <Icon 
-                  icon={getStatusIcon().icon} 
-                  className={`w-16 h-16 mx-auto ${getStatusIcon().color}`} 
-                />
-                <h2 className="mt-4 text-2xl font-bold text-gray-900">
-                  {getStatusMessage()}
-                </h2>
-                <p className="mt-2 text-gray-600">
-                  {getStatusDescription()}
-                </p>
-              </div>
-
-              {certificate && (
-                <>
-                  <div className="border-t border-gray-200 pt-6">
-                    <h3 className="text-lg font-medium text-gray-900">Certificate Details</h3>
-                    <dl className="mt-4 grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
-                      {/* ... existing certificate details ... */}
-                    </dl>
-                  </div>
-
-                  <div className="mt-8 border-t border-gray-200 pt-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">QR Verification</h3>
-                    <div className="flex flex-col items-center">
-                      <div className="p-2 bg-white rounded-lg border border-gray-200">
-                        <QRCode 
-                          value={`${window.location.origin}/verify-certificate/${certificate.certificateId}`}
-                          size={200}
-                          level="H"
-                          includeMargin={true}
-                        />
-                      </div>
-                      <p className="mt-3 text-sm text-gray-500 text-center">
-                        Scan this QR code to verify this certificate
-                      </p>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Scan QR Code Section */}
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <div className="p-6 sm:p-8">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Verify Another Certificate</h3>
-              <div className="flex flex-col items-center">
-                <button
-                  onClick={startScanner}
-                  className="px-6 py-3 bg-green-800 text-white rounded-md hover:bg-green-700 transition-colors flex items-center"
-                >
-                  <Icon icon="carbon:qr-code" className="w-5 h-5 mr-2" />
-                  Scan QR Code
-                </button>
-                <p className="mt-3 text-sm text-gray-500 text-center">
-                  Point your camera at a certificate's QR code to verify it
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-center">
+      <form onSubmit={verifyCertificate} className="mb-6">
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Enter Certificate ID</label>
+          <div className="flex">
+            <input
+              type="text"
+              value={certificateId}
+              onChange={(e) => setCertificateId(e.target.value)}
+              className="flex-grow px-3 py-2 border rounded-l focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="e.g. CERT-1234-ABCD"
+              required
+            />
             <button
-              onClick={() => navigate('/')}
-              className="px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors"
+              type="submit"
+              disabled={loading}
+              className="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700 disabled:bg-blue-400"
             >
-              Back to Home
+              {loading ? 'Verifying...' : 'Verify'}
             </button>
           </div>
         </div>
-      </main>
+      </form>
 
-      <Footer />
+      {result !== null && (
+        <div className={`p-4 rounded-lg border ${
+          result ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+        }`}>
+          <div className="flex items-start">
+            <Icon 
+              icon={result ? "carbon:checkmark-filled" : "carbon:warning-filled"} 
+              className={`text-2xl mr-2 mt-0.5 ${
+                result ? 'text-green-600' : 'text-red-600'
+              }`} 
+            />
+            <div>
+              <h3 className="font-medium">
+                {result ? 'Valid Certificate' : 'Invalid Certificate'}
+              </h3>
+              
+              {result && verificationDetails && (
+                <div className="mt-2 text-sm space-y-1">
+                  <p><strong>Name:</strong> {verificationDetails.name}</p>
+                  <p><strong>Issue Date:</strong> {new Date(verificationDetails.issueDate).toLocaleDateString()}</p>
+                  <p className="flex items-center">
+                    <Icon 
+                      icon={verificationDetails.verificationSticker ? "carbon:checkmark" : "carbon:close"} 
+                      className={`mr-1 ${
+                        verificationDetails.verificationSticker ? 'text-green-600' : 'text-red-600'
+                      }`} 
+                    />
+                    Verification Sticker: {verificationDetails.verificationSticker ? 'Present' : 'Not Present'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default VerifyCertificate;
+export default CertificateVerification;

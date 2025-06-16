@@ -15,6 +15,7 @@ import HBLCertificateGenerator from './components/HBLCertificateGenerator'
 import HBLCertificateModal from './components/HBLCertificateModal'
 import Certificates from './components/Certificate'
 import CertificateCheck from './components/CertificateCheck'
+import Verify from './components/VerifyCertificate'
 const App = () => {
   return (
     <div className="font-Poppins bg-Solitude text-sm">
@@ -37,7 +38,7 @@ const App = () => {
           <Route path="/CertificateGenerator" element= {<HBLCertificateGenerator />} />
           <Route path="/Certficates" element={<Certificates />} />
           <Route path="/CertificateCheck" element={<CertificateCheck />}/>
-         
+         <Route path="/verify" element={<Verify/>} />
         </Routes>
       </Router>
     </div>
