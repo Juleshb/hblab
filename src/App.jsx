@@ -1,6 +1,4 @@
-import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Navbar from './components/Navbar'
 import ContainerPage from './components/ContainerPage'
 import Draft from './components/Footer'
 import LeadershipTeam from './components/LeadershipTeam'
@@ -39,6 +37,7 @@ const App = () => {
           <Route path="/CertificateGenerator" element= {<HBLCertificateGenerator />} />
           <Route path="/Certficates" element={<Certificates />} />
           <Route path="/CertificateCheck" element={<CertificateCheck />}/>
+         
         </Routes>
       </Router>
     </div>

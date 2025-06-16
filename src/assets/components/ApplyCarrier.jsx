@@ -28,7 +28,7 @@ const ApplyCarrier = () => {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/jobs/${id}`);
+        const response = await axios.get(`https://umuhuza.store/jobs/${id}`);
         setJob(response.data);
         setFormData(response.data);
         setLoading(false);
@@ -72,7 +72,7 @@ const ApplyCarrier = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3000/jobs/${id}`, formData);
+      await axios.put(`https://umuhuza.store/jobs/${id}`, formData);
       setJob(formData);
       setIsEditing(false);
     } catch (err) {
@@ -84,7 +84,7 @@ const ApplyCarrier = () => {
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this job posting?')) {
       try {
-        await axios.delete(`http://localhost:3000/jobs/${id}`);
+        await axios.delete(`https://umuhuza.store/jobs/${id}`);
         navigate('/careers');
       } catch (err) {
         setError('Failed to delete job');

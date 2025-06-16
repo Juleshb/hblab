@@ -28,7 +28,7 @@ const ApplyCarrier = () => {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/carriers/${id}`);
+        const response = await axios.get(`https://umuhuza.store/api/carriers/${id}`);
         setJob(response.data);
         console.log(response.data)
         setFormData(response.data);
@@ -73,7 +73,7 @@ const ApplyCarrier = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3000/jobs/${id}`, formData);
+      await axios.put(`https://umuhuza.store/jobs/${id}`, formData);
       setJob(formData);
       setIsEditing(false);
     } catch (err) {
@@ -85,7 +85,7 @@ const ApplyCarrier = () => {
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this job posting?')) {
       try {
-        await axios.delete(`http://localhost:3000/jobs/${id}`);
+        await axios.delete(`https://umuhuza.store/jobs/${id}`);
         navigate('/careers');
       } catch (err) {
         setError('Failed to delete job');
@@ -104,7 +104,7 @@ const ApplyCarrier = () => {
       <main className="flex-grow py-12 px-4 sm:px-6 lg:px-8 mt-16">
         <div className="max-w-7xl mx-auto">
           {/* Admin controls */}
-          <div className="flex justify-end mb-4 space-x-2">
+          {/* <div className="flex justify-end mb-4 space-x-2">
             <button 
               onClick={() => setIsEditing(!isEditing)}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
@@ -117,7 +117,7 @@ const ApplyCarrier = () => {
             >
               Delete Job
             </button>
-          </div>
+          </div> */}
 
           {isEditing ? (
             <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm">

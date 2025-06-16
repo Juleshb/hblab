@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import axios from 'axios';
@@ -28,7 +28,7 @@ const CertificateRetrieval = () => {
     setCertificateFound(false);
 
     try {
-      const response = await axios.post('http://localhost:3000/api/certificates/check', { email });
+      const response = await axios.post('https://umuhuza.store/api/certificates/check', { email });
       
       if (response.data.exists) {
         setCertificateData(response.data.certificate);
@@ -39,154 +39,150 @@ const CertificateRetrieval = () => {
       }
     } catch (error) {
       console.error('Error checking certificate:', error);
-      setMessage(error.response?.data?.error || 'An error occurred while checking for your certificate.');
+      setMessage(error.response?.data?.error || 'No certificate found for this email address.');
     } finally {
       setLoading(false);
     }
   };
 
-  const generatePDF = async (data) => {
-    if (!data || isGeneratingPDF) return;
-    
-    setIsGeneratingPDF(true);
-    setMessage('Generating PDF...');
+const generatePDF = async (data) => {
+  if (!data || isGeneratingPDF) return;
 
-    try {
-      const certificateContainer = document.createElement('div');
-      certificateContainer.style.position = 'absolute';
-      certificateContainer.style.left = '-9999px';
-      certificateContainer.style.width = '1200px';
-      certificateContainer.style.padding = '60px';
-      certificateContainer.style.background = 'white';
-      
-      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(data.certificateId)}`;
-      
-      certificateContainer.innerHTML = `
-        <div style="font-family: 'Times New Roman', serif; position: relative; width: 100%; text-align: center; padding: 60px; border: 10px solid #14532d; min-height: 800px; display: flex; flex-direction: column;">
-          <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-45deg); 
-                     font-size: 72px; font-weight: bold; color: #14532d; opacity: 0.1; white-space: nowrap; z-index: 0;">
-            HBLAB CERTIFIED
-          </div>
-          
-          <div style="margin-bottom: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-            <img src="/images/hb-lab-logo.png" style="height: 100px; margin-bottom: 15px;" alt="HB-Lab Logo" />
-            <div style="font-size: 18px; font-weight: bold; color: #14532d; letter-spacing: 1px;">HB-Lab</div>
-            <div style="width: 80%; height: 2px; background: #14532d; margin: 15px auto;"></div>
-          </div>
-          
-          <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-            <h1 style="font-size: 42px; font-weight: bold; color: #14532d; margin-bottom: 30px; letter-spacing: 1px;">
-              CERTIFICATE OF COMPLETION
-            </h1>
-            
-            <p style="font-size: 20px; margin-bottom: 20px;">
-              This is to certify that
-            </p>
-            
-            <h2 style="font-size: 36px; font-weight: bold; color: #14532d; margin: 20px 0; text-decoration: underline; line-height: 1.2;">
-              ${data.recipientName}
-            </h2>
-            
-            <p style="font-size: 20px; margin-bottom: 20px;">
-              has successfully completed the training program
-            </p>
-            
-            <h3 style="font-size: 28px; font-weight: bold; color: #14532d; margin: 20px 0 30px; line-height: 1.3;">
-              "${data.courseName}"
-            </h3>
-            
-            <div style="text-align: center; margin-bottom: 40px; font-size: 18px; line-height: 1.6;">
-              ${data.duration ? `<p style="margin: 8px 0;"><strong>Duration:</strong> ${data.duration}</p>` : ''}
-              <p style="margin: 8px 0;"><strong>Date of Completion:</strong> ${new Date(data.completionDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-              ${data.dateRange ? `<p style="margin: 8px 0;"><strong>Training Period:</strong> ${data.dateRange}</p>` : ''}
-            </div>
-            
-            ${data.skills?.length > 0 ? `
-              <div style="margin-bottom: 40px;">
-                <h4 style="font-size: 22px; font-weight: bold; color: #14532d; margin-bottom: 15px;">
-                  Skills Acquired:
-                </h4>
-                <ul style="display: inline-block; text-align: left; margin: 0 auto; padding-left: 20px; font-size: 18px; line-height: 1.6;">
-                  ${data.skills.map(skill => `<li style="margin-bottom: 6px;">${skill}</li>`).join('')}
-                </ul>
-              </div>
-            ` : ''}
-          </div>
-          
-          <div style="margin-top: auto; padding-top: 40px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-              <div style="display: flex; gap: 80px; flex: 1;">
-                <div style="width: 250px; text-align: center;">
-                  <div style="margin-bottom: 10px;">
-                    <div style="font-weight: bold; font-size: 18px; color: #14532d;">Mr. Jules HABARUREMA</div>
-                    <div style="font-size: 16px; color: #555;">Chief Executive Officer</div>
-                    <div style="font-size: 16px; color: #555;">HB-Lab</div>
-                  </div>
-                  <div style="height: 1px; background: #ccc; margin: 10px 0;"></div>
-                  <div style="height: 80px; display: flex; justify-content: center; align-items: center;">
-                    <img src="/signatures/jules-signature.png" style="height: 60px; width: auto;" alt="CEO's Signature" />
-                  </div>
-                </div>
-                
-                <div style="width: 250px; text-align: center;">
-                  <div style="margin-bottom: 10px;">
-                    <div style="font-weight: bold; font-size: 18px; color: #14532d;">Mr. Ferdnard KWIZERA</div>
-                    <div style="font-size: 16px; color: #555;">Training Coordinator</div>
-                    <div style="font-size: 16px; color: #555;">HB-Lab</div>
-                  </div>
-                  <div style="height: 1px; background: #ccc; margin: 10px 0;"></div>
-                  <div style="height: 80px; display: flex; justify-content: center; align-items: center;">
-                    <img src="/signatures/ferdinard-signature.png" style="height: 60px; width: auto;" alt="Coordinator's Signature" />
-                  </div>
-                </div>
-              </div>
-              
-              <div style="width: 200px; text-align: center;">
-                <img src="${qrCodeUrl}" style="width: 120px; height: 120px;" alt="Verification QR Code" />
-                <div style="font-size: 14px; color: #666; margin-top: 8px;">
-                  Scan to verify authenticity
-                </div>
-              </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 30px; font-size: 14px; color: #666;">
-              Certificate ID: ${data.certificateId}
-            </div>
+  setIsGeneratingPDF(true);
+  setMessage('Generating PDF...');
+
+  try {
+    const certificateContainer = document.createElement('div');
+    certificateContainer.style.position = 'absolute';
+    certificateContainer.style.left = '-9999px';
+    certificateContainer.style.width = '1200px';
+    certificateContainer.style.padding = '0';
+    certificateContainer.style.background = 'white';
+    certificateContainer.style.fontFamily = "'Poppins', sans-serif";
+
+const qrData = `hblab.rw/verfiy/${data.certificateId}`;
+const encodedData = encodeURIComponent(qrData);
+const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodedData}`;
+
+    certificateContainer.innerHTML = `
+       <div style="
+    border: 10px solid rgba(3, 61, 22, 0.63); 
+    width: 100%; 
+    min-height: 850px; 
+    display: flex; 
+    flex-direction: column; 
+    position: relative; 
+    background-image: url('/images/dd.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    font-family: 'Poppins', sans-serif;
+  ">
+        
+        <!-- Top Banner -->
+        <div style="background: rgba(3, 61, 22, 0.45); color: white; text-align: center; padding: 20px;"> 
+        <div style="font-size: 40px; font-weight: bold;">
+        <center>
+            <img src="/images/logo.png" alt="Logo" style="height: 160px; width: 160px">
+            </center>
+            INTERNSHIP CERTIFICATE
           </div>
         </div>
-      `;
-      
-      document.body.appendChild(certificateContainer);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const canvas = await html2canvas(certificateContainer, {
-        scale: 2,
-        useCORS: true,
-        logging: true,
-        backgroundColor: null,
-        allowTaint: true
-      });
-      
-      document.body.removeChild(certificateContainer);
-      
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
-      
-      pdf.save(`HB-Lab-Certificate-${data.recipientName.replace(/\s+/g, '-')}.pdf`);
-      setMessage('Certificate downloaded successfully!');
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      setMessage('Failed to generate PDF. Please try again.');
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  };
+
+        <!-- Badge -->
+        <div style="margin: 30px auto 20px;">
+          <img src="/images/bdg.png" alt="Attendee Badge" style="height: 200px;" />
+        </div>
+
+        <!-- Recipient Info -->
+        <div style="text-align: center; padding: 0 60px;">
+          <p style="font-size: 18px; margin: 0 0 10px;">This Certificate is Proudly Presented to</p>
+          <h2 style="font-size: 36px; font-family: 'Silentha', cursive; font-weight: bold; margin: 10px 0; color:rgb(3, 61, 22);">${data.recipientName}</h2>
+          <p style="font-size: 18px; margin: 20px 0;">
+            We sincerely appreciate your dedication and valuable contribution during your internship at  
+            <strong>“Hb-Lab”</strong>.
+          </p>
+          ${data.dateRange ? `<p style="margin: 8px 0;"><strong>Training Period:</strong> ${data.dateRange}</p>` : ''}
+          <p style="margin: 8px 0;"><strong>Date of Completion:</strong> ${new Date(data.completionDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+
+        <!-- Skills Section -->
+        ${data.skills?.length ? `
+          <div style="margin: 30px 60px 0;">
+            <h4 style="font-size: 20px; text-align: center; font-weight: bold; margin-bottom: 10px; color: rgb(3, 61, 22);">Skills Acquired:</h4>
+            <ul style="text-align: center; font-size: 16px; padding-left: 20px;">
+              ${data.skills.map(skill => `<li>${skill}</li>`).join('')}
+            </ul>
+          </div>` : ''}
+
+        <!-- Signatures -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin: 40px 60px 20px;">
+          <div style="text-align: center;">
+            <img src="/signatures/jules-signature.png" alt="Signature" style="height: 70px;"><br/>
+            <strong style="font-size: 16px;">Mr. Jules HABARUREMA</strong><br/>
+            <span style="font-size: 14px;">Chief Executive Officer</span><br/>
+            <span style="font-size: 14px;">HB-Lab</span>
+          </div>
+
+          
+          <div style="text-align: center;">
+            <img src="${qrCodeUrl}" style="width: 100px; height: 120px;" alt="QR Code"/><br/>
+            <span style="font-size: 12px; color: #444;">Scan to verify</span>
+          </div>
+
+          <div style="text-align: center;">
+            <img src="/signatures/ferdinard-signature.png" alt="Signature" style="height: 70px;"><br/>
+            <strong style="font-size: 16px;">Mr. Ferdnard KWIZERA</strong><br/>
+            <span style="font-size: 14px;">Training Coordinator</span><br/>
+            <span style="font-size: 14px;">HB-Lab</span>
+          </div>
+
+        </div>
+
+        <!-- Footer: Certificate ID & Sponsors -->
+        <div style="text-align: center; font-size: 12px; color: #777; margin-bottom: 10px;">
+          Certificate ID: ${data.certificateId}
+        </div>
+
+        <div style="border-top: 1px solid #ccc; margin: 10px 60px; padding-top: 10px; display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;">
+          <img src="/sponsors/buttercms.png" style="height: 30px;" alt="ButterCMS" />
+          <img src="/sponsors/twicpics.png" style="height: 30px;" alt="TwicPics" />
+          <img src="/sponsors/base.png" style="height: 30px;" alt="Base" />
+          <img src="/sponsors/progress.png" style="height: 30px;" alt="Progress" />
+          <img src="/sponsors/stormkit.png" style="height: 30px;" alt="Stormkit" />
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(certificateContainer);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const canvas = await html2canvas(certificateContainer, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: null,
+      allowTaint: true
+    });
+
+    document.body.removeChild(certificateContainer);
+
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
+    pdf.save(`HB-Lab-Certificate-${data.recipientName.replace(/\s+/g, '-')}.pdf`);
+    setMessage('Certificate downloaded successfully!');
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    setMessage('Failed to generate PDF. Please try again.');
+  } finally {
+    setIsGeneratingPDF(false);
+  }
+};
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">

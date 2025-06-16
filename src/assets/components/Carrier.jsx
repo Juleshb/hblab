@@ -31,7 +31,7 @@ const Carrier = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/carriers');
+        const response = await axios.get('https://umuhuza.store/carriers');
         setJobOpenings(response.data);
         setLoading(false);
       } catch (err) {

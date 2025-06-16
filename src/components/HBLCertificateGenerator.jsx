@@ -76,7 +76,7 @@ const HBLCertificateGenerator = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:3000/api/certificates", {
+      const response = await axios.post("https://umuhuza.store/api/certificates", {
         recipientName: certificateData.recipientName,
         email: certificateData.email,
         courseName: certificateData.courseName,
