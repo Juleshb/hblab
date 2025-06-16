@@ -11,7 +11,7 @@ const CertificateVerification = () => {
       setLoading(true);
       setError('');
       
-      const response = await fetch(`http://localhost:3000/api/certificates/${certificateId}`);
+      const response = await fetch(`https://umuhuza.store/api/certificates/${certificateId}`);
       
       if (!response.ok) {
         const errorData = await response.json();

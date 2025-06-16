@@ -25,7 +25,7 @@ const Certificates = () => {
     const fetchCertificates = async () => {
       try {
         console.log("[DEBUG] Attempting to fetch certificates...");
-        const response = await axios.get("http://localhost:3000/api/certificates", {
+        const response = await axios.get("https://umuhuza.store/api/certificates", {
           timeout: 5000 // 5 second timeout
         });
         
