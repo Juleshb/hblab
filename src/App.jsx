@@ -38,7 +38,7 @@ const App = () => {
           <Route path="/CertificateGenerator" element= {<HBLCertificateGenerator />} />
           <Route path="/Certficates" element={<Certificates />} />
           <Route path="/CertificateCheck" element={<CertificateCheck />}/>
-         <Route path="/Verify/:certificateId" element={<Verify/>} />
+         <Route path="/verfiy/:certificateId" element={<Verify/>} />
         </Routes>
       </Router>
     </div>
