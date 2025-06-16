@@ -60,7 +60,7 @@ const generatePDF = async (data) => {
     certificateContainer.style.background = 'white';
     certificateContainer.style.fontFamily = "'Poppins', sans-serif";
 
-const qrData = `hblab.rw/verfiy/${data.certificateId}`;
+const qrData = `https://www.hblab.rw/verfiy/${data.certificateId}`;
 const encodedData = encodeURIComponent(qrData);
 const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodedData}`;
 
