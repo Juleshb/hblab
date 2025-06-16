@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Icon } from '@iconify/react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import axios from 'axios';

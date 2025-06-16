@@ -1,69 +1,64 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import axios from 'axios';
+import { useParams } from 'react-router-dom';
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const CertificateVerification = () => {
-  const [certificateId, setCertificateId] = useState('');
+  const { certificateId } = useParams();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [verificationDetails, setVerificationDetails] = useState(null);
+  const [error, setError] = useState(null);
 
-  const verifyCertificate = async (e) => {
-    e.preventDefault();
+  const verifyCertificate = async () => {
     if (!certificateId) return;
 
     setLoading(true);
     setResult(null);
     setVerificationDetails(null);
+    setError(null);
 
     try {
       const response = await axios.get(
         `https://umuhuza.store/api/certificates/verify/${certificateId}`
       );
       
-      setResult(response.data.isValid);
-      setVerificationDetails({
-        name: response.data.recipientName,
-        issueDate: response.data.issueDate,
-        verificationSticker: response.data.hasVerificationSticker
-      });
+      // Since the API returns the certificate data directly (not wrapped in isValid)
+      setResult(true); // Certificate exists, so it's valid
+      setVerificationDetails(response.data);
     } catch (error) {
       console.error('Verification error:', error);
       setResult(false);
+      setError(error.response?.data?.message || 'Certificate not found');
     } finally {
       setLoading(false);
     }
   };
 
+  // Auto-verify when component mounts with certificateId
+  useEffect(() => {
+    if (certificateId) {
+      verifyCertificate();
+    }
+  }, [certificateId]);
+
   return (
+     <>
+      <Navbar />
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-xl font-bold mb-4 flex items-center">
         <Icon icon="carbon:certificate" className="mr-2 text-blue-600" />
         Certificate Verification
       </h2>
-      
-      <form onSubmit={verifyCertificate} className="mb-6">
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Enter Certificate ID</label>
-          <div className="flex">
-            <input
-              type="text"
-              value={certificateId}
-              onChange={(e) => setCertificateId(e.target.value)}
-              className="flex-grow px-3 py-2 border rounded-l focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="e.g. CERT-1234-ABCD"
-              required
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700 disabled:bg-blue-400"
-            >
-              {loading ? 'Verifying...' : 'Verify'}
-            </button>
-          </div>
+
+      {loading && (
+        <div className="flex items-center justify-center p-4">
+          <Icon icon="eos-icons:loading" className="text-2xl text-blue-600" />
+          <span className="ml-2">Verifying certificate...</span>
         </div>
-      </form>
+      )}
 
       {result !== null && (
         <div className={`p-4 rounded-lg border ${
@@ -81,26 +76,43 @@ const CertificateVerification = () => {
                 {result ? 'Valid Certificate' : 'Invalid Certificate'}
               </h3>
               
+              {error && !result && (
+                <p className="mt-1 text-sm">{error}</p>
+              )}
+
               {result && verificationDetails && (
                 <div className="mt-2 text-sm space-y-1">
-                  <p><strong>Name:</strong> {verificationDetails.name}</p>
-                  <p><strong>Issue Date:</strong> {new Date(verificationDetails.issueDate).toLocaleDateString()}</p>
-                  <p className="flex items-center">
-                    <Icon 
-                      icon={verificationDetails.verificationSticker ? "carbon:checkmark" : "carbon:close"} 
-                      className={`mr-1 ${
-                        verificationDetails.verificationSticker ? 'text-green-600' : 'text-red-600'
-                      }`} 
-                    />
-                    Verification Sticker: {verificationDetails.verificationSticker ? 'Present' : 'Not Present'}
-                  </p>
+                  <p><strong>Certificate ID:</strong> {verificationDetails.certificateId}</p>
+                  <p><strong>Recipient Name:</strong> {verificationDetails.recipientName}</p>
+                  <p><strong>Course:</strong> {verificationDetails.courseName}</p>
+                  <p><strong>Duration:</strong> {verificationDetails.duration}</p>
+                  <p><strong>Completion Date:</strong> {new Date(verificationDetails.completionDate).toLocaleDateString()}</p>
+                  
+                  {verificationDetails.skills && verificationDetails.skills.length > 0 && (
+                    <div>
+                      <strong>Skills Acquired:</strong>
+                      <ul className="list-disc list-inside">
+                        {verificationDetails.skills.map((skill, index) => (
+                          <li key={index}>{skill}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
+
+      {!certificateId && (
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p>No certificate ID provided in the URL</p>
+        </div>
+      )}
     </div>
+    <Footer />
+        </>
   );
 };
 
