@@ -61,7 +61,7 @@ const LoginForm = () => {
 
       // Redirect based on role
       const redirectPath = {
-        'ADMIN': '/admin/AdminDashboard',
+        'ADMIN': '/admin/dashboard',
         'STUDENT': '/student/dashboard',
         'APPLICANT': '/applicant/dashboard'
       }[response.data.user.role] || '/dashboard';

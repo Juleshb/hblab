@@ -16,6 +16,7 @@ import HBLCertificateModal from './components/HBLCertificateModal'
 import Certificates from './components/Certificate'
 import CertificateCheck from './components/CertificateCheck'
 import Verify from './components/VerifyCertificate'
+import AdminDashboard from './components/Admin/AdminDashboard'
 const App = () => {
   return (
     <div className="font-Poppins bg-Solitude text-sm">
@@ -39,6 +40,7 @@ const App = () => {
           <Route path="/Certficates" element={<Certificates />} />
           <Route path="/CertificateCheck" element={<CertificateCheck />}/>
          <Route path="/verfiy/:certificateId" element={<Verify/>} />
+         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         </Routes>
       </Router>
     </div>
