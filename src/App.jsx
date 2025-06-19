@@ -17,6 +17,9 @@ import Certificates from './components/Certificate'
 import CertificateCheck from './components/CertificateCheck'
 import Verify from './components/VerifyCertificate'
 import AdminDashboard from './components/Admin/AdminDashboard'
+import DashboardHome from './components/Admin/DashboardHome'
+import UsersManagement from './components/Admin/UsersManagement'
+import TrainersManagement from './components/Admin/TrainersManagement'
 const App = () => {
   return (
     <div className="font-Poppins bg-Solitude text-sm">
@@ -40,7 +43,10 @@ const App = () => {
           <Route path="/Certficates" element={<Certificates />} />
           <Route path="/CertificateCheck" element={<CertificateCheck />}/>
          <Route path="/verfiy/:certificateId" element={<Verify/>} />
-         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/dashboard" element={<DashboardHome />} />
+        <Route path="/admin/users" element={<UsersManagement />} />
+        <Route path="/admin/trainers" element={<TrainersManagement />} />
         </Routes>
       </Router>
     </div>
