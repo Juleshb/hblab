@@ -105,8 +105,8 @@ const HBLCertificateModal = ({ show, onHide, certificateData }) => {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 overflow-y-auto">
-      <div className="relative w-full max-w-6xl rounded-lg bg-white shadow-xl mx-2">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 p-4 overflow-y-auto">
+      <div className="relative w-full max-w-6xl rounded-2xl bg-white shadow-2xl mx-2 border border-gray-100">
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b p-4">
           <h3 className="text-xl font-bold text-gray-800">Certificate Preview</h3>

@@ -1,4 +1,6 @@
 // pages/DashboardHome.jsx
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import StatCard from '../Admin/StatCard';
 import LineChart from '../Admin/LineChart';
 import PieChart from '../Admin/PieChart';
@@ -6,58 +8,70 @@ import BarChart from '../Admin/BarChart';
 import ServicesSection from '../Admin/ServicesSection';
 
 const DashboardHome = () => {
-  const stats = {
-    users: 1245,
-    trainers: 56,
-    certificates: 892,
-    pending: 23,
-    projects: 15,
-    active: 8,
-    revenue: 125000,
-    expenses: 85000
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalCertificates: 0,
+    totalCarriers: 0,
+    adminCount: 0,
+    studentCount: 0,
+    applicantCount: 0,
+    recentUsers: 0,
+    recentCertificates: 0,
+    recentCarriers: 0,
+    userGrowth: '0%',
+    certificateGrowth: '0%'
+  });
+  const [userGrowthData, setUserGrowthData] = useState({
+    labels: [],
+    datasets: []
+  });
+  const [certificateStatusData, setCertificateStatusData] = useState({
+    labels: [],
+    datasets: []
+  });
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [topCourses, setTopCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch all dashboard data in parallel
+      const [
+        statsResponse,
+        userGrowthResponse,
+        certificateStatusResponse,
+        activitiesResponse,
+        coursesResponse
+      ] = await Promise.all([
+        axios.get('http://localhost:3000/api/dashboard/stats'),
+        axios.get('http://localhost:3000/api/dashboard/user-growth'),
+        axios.get('http://localhost:3000/api/dashboard/certificate-status'),
+        axios.get('http://localhost:3000/api/dashboard/recent-activities'),
+        axios.get('http://localhost:3000/api/dashboard/top-courses')
+      ]);
+
+      setStats(statsResponse.data.stats);
+      setUserGrowthData(userGrowthResponse.data);
+      setCertificateStatusData(certificateStatusResponse.data);
+      setRecentActivities(activitiesResponse.data);
+      setTopCourses(coursesResponse.data);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setError('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Chart data configurations
-  const userGrowthData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-    datasets: [
-      {
-        label: 'New Users',
-        data: [65, 59, 80, 81, 56, 72, 95],
-        fill: true,
-        backgroundColor: 'rgba(13, 148, 136, 0.1)',
-        borderColor: 'rgba(13, 148, 136, 1)',
-        tension: 0.4,
-        borderWidth: 2
-      },
-      {
-        label: 'Active Users',
-        data: [45, 49, 60, 71, 46, 52, 75],
-        fill: true,
-        backgroundColor: 'rgba(56, 182, 255, 0.1)',
-        borderColor: 'rgba(56, 182, 255, 1)',
-        tension: 0.4,
-        borderWidth: 2
-      }
-    ]
-  };
-
-  const certificateStatusData = {
-    labels: ['Verified', 'Pending', 'Expired', 'Revoked'],
-    datasets: [
-      {
-        data: [720, 120, 42, 10],
-        backgroundColor: [
-          'rgba(13, 148, 136, 0.8)',
-          'rgba(249, 168, 37, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-          'rgba(156, 163, 175, 0.8)'
-        ],
-        borderWidth: 1
-      }
-    ]
-  };
-
+  // Mock data for charts that don't have database data yet
   const projectProgressData = {
     labels: ['Planning', 'Development', 'Testing', 'Deployment', 'Completed'],
     datasets: [
@@ -116,6 +130,28 @@ const DashboardHome = () => {
     ]
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-600 mb-4">{error}</div>
+        <button 
+          onClick={fetchDashboardData}
+          className="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h2 className="text-2xl font-bold text-teal-900 mb-6">Dashboard Overview</h2>
@@ -125,30 +161,31 @@ const DashboardHome = () => {
         <StatCard 
           icon="users"
           title="Total Users"
-          value={stats.users}
-          trend="+12.5% from last month"
+          value={stats.totalUsers}
+          trend={stats.userGrowth}
           trendColor="text-green-600"
         />
         <StatCard 
           icon="certificates"
           title="Certificates"
-          value={stats.certificates}
-          additionalText={`${stats.pending} pending`}
-          trendColor="text-red-600"
-        />
-        <StatCard 
-          icon="trainers"
-          title="Trainers"
-          value={stats.trainers}
-          trend="+2 new this week"
+          value={stats.totalCertificates}
+          additionalText={`${stats.recentCertificates} recent`}
+          trend={stats.certificateGrowth}
           trendColor="text-blue-600"
         />
         <StatCard 
-          icon="projects"
-          title="Active Projects"
-          value={stats.active}
-          additionalText={`${stats.projects} total`}
+          icon="trainers"
+          title="Admins"
+          value={stats.adminCount}
+          additionalText={`${stats.studentCount} students`}
           trendColor="text-indigo-600"
+        />
+        <StatCard 
+          icon="projects"
+          title="Carriers"
+          value={stats.totalCarriers}
+          additionalText={`${stats.recentCarriers} recent`}
+          trendColor="text-purple-600"
         />
       </div>
 
@@ -162,34 +199,50 @@ const DashboardHome = () => {
         </ChartCard>
       </div>
 
-      {/* Secondary Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      {/* Additional Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <ChartCard title="Project Progress">
-          <BarChart data={projectProgressData} options={{ plugins: { legend: { display: false } } }} />
+          <BarChart data={projectProgressData} />
         </ChartCard>
-        <ChartCard 
-          title="Financial Overview" 
-          headerRight={<span className="text-sm text-teal-600 font-medium">
-            Net: ${(stats.revenue - stats.expenses).toLocaleString()}
-          </span>}
-        >
-          <BarChart 
-            data={monthlyRevenueData} 
-            options={{
-              scales: {
-                y: {
-                  ticks: {
-                    callback: function(value) {
-                      return '$' + value.toLocaleString();
-                    }
-                  }
-                }
-              }
-            }} 
-          />
+        <ChartCard title="Monthly Revenue vs Expenses">
+          <LineChart data={monthlyRevenueData} />
         </ChartCard>
+      </div>
+
+      {/* User Activity Chart */}
+      <div className="mb-8">
         <ChartCard title="Weekly User Activity">
           <BarChart data={userActivityData} />
+        </ChartCard>
+      </div>
+
+      {/* Recent Activities and Top Courses */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <ChartCard title="Recent Activities">
+          <div className="space-y-3">
+            {recentActivities.slice(0, 5).map((activity, index) => (
+              <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">{activity.action}</p>
+                  <p className="text-xs text-gray-500">{activity.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ChartCard>
+        <ChartCard title="Top Courses">
+          <div className="space-y-3">
+            {topCourses.slice(0, 5).map((course, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{course.name}</p>
+                  <p className="text-xs text-gray-500">{course.category}</p>
+                </div>
+                <div className="text-sm font-semibold text-teal-600">{course.enrollments}</div>
+              </div>
+            ))}
+          </div>
         </ChartCard>
       </div>
 
@@ -199,16 +252,10 @@ const DashboardHome = () => {
 };
 
 const ChartCard = ({ title, children, headerRight }) => (
-  <div className="bg-white p-6 rounded-lg shadow">
-    <div className="flex justify-between items-center mb-4">
-      <h3 className="text-lg font-medium text-gray-900">{title}</h3>
-      {headerRight || (
-        <select className="text-sm border rounded px-2 py-1">
-          <option>Last 7 Days</option>
-          <option>Last 30 Days</option>
-          <option>Last 90 Days</option>
-        </select>
-      )}
+  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      {headerRight && <div>{headerRight}</div>}
     </div>
     {children}
   </div>

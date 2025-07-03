@@ -1,7 +1,10 @@
-// pages/TrainersManagement.jsx
 import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
-import Sidebar from '../Admin/Sidebar';
+import axios from 'axios';
+import Sidebar from './Sidebar';
+import AddTrainerModal from './AddTrainerModal';
+import AddStudentModal from './AddStudentModal';
+import Header from './Header';
 
 const TrainersManagement = () => {
   // State for sidebar
@@ -14,115 +17,131 @@ const TrainersManagement = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPrevPage: false
+  });
+
+  // Modal states
+  const [showAddTrainer, setShowAddTrainer] = useState(false);
+  const [showAddStudent, setShowAddStudent] = useState(false);
 
   // Toggle functions
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const toggleMobileSidebar = () => setMobileSidebarOpen(!mobileSidebarOpen);
 
+  // Load data from API
+  const loadTrainers = async (page = 1, search = '') => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`http://localhost:3000/api/admin/users/trainers?page=${page}&limit=10&search=${search}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTrainers(response.data.trainers);
+      setPagination(response.data.pagination);
+    } catch (error) {
+      console.error('Error loading trainers:', error);
+    }
+  };
+
+  const loadStudents = async (page = 1, search = '') => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`http://localhost:3000/api/admin/users/students?page=${page}&limit=10&search=${search}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStudents(response.data.students);
+      setPagination(response.data.pagination);
+    } catch (error) {
+      console.error('Error loading students:', error);
+    }
+  };
+
   // Load data
   useEffect(() => {
-    setTimeout(() => {
-      setTrainers([
-        { 
-          id: 1, 
-          name: 'Alex Johnson', 
-          email: 'alex@example.com', 
-          specialization: 'Frontend Development', 
-          status: 'Active', 
-          courses: 12,
-          rating: 4.8
-        },
-        { 
-          id: 2, 
-          name: 'Sarah Williams', 
-          email: 'sarah@example.com', 
-          specialization: 'Data Science', 
-          status: 'Active', 
-          courses: 8,
-          rating: 4.9
-        }
-      ]);
-
-      setStudents([
-        {
-          id: 1,
-          name: 'John Smith',
-          email: 'john@example.com',
-          enrolledCourses: 3,
-          completion: '75%',
-          lastActive: '2 days ago',
-          status: 'Active'
-        },
-        {
-          id: 2,
-          name: 'Emily Davis',
-          email: 'emily@example.com',
-          enrolledCourses: 5,
-          completion: '92%',
-          lastActive: '5 hours ago',
-          status: 'Active'
-        }
-      ]);
-
+    const loadData = async () => {
+      setLoading(true);
+      if (activeTab === 'trainers') {
+        await loadTrainers();
+      } else {
+        await loadStudents();
+      }
       setLoading(false);
-    }, 1000);
-  }, []);
+    };
+    loadData();
+  }, [activeTab]);
+
+  // Handle search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (activeTab === 'trainers') {
+        loadTrainers(1, searchTerm);
+      } else {
+        loadStudents(1, searchTerm);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, activeTab]);
+
+  // Handle tab change
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearchTerm('');
+    setPagination({ currentPage: 1, totalPages: 1, hasNextPage: false, hasPrevPage: false });
+  };
 
   // Filter data based on active tab
-  const filteredData = activeTab === 'trainers' 
-    ? trainers.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.specialization.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : students.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const filteredData = activeTab === 'trainers' ? trainers : students;
+
+  // Add new trainer
+  const handleAddTrainer = async (newTrainer) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('http://localhost:3000/api/admin/users', {
+        ...newTrainer,
+        role: 'ADMIN' // Trainers are stored as ADMIN role
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      loadTrainers(); // Reload data
+    } catch (error) {
+      console.error('Error adding trainer:', error);
+    }
+  };
+
+  // Add new student
+  const handleAddStudent = async (newStudent) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('http://localhost:3000/api/admin/users', {
+        ...newStudent,
+        role: 'STUDENT'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      loadStudents(); // Reload data
+    } catch (error) {
+      console.error('Error adding student:', error);
+    }
+  };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Reuse existing Sidebar component */}
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
       <Sidebar 
         sidebarOpen={sidebarOpen}
         mobileSidebarOpen={mobileSidebarOpen}
         toggleSidebar={toggleSidebar}
         toggleMobileSidebar={toggleMobileSidebar}
-        activeTab="trainers"
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1">
         {/* Header */}
-        <header className="bg-white shadow-sm z-10">
-          <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-            <div className="flex items-center">
-              <button 
-                onClick={toggleMobileSidebar}
-                className="text-gray-500 hover:text-gray-600 lg:hidden mr-4"
-              >
-                <Icon icon="carbon:menu" className="h-6 w-6" />
-              </button>
-              <h1 className="text-xl font-semibold text-gray-800">
-                {activeTab === 'trainers' ? 'Trainers' : 'Students'} Management
-              </h1>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <button className="p-1 text-gray-500 hover:text-gray-600">
-                <Icon icon="carbon:notification" className="h-6 w-6" />
-              </button>
-              <button className="p-1 text-gray-500 hover:text-gray-600">
-                <Icon icon="carbon:chat" className="h-6 w-6" />
-              </button>
-              <div className="relative">
-                <button className="flex items-center space-x-2">
-                  <Icon icon="carbon:user" className="h-8 w-8 text-gray-600 bg-gray-200 rounded-full p-1.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
+        <Header toggleMobileSidebar={toggleMobileSidebar} activeTab="trainers" />
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
@@ -132,13 +151,13 @@ const TrainersManagement = () => {
               <div className="flex border-b border-gray-200 w-full">
                 <button
                   className={`py-2 px-4 font-medium text-sm ${activeTab === 'trainers' ? 'border-b-2 border-teal-500 text-teal-600' : 'text-gray-500 hover:text-gray-700'}`}
-                  onClick={() => setActiveTab('trainers')}
+                  onClick={() => handleTabChange('trainers')}
                 >
                   Trainers
                 </button>
                 <button
                   className={`py-2 px-4 font-medium text-sm ${activeTab === 'students' ? 'border-b-2 border-teal-500 text-teal-600' : 'text-gray-500 hover:text-gray-700'}`}
-                  onClick={() => setActiveTab('students')}
+                  onClick={() => handleTabChange('students')}
                 >
                   Students
                 </button>
@@ -158,7 +177,10 @@ const TrainersManagement = () => {
                     className="absolute left-3 top-2.5 text-gray-400 h-4 w-4" 
                   />
                 </div>
-                <button className="bg-teal-700 text-white px-4 py-2 rounded-md text-sm hover:bg-teal-800 flex items-center whitespace-nowrap">
+                <button 
+                  onClick={() => activeTab === 'trainers' ? setShowAddTrainer(true) : setShowAddStudent(true)}
+                  className="bg-teal-700 text-white px-4 py-2 rounded-md text-sm hover:bg-teal-800 flex items-center whitespace-nowrap"
+                >
                   <Icon icon="carbon:add" className="h-4 w-4 mr-2" />
                   Add {activeTab === 'trainers' ? 'Trainer' : 'Student'}
                 </button>
@@ -283,6 +305,19 @@ const TrainersManagement = () => {
           )}
         </main>
       </div>
+
+      {/* Modals */}
+      <AddTrainerModal
+        isOpen={showAddTrainer}
+        onClose={() => setShowAddTrainer(false)}
+        onAddTrainer={handleAddTrainer}
+      />
+      
+      <AddStudentModal
+        isOpen={showAddStudent}
+        onClose={() => setShowAddStudent(false)}
+        onAddStudent={handleAddStudent}
+      />
     </div>
   );
 };
