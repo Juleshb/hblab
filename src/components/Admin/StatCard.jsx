@@ -40,29 +40,11 @@ const getIcon = (icon) => {
 };
 
 const getBgColor = (icon) => {
-  const colors = {
-    users: 'bg-blue-100',
-    certificates: 'bg-green-100',
-    trainers: 'bg-purple-100',
-    projects: 'bg-yellow-100',
-    revenue: 'bg-teal-100',
-    expenses: 'bg-red-100',
-    active: 'bg-indigo-100'
-  };
-  return colors[icon] || 'bg-gray-100';
+  return 'bg-green-100';
 };
 
 const getTextColor = (icon) => {
-  const colors = {
-    users: 'text-blue-600',
-    certificates: 'text-green-600',
-    trainers: 'text-purple-600',
-    projects: 'text-yellow-600',
-    revenue: 'text-teal-600',
-    expenses: 'text-red-600',
-    active: 'text-indigo-600'
-  };
-  return colors[icon] || 'text-gray-600';
+  return 'text-green-600';
 };
 
 export default StatCard;

@@ -121,4 +121,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export default AuthContext;
-export const useAuth = () => React.useContext(AuthContext); 
+export const useAuth = () => React.useContext(AuthContext) || {}; 

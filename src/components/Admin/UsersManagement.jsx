@@ -2,22 +2,15 @@
 import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import axios from 'axios';
-import Sidebar from './Sidebar';
 import UserModal from './UserModal';
-import Header from './Header';
 
 const UsersManagement = () => {
-  // State for sidebar
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  
   // State for users data
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
-  
   // State for pagination
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -27,28 +20,21 @@ const UsersManagement = () => {
     hasPrevPage: false,
     limit: 5
   });
-
   // State for modal
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-
-  // Toggle functions
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-  const toggleMobileSidebar = () => setMobileSidebarOpen(!mobileSidebarOpen);
 
   // Load users data
   const fetchUsers = async (page = 1) => {
     try {
       setLoading(true);
       setError(null);
-      
       const params = new URLSearchParams({
         page: page.toString(),
         limit: pagination.limit.toString(),
         search: searchTerm,
         role: roleFilter
       });
-
       const response = await axios.get(`http://localhost:3000/api/admin/users?${params}`);
       setUsers(response.data.users);
       setPagination(response.data.pagination);
@@ -204,21 +190,8 @@ const UsersManagement = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <Sidebar 
-        sidebarOpen={sidebarOpen}
-        mobileSidebarOpen={mobileSidebarOpen}
-        toggleSidebar={toggleSidebar}
-        toggleMobileSidebar={toggleMobileSidebar}
-      />
-
-      {/* Main Content */}
-      <div className="flex-1">
-        {/* Header */}
-        <Header toggleMobileSidebar={toggleMobileSidebar} activeTab="users" />
-
-        {/* Users Table Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+      {/* Users Table Content */}
+      <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-teal-900">Users</h2>
@@ -407,7 +380,6 @@ const UsersManagement = () => {
             </>
           )}
         </main>
-      </div>
 
       {/* User Modal */}
       <UserModal

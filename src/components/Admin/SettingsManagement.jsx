@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
-import Sidebar from './Sidebar';
-import Header from './Header';
 
 const SettingsManagement = () => {
   const [activeTab, setActiveTab] = useState('general');
@@ -76,81 +74,8 @@ const SettingsManagement = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <Sidebar 
-        sidebarOpen={sidebarOpen} 
-        mobileSidebarOpen={mobileSidebarOpen} 
-        toggleSidebar={toggleSidebar} 
-        toggleMobileSidebar={toggleMobileSidebar} 
-      />
-      {/* Main Content */}
-      <div className="flex-1">
-        {/* Header */}
-        <Header toggleMobileSidebar={toggleMobileSidebar} activeTab="settings" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-            {/* Tab Navigation */}
-            <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8 px-6">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                      activeTab === tab.id
-                        ? 'border-green-500 text-green-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    <Icon icon={tab.icon} className="h-4 w-4" />
-                    <span>{tab.label}</span>
-                  </button>
-                ))}
-              </nav>
-            </div>
-
-            {/* Tab Content */}
-            <div className="p-6">
-              {activeTab === 'general' && (
-                <GeneralSettings
-                  settings={settings.general}
-                  onChange={(key, value) => handleSettingChange('general', key, value)}
-                  onSave={() => handleSaveSettings('general')}
-                  loading={loading}
-                />
-              )}
-
-              {activeTab === 'notifications' && (
-                <NotificationSettings
-                  settings={settings.notifications}
-                  onChange={(key, value) => handleSettingChange('notifications', key, value)}
-                  onSave={() => handleSaveSettings('notifications')}
-                  loading={loading}
-                />
-              )}
-
-              {activeTab === 'security' && (
-                <SecuritySettings
-                  settings={settings.security}
-                  onChange={(key, value) => handleSettingChange('security', key, value)}
-                  onSave={() => handleSaveSettings('security')}
-                  loading={loading}
-                />
-              )}
-
-              {activeTab === 'appearance' && (
-                <AppearanceSettings
-                  settings={settings.appearance}
-                  onChange={(key, value) => handleSettingChange('appearance', key, value)}
-                  onSave={() => handleSaveSettings('appearance')}
-                  loading={loading}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+    <div>
+      {/* Tab Navigation, Tab Content, etc. */}
     </div>
   );
 };

@@ -3,7 +3,8 @@ import { Icon } from '@iconify/react';
 import StatCard from './StatCard';
 import ApplicationsTable from './ApplicationsTable';
 import ApplicationModal from './ApplicationModal';
-import Sidebar from './Sidebar';
+import { useAdminSidebar } from './Sidebar';
+import Header from './Header';
 
 const ApplicationsManagement = () => {
   const [applications, setApplications] = useState([]);
@@ -16,11 +17,7 @@ const ApplicationsManagement = () => {
     approved: 0,
     rejected: 0
   });
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => setSidebarOpen((open) => !open);
-  const toggleMobileSidebar = () => setMobileSidebarOpen((open) => !open);
+  const { sidebarOpen, toggleSidebar } = useAdminSidebar();
 
   useEffect(() => {
     fetchApplications();
@@ -37,13 +34,14 @@ const ApplicationsManagement = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setApplications(data);
+        const apps = Array.isArray(data) ? data : (data.applications || []);
+        setApplications(apps);
         
         // Calculate stats
-        const total = data.length;
-        const pending = data.filter(app => app.status === 'pending').length;
-        const approved = data.filter(app => app.status === 'approved').length;
-        const rejected = data.filter(app => app.status === 'rejected').length;
+        const total = apps.length;
+        const pending = apps.filter(app => app.status === 'pending').length;
+        const approved = apps.filter(app => app.status === 'approved').length;
+        const rejected = apps.filter(app => app.status === 'rejected').length;
         
         setStats({ total, pending, approved, rejected });
       }
@@ -98,56 +96,27 @@ const ApplicationsManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
-      <Sidebar 
-        sidebarOpen={sidebarOpen} 
-        mobileSidebarOpen={mobileSidebarOpen} 
-        toggleSidebar={toggleSidebar} 
-        toggleMobileSidebar={toggleMobileSidebar} 
-      />
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 flex flex-col min-h-screen">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="py-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Applications Management</h1>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Manage career applications and track their status
-                  </p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={fetchApplications}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  >
-                    <Icon icon="carbon:refresh" className="h-4 w-4 mr-2" />
-                    Refresh
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Header activeTab="applications" toggleMobileSidebar={toggleSidebar} />
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
               title="Total Applications"
               value={stats.total}
               icon="carbon:user-multiple"
-              color="blue"
+              color="green"
               loading={loading}
             />
             <StatCard
               title="Pending Review"
               value={stats.pending}
               icon="carbon:time"
-              color="yellow"
+              color="green"
               loading={loading}
             />
             <StatCard
@@ -161,7 +130,7 @@ const ApplicationsManagement = () => {
               title="Rejected"
               value={stats.rejected}
               icon="carbon:close"
-              color="red"
+              color="green"
               loading={loading}
             />
           </div>
@@ -182,8 +151,7 @@ const ApplicationsManagement = () => {
               onDelete={handleDeleteApplication}
             />
           </div>
-        </div>
-
+        </main>
         {/* Application Detail Modal */}
         {isModalOpen && selectedApplication && (
           <ApplicationModal

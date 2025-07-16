@@ -66,7 +66,7 @@ const CareersTable = ({ onCareersCount }) => {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/carriers', {
+      const response = await axios.get('http://localhost:3000/api/careers', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCareers(response.data.careers || []);
@@ -87,7 +87,7 @@ const CareersTable = ({ onCareersCount }) => {
     if (!window.confirm('Are you sure you want to delete this career?')) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3000/api/carriers/${id}`, {
+      await axios.delete(`http://localhost:3000/api/careers/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCareers(careers.filter(career => career.id !== id));
@@ -142,7 +142,7 @@ const CareersTable = ({ onCareersCount }) => {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:3000/api/carriers', {
+      const response = await axios.post('http://localhost:3000/api/careers', {
         title: form.title,
         type: form.type,
         location: form.location,

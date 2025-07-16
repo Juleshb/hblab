@@ -58,6 +58,7 @@ const AddTrainerModal = ({ isOpen, onClose, onAddTrainer }) => {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
+      console.log('Token being sent (AddTrainerModal):', token);
       const response = await axios.post('http://localhost:3000/api/admin/users', {
         ...formData,
         role: 'ADMIN'

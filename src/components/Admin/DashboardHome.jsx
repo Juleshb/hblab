@@ -79,11 +79,11 @@ const DashboardHome = () => {
         label: 'Projects by Phase',
         data: [3, 5, 2, 3, 2],
         backgroundColor: [
-          'rgba(99, 102, 241, 0.7)',
-          'rgba(13, 148, 136, 0.7)',
-          'rgba(234, 179, 8, 0.7)',
-          'rgba(239, 68, 68, 0.7)',
-          'rgba(16, 185, 129, 0.7)'
+          'rgba(34,197,94,0.7)', // green-500
+          'rgba(22,163,74,0.7)', // green-600
+          'rgba(132,204,22,0.7)', // green-400
+          'rgba(187,247,208,0.7)', // green-100
+          'rgba(21,128,61,0.7)' // green-700
         ],
         borderWidth: 1
       }
@@ -96,15 +96,15 @@ const DashboardHome = () => {
       {
         label: 'Revenue',
         data: [35000, 42000, 38000, 45000],
-        backgroundColor: 'rgba(13, 148, 136, 0.7)',
-        borderColor: 'rgba(13, 148, 136, 1)',
+        backgroundColor: 'rgba(34,197,94,0.7)',
+        borderColor: 'rgba(22,163,74,1)',
         borderWidth: 2
       },
       {
         label: 'Expenses',
         data: [28000, 32000, 30000, 25000],
-        backgroundColor: 'rgba(239, 68, 68, 0.7)',
-        borderColor: 'rgba(239, 68, 68, 1)',
+        backgroundColor: 'rgba(187,247,208,0.7)',
+        borderColor: 'rgba(21,128,61,1)',
         borderWidth: 2
       }
     ]
@@ -116,15 +116,15 @@ const DashboardHome = () => {
       {
         label: 'Logins',
         data: [320, 450, 380, 510, 490, 210, 180],
-        backgroundColor: 'rgba(13, 148, 136, 0.7)',
-        borderColor: 'rgba(13, 148, 136, 1)',
+        backgroundColor: 'rgba(34,197,94,0.7)',
+        borderColor: 'rgba(22,163,74,1)',
         borderWidth: 1
       },
       {
         label: 'Actions',
         data: [1200, 1500, 1350, 1700, 1600, 700, 600],
-        backgroundColor: 'rgba(56, 182, 255, 0.7)',
-        borderColor: 'rgba(56, 182, 255, 1)',
+        backgroundColor: 'rgba(132,204,22,0.7)',
+        borderColor: 'rgba(21,128,61,1)',
         borderWidth: 1
       }
     ]
@@ -154,16 +154,17 @@ const DashboardHome = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-teal-900 mb-6">Dashboard Overview</h2>
+      <h2 className="text-xl font-bold text-green-900 mb-4 tracking-tight">Dashboard Overview</h2>
       
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <StatCard 
           icon="users"
           title="Total Users"
           value={stats.totalUsers}
           trend={stats.userGrowth}
           trendColor="text-green-600"
+          className="glass-card"
         />
         <StatCard 
           icon="certificates"
@@ -171,82 +172,86 @@ const DashboardHome = () => {
           value={stats.totalCertificates}
           additionalText={`${stats.recentCertificates} recent`}
           trend={stats.certificateGrowth}
-          trendColor="text-blue-600"
+          trendColor="text-green-600"
+          className="glass-card"
         />
         <StatCard 
           icon="trainers"
           title="Admins"
           value={stats.adminCount}
           additionalText={`${stats.studentCount} students`}
-          trendColor="text-indigo-600"
+          trendColor="text-green-600"
+          className="glass-card"
         />
         <StatCard 
           icon="projects"
           title="Carriers"
           value={stats.totalCarriers}
           additionalText={`${stats.recentCarriers} recent`}
-          trendColor="text-purple-600"
+          trendColor="text-green-600"
+          className="glass-card"
         />
       </div>
 
       {/* Main Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <ChartCard title="User Growth">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
+        <ChartCard title="User Growth" className="glass-card">
           <LineChart data={userGrowthData} />
         </ChartCard>
-        <ChartCard title="Certificate Status">
+        <ChartCard title="Certificate Status" className="glass-card">
           <PieChart data={certificateStatusData} />
         </ChartCard>
       </div>
 
       {/* Additional Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <ChartCard title="Project Progress">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
+        <ChartCard title="Project Progress" className="glass-card">
           <BarChart data={projectProgressData} />
         </ChartCard>
-        <ChartCard title="Monthly Revenue vs Expenses">
+        <ChartCard title="Monthly Revenue vs Expenses" className="glass-card">
           <LineChart data={monthlyRevenueData} />
         </ChartCard>
       </div>
 
       {/* User Activity Chart */}
-      <div className="mb-8">
-        <ChartCard title="Weekly User Activity">
+      <div className="mb-4">
+        <ChartCard title="Weekly User Activity" className="glass-card">
           <BarChart data={userActivityData} />
         </ChartCard>
       </div>
 
       {/* Recent Activities and Top Courses */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <ChartCard title="Recent Activities">
-          <div className="space-y-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
+        <ChartCard title="Recent Activities" className="glass-card">
+          <div className="space-y-2">
             {recentActivities.slice(0, 5).map((activity, index) => (
-              <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center space-x-2 p-2 bg-white/30 rounded-lg backdrop-blur-md">
                 <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                  <p className="text-xs text-gray-500">{activity.time}</p>
+                  <p className="text-xs font-medium text-gray-900">{activity.action}</p>
+                  <p className="text-[10px] text-gray-500">{activity.time}</p>
                 </div>
               </div>
             ))}
           </div>
         </ChartCard>
-        <ChartCard title="Top Courses">
-          <div className="space-y-3">
+        <ChartCard title="Top Courses" className="glass-card">
+          <div className="space-y-2">
             {topCourses.slice(0, 5).map((course, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-2 bg-white/30 rounded-lg backdrop-blur-md">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{course.name}</p>
-                  <p className="text-xs text-gray-500">{course.category}</p>
+                  <p className="text-xs font-medium text-gray-900">{course.name}</p>
+                  <p className="text-[10px] text-gray-500">{course.category}</p>
                 </div>
-                <div className="text-sm font-semibold text-teal-600">{course.enrollments}</div>
+                <div className="text-xs font-semibold text-teal-600">{course.enrollments}</div>
               </div>
             ))}
           </div>
         </ChartCard>
       </div>
-
+      <div className="mt-2">
       <ServicesSection />
+      </div>
     </div>
   );
 };

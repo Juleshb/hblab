@@ -33,7 +33,7 @@ const AdminDashboard = () => {
           activeTab={activeTab}
         />
 
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-2 sm:p-3 lg:p-4 text-sm">
           {isRootDashboard ? <DashboardHome /> : <Outlet />}
         </main>
       </div>

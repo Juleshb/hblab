@@ -127,14 +127,12 @@ const ProjectModal = ({ project, mode, isOpen, onClose, onSave }) => {
   const getStatusBadge = (status) => {
     const statusConfig = {
       active: { color: 'bg-green-100 text-green-800', icon: 'carbon:play' },
-      completed: { color: 'bg-purple-100 text-purple-800', icon: 'carbon:checkmark' },
-      on_hold: { color: 'bg-yellow-100 text-yellow-800', icon: 'carbon:pause' },
-      cancelled: { color: 'bg-red-100 text-red-800', icon: 'carbon:close' },
-      planning: { color: 'bg-blue-100 text-blue-800', icon: 'carbon:planning' }
+      completed: { color: 'bg-green-200 text-green-800', icon: 'carbon:checkmark' },
+      on_hold: { color: 'bg-green-50 text-green-800', icon: 'carbon:pause' },
+      cancelled: { color: 'bg-green-300 text-green-800', icon: 'carbon:close' },
+      planning: { color: 'bg-green-100 text-green-800', icon: 'carbon:planning' }
     };
-
     const config = statusConfig[status] || statusConfig.planning;
-
     return (
       <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.color}`}>
         <Icon icon={config.icon} className="h-4 w-4 mr-2" />
@@ -145,13 +143,11 @@ const ProjectModal = ({ project, mode, isOpen, onClose, onSave }) => {
 
   const getPriorityBadge = (priority) => {
     const priorityConfig = {
-      high: { color: 'bg-red-100 text-red-800', icon: 'carbon:warning' },
-      medium: { color: 'bg-yellow-100 text-yellow-800', icon: 'carbon:information' },
-      low: { color: 'bg-green-100 text-green-800', icon: 'carbon:checkmark' }
+      high: { color: 'bg-green-300 text-green-800', icon: 'carbon:warning' },
+      medium: { color: 'bg-green-100 text-green-800', icon: 'carbon:information' },
+      low: { color: 'bg-green-50 text-green-800', icon: 'carbon:checkmark' }
     };
-
     const config = priorityConfig[priority] || priorityConfig.medium;
-
     return (
       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
         <Icon icon={config.icon} className="h-3 w-3 mr-1" />
@@ -202,7 +198,7 @@ const ProjectModal = ({ project, mode, isOpen, onClose, onSave }) => {
               <div className="space-y-6">
                 <div>
                   <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <Icon icon="carbon:information" className="h-5 w-5 mr-2 text-blue-500" />
+                    <Icon icon="carbon:information" className="h-5 w-5 mr-2 text-green-500" />
                     Project Information
                   </h4>
                   <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 space-y-4 border border-gray-200">
@@ -248,7 +244,7 @@ const ProjectModal = ({ project, mode, isOpen, onClose, onSave }) => {
               <div className="space-y-6">
                 <div>
                   <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <Icon icon="carbon:calendar" className="h-5 w-5 mr-2 text-purple-500" />
+                    <Icon icon="carbon:calendar" className="h-5 w-5 mr-2 text-green-500" />
                     Timeline & Budget
                   </h4>
                   <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 space-y-4 border border-gray-200">
@@ -281,7 +277,7 @@ const ProjectModal = ({ project, mode, isOpen, onClose, onSave }) => {
 
                 <div>
                   <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <Icon icon="carbon:chart-line" className="h-5 w-5 mr-2 text-orange-500" />
+                    <Icon icon="carbon:chart-line" className="h-5 w-5 mr-2 text-green-500" />
                     Progress
                   </h4>
                   <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200">

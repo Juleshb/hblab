@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
-import Sidebar from './Sidebar';
-import Header from './Header';
+import React, { useState, useEffect } from 'react';
 import HBLCertificateGenerator from '../HBLCertificateGenerator';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
@@ -54,9 +52,6 @@ const CertificatesManagement = () => {
   const indexOfFirstCert = indexOfLastCert - certsPerPage;
   const currentCerts = certificates.slice(indexOfFirstCert, indexOfLastCert);
   const totalPages = Math.ceil(certificates.length / certsPerPage);
-
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-  const toggleMobileSidebar = () => setMobileSidebarOpen(!mobileSidebarOpen);
 
   // Handle Edit
   const handleEdit = (certificate) => {
@@ -282,57 +277,44 @@ const CertificatesManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <Sidebar 
-        sidebarOpen={sidebarOpen} 
-        mobileSidebarOpen={mobileSidebarOpen} 
-        toggleSidebar={toggleSidebar} 
-        toggleMobileSidebar={toggleMobileSidebar} 
-      />
-      {/* Main Content */}
-      <div className="flex-1">
-        {/* Header */}
-        <Header toggleMobileSidebar={toggleMobileSidebar} activeTab="certificates" />
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+    <>
+      <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-2 sm:p-4 lg:p-8 w-full">
           {/* Page Header */}
-          <div className="mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <div className="mb-4 sm:mb-0">
-                <h1 className="text-2xl font-bold text-gray-900">Certificates Management</h1>
-                <p className="text-gray-600 mt-1">Manage and generate certificates for your students</p>
+          <div className="mb-4 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+              <div className="mb-2 sm:mb-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Certificates Management</h1>
+                <p className="text-gray-600 mt-1 text-xs sm:text-sm">Manage and generate certificates for your students</p>
               </div>
               <button
                 onClick={() => setShowGenerator(true)}
-                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="inline-flex items-center px-3 sm:px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl text-xs sm:text-sm"
               >
-                <Icon icon="carbon:add" className="h-5 w-5 mr-2" />
+                <Icon icon="carbon:add" className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
                 Generate Certificate
               </button>
             </div>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <Icon icon="carbon:certificate" className="h-6 w-6 text-green-600" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 flex items-center">
+              <div className="p-2 sm:p-3 bg-green-100 rounded-lg">
+                <Icon icon="carbon:certificate" className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Certificates</p>
-                  <p className="text-2xl font-bold text-gray-900">{certificates.length}</p>
-                </div>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Certificates</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">{certificates.length}</p>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Icon icon="carbon:user" className="h-6 w-6 text-blue-600" />
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 flex items-center">
+              <div className="p-2 sm:p-3 bg-blue-100 rounded-lg">
+                <Icon icon="carbon:user" className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">This Month</p>
-                  <p className="text-2xl font-bold text-gray-900">
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">This Month</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">
                     {certificates.filter(cert => {
                       const certDate = new Date(cert.createdAt);
                       const now = new Date();
@@ -341,82 +323,78 @@ const CertificatesManagement = () => {
                   </p>
                 </div>
               </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 flex items-center">
+              <div className="p-2 sm:p-3 bg-purple-100 rounded-lg">
+                <Icon icon="carbon:download" className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Icon icon="carbon:download" className="h-6 w-6 text-purple-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Downloads</p>
-                  <p className="text-2xl font-bold text-gray-900">0</p>
-                </div>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Downloads</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">0</p>
               </div>
             </div>
           </div>
 
           {/* Certificates Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">All Certificates</h3>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">All Certificates</h3>
             </div>
-            
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipient</th>
-                    <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                    <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-2 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Recipient</th>
+                    <th className="hidden md:table-cell px-2 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th className="hidden md:table-cell px-2 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                    <th className="hidden md:table-cell px-2 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-2 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {loading ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-12">
+                      <td colSpan={5} className="text-center py-8 sm:py-12">
                         <div className="flex flex-col items-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                          <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-green-600"></div>
                           <p className="text-gray-500 mt-2">Loading certificates...</p>
                         </div>
                       </td>
                     </tr>
                   ) : currentCerts.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-12">
+                      <td colSpan={5} className="text-center py-8 sm:py-12">
                         <div className="flex flex-col items-center">
-                          <Icon icon="carbon:certificate" className="h-12 w-12 text-gray-300 mb-4" />
+                          <Icon icon="carbon:certificate" className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mb-4" />
                           <p className="text-gray-500">No certificates found</p>
-                          <p className="text-gray-400 text-sm">Generate your first certificate to get started</p>
+                          <p className="text-gray-400 text-xs sm:text-sm">Generate your first certificate to get started</p>
                         </div>
                       </td>
                     </tr>
                   ) : currentCerts.map((cert) => (
                     <tr key={cert.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{cert.recipientName}</div>
-                          <div className="md:hidden text-xs text-gray-500 mt-1">
+                          <div className="text-xs sm:text-sm font-medium text-gray-900">{cert.recipientName}</div>
+                          <div className="md:hidden text-[10px] text-gray-500 mt-1">
                             {cert.email}
                           </div>
-                          <div className="md:hidden text-xs text-gray-500">
+                          <div className="md:hidden text-[10px] text-gray-500">
                             {cert.courseName}
                           </div>
-                          <div className="md:hidden text-xs text-gray-500">
+                          <div className="md:hidden text-[10px] text-gray-500">
                             {new Date(cert.completionDate).toLocaleDateString()}
                           </div>
                         </div>
                       </td>
-                      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-700">{cert.email}</td>
-                      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-700">{cert.courseName}</td>
-                      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-700">{new Date(cert.completionDate).toLocaleDateString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="hidden md:table-cell px-2 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">{cert.email}</td>
+                      <td className="hidden md:table-cell px-2 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">{cert.courseName}</td>
+                      <td className="hidden md:table-cell px-2 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">{new Date(cert.completionDate).toLocaleDateString()}</td>
+                      <td className="px-2 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
                         <div className="flex flex-col sm:flex-row gap-2">
                           <button 
                             onClick={() => generatePDF(cert)} 
                             disabled={isGeneratingPDF}
-                            className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                            className={`inline-flex items-center px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                               isGeneratingPDF 
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                                 : 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -427,14 +405,14 @@ const CertificatesManagement = () => {
                           </button>
                           <button 
                             onClick={() => handleEdit(cert)}
-                            className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-all duration-200"
+                            className="inline-flex items-center px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-all duration-200"
                           >
                             <Icon icon="carbon:edit" className="h-3 w-3 mr-1" />
                             Edit
                           </button>
                           <button 
                             onClick={() => handleDelete(cert)}
-                            className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-all duration-200"
+                            className="inline-flex items-center px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-all duration-200"
                           >
                             <Icon icon="carbon:trash-can" className="h-3 w-3 mr-1" />
                             Delete
@@ -449,26 +427,26 @@ const CertificatesManagement = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-700">
+              <div className="px-4 sm:px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+                  <div className="text-xs sm:text-sm text-gray-700">
                     Showing {indexOfFirstCert + 1} to {Math.min(indexOfLastCert, certificates.length)} of {certificates.length} results
                   </div>
                   <div className="flex items-center space-x-2">
                     <button 
                       onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} 
                       disabled={currentPage === 1} 
-                      className="px-3 py-1.5 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Previous
                     </button>
-                    <span className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg">
+                    <span className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg">
                       Page {currentPage} of {totalPages}
                     </span>
                     <button 
                       onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} 
                       disabled={currentPage === totalPages} 
-                      className="px-3 py-1.5 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Next
                     </button>
@@ -478,7 +456,7 @@ const CertificatesManagement = () => {
             )}
           </div>
         </main>
-
+      </div>
         {/* Certificate Generator Modal */}
         {showGenerator && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -509,10 +487,9 @@ const CertificatesManagement = () => {
             </div>
           </div>
         )}
-
         {/* Edit Certificate Modal */}
         {showEditModal && editingCertificate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setShowEditModal(false); setEditingCertificate(null); }} />
             <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl mx-auto transform transition-all duration-300 ease-out border border-gray-100 overflow-hidden">
               {/* Gradient Header */}
@@ -656,7 +633,7 @@ const CertificatesManagement = () => {
 
         {/* Delete Confirmation Modal */}
         {showDeleteModal && deletingCertificate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setShowDeleteModal(false); setDeletingCertificate(null); }} />
             <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md mx-auto border border-gray-100 overflow-hidden">
               {/* Gradient Header */}
@@ -703,8 +680,7 @@ const CertificatesManagement = () => {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </>
   );
 };
 

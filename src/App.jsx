@@ -1,5 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { AuthProvider } from './assets/context/AuthContext.jsx'
+import { Routes, Route } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import ContainerPage from './components/ContainerPage'
 import Draft from './components/Footer'
@@ -17,7 +16,6 @@ import HBLCertificateGenerator from './components/HBLCertificateGenerator'
 import HBLCertificateModal from './components/HBLCertificateModal'
 import Certificates from './components/Certificate'
 import CertificateCheck from './components/CertificateCheck'
-import Verify from './components/VerifyCertificate'
 import AdminDashboard from './components/Admin/AdminDashboard'
 import DashboardHome from './components/Admin/DashboardHome'
 import UsersManagement from './components/Admin/UsersManagement'
@@ -28,104 +26,89 @@ import ApplicationsManagement from './components/Admin/ApplicationsManagement'
 import ProjectsManagement from './components/Admin/ProjectsManagement'
 import SettingsManagement from './components/Admin/SettingsManagement'
 import ModalDemo from './components/ModalDemo'
+import { UserDashboard } from './components/User'
+import { StudentDashboard, CareerApplications } from './components/Student';
+import StudentCertificates from './components/Student/StudentCertificates'
+import LessonsManagement from './components/Admin/LessonsManagement'
+import StudentLessons from './components/Student/StudentLessons';
 
 const App = () => {
+
   return (
     <div className="font-Poppins bg-Solitude text-sm">
-      <Router>
-        <AuthProvider>
-        <Routes>
-            {/* Public routes */}
-          <Route path='/' element={<ContainerPage/>}/>
-          <Route path='/landing' element={<ContainerPage/>}/>
-          <Route path='/draft' element={<Draft/>}/>
-          <Route path='/leadership' element={<LeadershipTeam/>}/>
-          <Route path="/get-started" element={<GetStartedForm />} />
-          <Route path="/terms-of-use" element={<TermsAndConditions />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/carrier" element={<Carrier />} />
-          <Route path="/apply/:id" element={<ApplyCarrier />} />
-            <Route path="/LoginForm" element={<LoginForm />} />
-            <Route path="/SignUpForm" element={<SignUpForm />} />
-          <Route path="/CertificateCheck" element={<CertificateCheck />}/>
-          <Route path="/modal-demo" element={<ModalDemo />} />
-        
-            {/* Protected routes - Admin only */}
-            <Route path="/admin" element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/dashboard" element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <DashboardHome />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/users" element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <UsersManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/trainers" element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <TrainersManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/careers" element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <CareersManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/certificates" element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <CertificatesManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/applications" element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <ApplicationsManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/projects" element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <ProjectsManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/settings" element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <SettingsManagement />
-              </ProtectedRoute>
-            } />
-            
-            {/* Protected routes - Admin and Student */}
-            <Route path="/AddCarrier" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'STUDENT']}>
-                <AddCarrier/>
-              </ProtectedRoute>
-            }/>
-            <Route path="/AdminCarrier" element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <AdminCarrier/>
-              </ProtectedRoute>
-            } />
-            <Route path="/CertificateModal" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'STUDENT']}>
-                <HBLCertificateModal />
-              </ProtectedRoute>
-            } />
-            <Route path="/CertificateGenerator" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'STUDENT']}>
-                <HBLCertificateGenerator />
-              </ProtectedRoute>
-            } />
-            <Route path="/Certficates" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'STUDENT']}>
-                <Certificates />
-              </ProtectedRoute>
-            } />
-        </Routes>
-        </AuthProvider>
-      </Router>
+      <Routes>
+        {/* Public routes */}
+        <Route path='/' element={<ContainerPage/>}/>
+        <Route path='/landing' element={<ContainerPage/>}/>
+        <Route path='/draft' element={<Draft/>}/>
+        <Route path='/leadership' element={<LeadershipTeam/>}/>
+        <Route path="/get-started" element={<GetStartedForm />} />
+        <Route path="/terms-of-use" element={<TermsAndConditions />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/carrier" element={<Carrier />} />
+        <Route path="/apply/:id" element={<ApplyCarrier />} />
+        <Route path="/LoginForm" element={<LoginForm />} />
+        <Route path="/SignUpForm" element={<SignUpForm />} />
+        <Route path="/CertificateCheck" element={<CertificateCheck />}/>
+        <Route path="/modal-demo" element={<ModalDemo />} />
+        {/* Protected routes - Admin only, nested under /admin */}
+        <Route path="/admin" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }>
+          <Route index element={<DashboardHome />} />
+          <Route path="dashboard" element={<DashboardHome />} />
+          <Route path="users" element={<UsersManagement />} />
+          <Route path="trainers" element={<TrainersManagement />} />
+          <Route path="careers" element={<CareersManagement />} />
+          <Route path="certificates" element={<CertificatesManagement />} />
+          <Route path="applications" element={<ApplicationsManagement />} />
+          <Route path="projects" element={<ProjectsManagement />} />
+          <Route path="settings" element={<SettingsManagement />} />
+          <Route path="lessons" element={<LessonsManagement />} />
+        </Route>
+        {/* Protected routes - Admin and Student */}
+        <Route path="/AddCarrier" element={
+          <ProtectedRoute allowedRoles={['ADMIN', 'STUDENT']}>
+            <AddCarrier/>
+          </ProtectedRoute>
+        }/>
+        <Route path="/AdminCarrier" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminCarrier/>
+          </ProtectedRoute>
+        } />
+        <Route path="/CertificateModal" element={
+          <ProtectedRoute allowedRoles={['ADMIN', 'STUDENT']}>
+            <HBLCertificateModal />
+          </ProtectedRoute>
+        } />
+        <Route path="/CertificateGenerator" element={
+          <ProtectedRoute allowedRoles={['ADMIN', 'STUDENT']}>
+            <HBLCertificateGenerator />
+          </ProtectedRoute>
+        } />
+        <Route path="/Certficates" element={
+          <ProtectedRoute allowedRoles={['ADMIN', 'STUDENT']}>
+            <Certificates />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={<UserDashboard />} />
+        <Route path="/student-dashboard" element={<StudentDashboard />} />
+        <Route path="/student/dashboard" element={<StudentDashboard />} />
+        <Route path="/student/certificates" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentCertificates />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/career-applications" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <CareerApplications />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/lessons" element={<StudentLessons />} />
+      </Routes>
     </div>
   )
 }

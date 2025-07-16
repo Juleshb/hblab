@@ -26,10 +26,10 @@ const Header = ({ toggleMobileSidebar, activeTab }) => {
             <div className="hidden sm:block w-1 h-8 bg-gradient-to-b from-green-500 to-green-600 rounded-full"></div>
             <div>
               <h1 className="text-xl font-bold text-gray-900 capitalize">
-                {activeTab.replace('-', ' ')}
+                {(activeTab || '').replace('-', ' ')}
               </h1>
               <p className="text-sm text-gray-500 hidden sm:block">
-                Manage your {activeTab.replace('-', ' ')} efficiently
+                Manage your {(activeTab || '').replace('-', ' ')} efficiently
               </p>
             </div>
           </div>

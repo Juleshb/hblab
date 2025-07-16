@@ -77,7 +77,8 @@ const HBLCertificateGenerator = () => {
     }
 
     try {
-      const response = await axios.post("/api/certificates", {
+      const token = localStorage.getItem('token');
+      const response = await axios.post("http://localhost:3000/api/certificates", {
         recipientName: certificateData.recipientName,
         email: certificateData.email,
         courseName: certificateData.courseName,
@@ -86,7 +87,7 @@ const HBLCertificateGenerator = () => {
         completionDate: certificateData.completionDate,
         skills: certificateData.skills,
         generatedBy: user?.id
-      });
+      }, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
 
       setCertificateData(prev => ({
         ...prev,

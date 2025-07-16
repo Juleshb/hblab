@@ -28,7 +28,7 @@ const UsersTable = ({ users, loading }) => {
 
 const TableHeader = ({ searchTerm, setSearchTerm }) => (
   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-    <h2 className="text-2xl font-bold text-teal-900 mb-4 sm:mb-0">Users Management</h2>
+    <h2 className="text-2xl font-bold text-green-900 mb-4 sm:mb-0">Users Management</h2>
     <div className="flex space-x-3">
       <SearchInput 
         searchTerm={searchTerm}
@@ -56,7 +56,7 @@ const SearchInput = ({ searchTerm, setSearchTerm }) => (
 );
 
 const AddUserButton = () => (
-  <button className="bg-teal-700 text-white px-4 py-2 rounded-md text-sm hover:bg-teal-800 flex items-center">
+  <button className="bg-green-700 text-white px-4 py-2 rounded-md text-sm hover:bg-green-800 flex items-center">
     <Icon icon="carbon:add" className="h-4 w-4 mr-2" />
     Add User
   </button>
@@ -64,7 +64,7 @@ const AddUserButton = () => (
 
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center h-64">
-    <Icon icon="eos-icons:loading" className="h-8 w-8 animate-spin text-teal-700" />
+    <Icon icon="eos-icons:loading" className="h-8 w-8 animate-spin text-green-700" />
   </div>
 );
 
@@ -122,27 +122,23 @@ const TableRow = ({ user }) => (
 );
 
 const RoleBadge = ({ role }) => (
-  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-    role === 'Admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-  }`}>
+  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800`}>
     {role}
   </span>
 );
 
 const StatusBadge = ({ status }) => (
-  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-    status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-  }`}>
+  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-green-50 text-green-800'}`}>
     {status}
   </span>
 );
 
 const EditButton = () => (
-  <button className="text-teal-600 hover:text-teal-900 mr-3">Edit</button>
+  <button className="text-green-600 hover:text-green-900 mr-3">Edit</button>
 );
 
 const DeleteButton = () => (
-  <button className="text-red-600 hover:text-red-900">Delete</button>
+  <button className="text-green-600 hover:text-green-900">Delete</button>
 );
 
 export default UsersTable;

@@ -39,14 +39,12 @@ const ProjectsTable = ({ projects, loading, onView, onEdit, onDelete, onStatusUp
   const getStatusBadge = (status) => {
     const statusConfig = {
       active: { color: 'bg-green-100 text-green-800', icon: 'carbon:play' },
-      completed: { color: 'bg-purple-100 text-purple-800', icon: 'carbon:checkmark' },
-      on_hold: { color: 'bg-yellow-100 text-yellow-800', icon: 'carbon:pause' },
-      cancelled: { color: 'bg-red-100 text-red-800', icon: 'carbon:close' },
-      planning: { color: 'bg-blue-100 text-blue-800', icon: 'carbon:planning' }
+      completed: { color: 'bg-green-200 text-green-800', icon: 'carbon:checkmark' },
+      on_hold: { color: 'bg-green-50 text-green-800', icon: 'carbon:pause' },
+      cancelled: { color: 'bg-green-300 text-green-800', icon: 'carbon:close' },
+      planning: { color: 'bg-green-100 text-green-800', icon: 'carbon:planning' }
     };
-
     const config = statusConfig[status] || statusConfig.planning;
-
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
         <Icon icon={config.icon} className="h-3 w-3 mr-1" />
@@ -56,10 +54,7 @@ const ProjectsTable = ({ projects, loading, onView, onEdit, onDelete, onStatusUp
   };
 
   const getProgressColor = (progress) => {
-    if (progress >= 80) return 'bg-green-500';
-    if (progress >= 60) return 'bg-blue-500';
-    if (progress >= 40) return 'bg-yellow-500';
-    return 'bg-red-500';
+    return 'bg-green-500';
   };
 
   const formatDate = (dateString) => {
@@ -198,7 +193,7 @@ const ProjectsTable = ({ projects, loading, onView, onEdit, onDelete, onStatusUp
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
                           <Icon icon="carbon:project" className="h-5 w-5 text-white" />
                         </div>
                       </div>
@@ -245,7 +240,7 @@ const ProjectsTable = ({ projects, loading, onView, onEdit, onDelete, onStatusUp
                       
                       <button
                         onClick={() => onEdit(project)}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded-md hover:bg-blue-50"
+                        className="text-green-600 hover:text-green-900 p-1 rounded-md hover:bg-green-50"
                         title="Edit Project"
                       >
                         <Icon icon="carbon:edit" className="h-4 w-4" />

@@ -69,8 +69,8 @@ const AddCarrier = () => {
 
     try {
       console.log("Submitting carrier:", newCarrier);
-      const response = await axios.post("https://umuhuza.store/carriers/", {
-        title: newCarrier.title ,
+      const response = await axios.post("http://localhost:3000/api/careers", {
+        title: newCarrier.title,
         type: newCarrier.type,
         location: newCarrier.location,
         description: newCarrier.description,
