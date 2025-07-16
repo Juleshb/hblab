@@ -1,5 +1,5 @@
 // Carrier.jsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import Navbar from './Navbar';
@@ -20,6 +20,7 @@ const Carrier = () => {
   ];
 
   const formatDate = (dateString) => {
+    if (!dateString) return '';
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
@@ -30,12 +31,20 @@ const Carrier = () => {
 
   useEffect(() => {
     const fetchJobs = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await axios.get('https://umuhuza.store/api/carriers');
-        setJobOpenings(response.data);
-        setLoading(false);
-      } catch (err) {
+        const response = await axios.get('http://localhost:3000/api/careers');
+        if (response.data && Array.isArray(response.data.careers)) {
+        setJobOpenings(response.data.careers);
+        } else {
+          setJobOpenings([]);
+          setError('No careers found.');
+        }
+      } catch {
         setError('Failed to load jobs');
+        setJobOpenings([]);
+      } finally {
         setLoading(false);
       }
     };
@@ -63,7 +72,10 @@ const Carrier = () => {
           {!loading && !error && (
             <section className="mb-16">
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {jobOpenings.map((job) => (
+                {jobOpenings.length === 0 ? (
+                  <div className="col-span-full text-center text-gray-400">No careers found.</div>
+                ) : (
+                  jobOpenings.map((job) => (
                   <div key={job.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                     <div className="flex justify-between items-start mb-4">
                       <h2 className="text-xl font-semibold text-gray-800">{job.title}</h2>
@@ -93,7 +105,8 @@ const Carrier = () => {
                       Apply Now
                     </button>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </section>
           )}
