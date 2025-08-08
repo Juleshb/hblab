@@ -5,6 +5,8 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import axios from "axios";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+
 const AddCarrier = () => {
   const [newCarrier, setNewCarrier] = useState({
     title: "",
@@ -69,17 +71,10 @@ const AddCarrier = () => {
 
     try {
       console.log("Submitting carrier:", newCarrier);
-      const response = await axios.post("http://localhost:3000/api/careers", {
-        title: newCarrier.title,
-        type: newCarrier.type,
-        location: newCarrier.location,
-        description: newCarrier.description,
-        requirements: newCarrier.requirements,
-        startDate: newCarrier.startDate,
-        endDate: newCarrier.endDate,
-        applicationLink: newCarrier.applicationLink,
-        imageUrl: newCarrier.imageUrl,
-      });
+      // Destructure to exclude 'currentRequirement' before sending
+      const { currentRequirement, ...carrierData } = newCarrier;
+      const response = await axios.post(`${BACKEND_URL}/api/careers`, carrierData);
+      
       console.log(response.data);
       setNewCarrier({
         title: "",
@@ -279,17 +274,24 @@ const AddCarrier = () => {
                     type="file"
                     accept="image/*"
                     id="imageFile"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        try {
+                          const res = await axios.post(`${BACKEND_URL}/api/upload`, formData, {
+                            headers: {
+                              'Content-Type': 'multipart/form-data',
+                            },
+                          });
                           setNewCarrier({
                             ...newCarrier,
-                            imageUrl: reader.result,
+                            imageUrl: res.data.url, // Save the returned URL
                           });
-                        };
-                        reader.readAsDataURL(file);
+                        } catch (err) {
+                          setErrorMessage("Image upload failed.");
+                        }
                       }
                     }}
                     className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -300,7 +302,7 @@ const AddCarrier = () => {
                         Image Preview:
                       </p>
                       <img
-                        src={newCarrier.imageUrl}
+                        src={`${BACKEND_URL}${newCarrier.imageUrl}`}
                         alt="Preview"
                         className="w-full max-w-sm rounded shadow"
                       />

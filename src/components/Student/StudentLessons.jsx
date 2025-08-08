@@ -1,12 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../../assets/context/AuthContext';
+import React, { useEffect, useState, useMemo } from 'react';
+import { StudentLayout } from './index';
 import { Icon } from '@iconify/react';
+import { useAuth } from '../../assets/context/AuthContext';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const StudentLessons = () => {
   const { user } = useAuth();
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('ALL'); // ALL, COMPLETED, IN_PROGRESS
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -19,6 +25,7 @@ const StudentLessons = () => {
         setLessons(data.lessons || []);
       } catch (err) {
         setError('Failed to load lessons.');
+        toast.error('Failed to load lessons.');
       } finally {
         setLoading(false);
       }
@@ -26,46 +33,99 @@ const StudentLessons = () => {
     if (user?.id) fetchLessons();
   }, [user]);
 
+  const filteredLessons = useMemo(() => {
+    return lessons
+      .filter(lesson => {
+        if (filterStatus === 'ALL') return true;
+        return filterStatus === 'COMPLETED' ? lesson.completed : !lesson.completed;
+      })
+      .filter(lesson =>
+        lesson.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+  }, [lessons, searchTerm, filterStatus]);
+
   return (
-    <div className="p-4 sm:p-8">
-      <h1 className="text-2xl font-bold text-green-900 mb-4">My Lessons</h1>
-      <div className="bg-white rounded-lg shadow border border-green-100 p-4">
+    <StudentLayout title="My Lessons">
+      <div className="p-4 sm:p-6">
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-200">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="w-full md:w-1/3">
+              <h1 className="text-xl font-bold text-gray-800">Your Enrolled Courses</h1>
+              <p className="text-xs text-gray-500">Continue your learning journey.</p>
+            </div>
+            <div className="w-full md:w-2/3 flex flex-col md:flex-row items-center gap-3">
+              <div className="w-full relative">
+                <Icon icon="carbon:search" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search lessons..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-100 focus:border-green-500 transition-all text-sm"
+                />
+              </div>
+              <div className="w-full md:w-auto flex items-center gap-2">
+                <select
+                  value={filterStatus}
+                  onChange={e => setFilterStatus(e.target.value)}
+                  className="w-full md:w-auto px-3 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-100 focus:border-green-500 transition-all text-sm appearance-none bg-white"
+                >
+                  <option value="ALL">All</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         {loading ? (
-          <div className="flex justify-center items-center h-32">
-            <Icon icon="eos-icons:loading" className="h-8 w-8 animate-spin text-green-700" />
+          <div className="text-center py-10">
+            <Icon icon="eos-icons:loading" className="h-10 w-10 text-green-700 animate-spin inline-block" />
           </div>
         ) : error ? (
-          <div className="text-center text-red-500 py-8">{error}</div>
-        ) : lessons.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10">
-            <Icon icon="carbon:book" className="w-12 h-12 mb-3 text-gray-300" />
-            <p className="text-base text-gray-500 mb-1 font-semibold">No lessons assigned yet.</p>
-            <p className="text-xs text-gray-400">Check back later for new lessons.</p>
+          <div className="text-center py-10 text-red-500 bg-red-50 rounded-xl p-6">{error}</div>
+        ) : filteredLessons.length === 0 ? (
+          <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-xl p-6">
+            <Icon icon="carbon:book" className="h-12 w-12 mx-auto text-gray-300 mb-2" />
+            <p className="font-semibold">No lessons found.</p>
+            <p className="text-xs">Try adjusting your search or filters.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-green-100 text-xs rounded-xl overflow-hidden">
-              <thead className="bg-green-50">
-                <tr>
-                  <th className="px-2 py-2 text-left font-semibold text-green-700 uppercase tracking-wider">Title</th>
-                  <th className="px-2 py-2 text-left font-semibold text-green-700 uppercase tracking-wider">Description</th>
-                  <th className="px-2 py-2 text-left font-semibold text-green-700 uppercase tracking-wider">Progress</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-green-50">
-                {lessons.map(lesson => (
-                  <tr key={lesson.id} className="hover:bg-green-50/60 transition">
-                    <td className="px-2 py-2 whitespace-nowrap font-medium text-gray-900">{lesson.title}</td>
-                    <td className="px-2 py-2 whitespace-nowrap text-gray-700 max-w-xs truncate">{lesson.description}</td>
-                    <td className="px-2 py-2 whitespace-nowrap text-green-800 font-semibold">{lesson.progress ? `${lesson.progress}%` : '0%'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredLessons.map(lesson => (
+              <div key={lesson.id} className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 ease-in-out overflow-hidden border border-gray-100 flex flex-col">
+                <div className="p-5 flex-grow">
+                  <div className="flex justify-between items-start">
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${lesson.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                      {lesson.completed ? 'Completed' : 'In Progress'}
+                    </span>
+                    <span className="text-sm font-medium text-gray-500">{lesson.category || 'General'}</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800 mt-4 mb-2 line-clamp-2">{lesson.title}</h3>
+                  <div className="flex items-center text-gray-500 text-sm mb-4">
+                    <Icon icon="carbon:time" className="mr-2" />
+                    <span>{lesson.duration || 'N/A'}</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+                    <div className="bg-green-600 h-1.5 rounded-full" style={{ width: `${lesson.progress || 0}%` }}></div>
+                  </div>
+                  <p className="text-xs text-gray-400 text-right">{lesson.progress || 0}% complete</p>
+                </div>
+                <div className="bg-gray-50 px-5 py-3 border-t border-gray-100">
+                  <button
+                    className="w-full text-center bg-gradient-to-r from-green-700 to-green-800 hover:from-green-800 hover:to-green-900 text-white font-semibold py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    onClick={() => navigate(`/student/lessons/${lesson.id}`)}
+                  >
+                    {lesson.completed ? 'Review Course' : lesson.progress === 0 ? 'Start Lesson' : 'Continue Lesson'}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
-    </div>
+    </StudentLayout>
   );
 };
 

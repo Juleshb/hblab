@@ -5,6 +5,7 @@ import { Icon } from '@iconify/react';
 import { Link } from 'react-router-dom';
 import ClientModal from '../ClientModal';
 import toast from 'react-hot-toast';
+import CareerCard from '../CareerCard'; // Import the new component
 
 const CareerApplications = () => {
   const { user } = useAuth();
@@ -27,13 +28,13 @@ const CareerApplications = () => {
   });
   // Pagination for careers (already present)
   const [careersPage, setCareersPage] = useState(1);
-  const careersPerPage = 5;
+  const careersPerPage = 8;
   const totalCareersPages = Math.ceil(careers.length / careersPerPage);
   const paginatedCareers = careers.slice((careersPage - 1) * careersPerPage, careersPage * careersPerPage);
 
   // Pagination for applications
   const [applicationsPage, setApplicationsPage] = useState(1);
-  const applicationsPerPage = 5;
+  const applicationsPerPage = 4;
   const totalApplicationsPages = Math.ceil(applications.length / applicationsPerPage);
   const paginatedApplications = applications.slice((applicationsPage - 1) * applicationsPerPage, applicationsPage * applicationsPerPage);
 
@@ -45,6 +46,8 @@ const CareerApplications = () => {
     'Resume Upload',
     'Review & Submit',
   ];
+
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
   // Fetch all careers
   useEffect(() => {
@@ -131,7 +134,7 @@ const CareerApplications = () => {
       if (formData.resume) {
         const fileData = new FormData();
         fileData.append('file', formData.resume);
-        const uploadRes = await fetch('http://localhost:3000/api/upload', {
+        const uploadRes = await fetch(`${BACKEND_URL}/api/upload`, {
           method: 'POST',
           body: fileData,
         });
@@ -184,64 +187,42 @@ const CareerApplications = () => {
             <p className="text-base text-gray-500 mb-1 font-semibold">No careers found.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto w-full">
-            <table className="min-w-full divide-y divide-green-100 text-xs rounded-xl overflow-hidden">
-              <thead className="bg-green-50 sticky top-0 z-10">
-                <tr>
-                  <th className="px-2 py-2 text-left font-semibold text-green-700 uppercase tracking-wider">Title</th>
-                  <th className="px-2 py-2 text-left font-semibold text-green-700 uppercase tracking-wider">Description</th>
-                  <th className="px-2 py-2 text-left font-semibold text-green-700 uppercase tracking-wider">Location</th>
-                  <th className="px-2 py-2 text-left font-semibold text-green-700 uppercase tracking-wider">Type</th>
-                  <th className="px-2 py-2 text-left font-semibold text-green-700 uppercase tracking-wider">Start</th>
-                  <th className="px-2 py-2 text-left font-semibold text-green-700 uppercase tracking-wider">End</th>
-                  <th className="px-2 py-2 text-left font-semibold text-green-700 uppercase tracking-wider">Action</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-green-50">
-                {paginatedCareers.map(career => (
-                  <tr key={career.id} className="hover:bg-green-50/60 transition">
-                    <td className="px-2 py-2 whitespace-nowrap font-medium text-gray-900">{career.title}</td>
-                    <td className="px-2 py-2 whitespace-nowrap text-gray-700 max-w-xs truncate">{career.description}</td>
-                    <td className="px-2 py-2 whitespace-nowrap text-gray-700">{career.location}</td>
-                    <td className="px-2 py-2 whitespace-nowrap text-gray-700">{career.type}</td>
-                    <td className="px-2 py-2 whitespace-nowrap text-gray-500">{career.startDate ? new Date(career.startDate).toLocaleDateString() : ''}</td>
-                    <td className="px-2 py-2 whitespace-nowrap text-gray-500">{career.endDate ? new Date(career.endDate).toLocaleDateString() : ''}</td>
-                    <td className="px-2 py-2 whitespace-nowrap">
-                      <button
-                        onClick={() => handleOpenModal(career)}
-                        className="inline-block bg-green-900 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors"
-                      >
-                        Apply
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              {/* Pagination controls */}
-              <tfoot>
-                <tr>
-                  <td colSpan={7} className="pt-4">
-                    <div className="flex flex-wrap justify-center items-center gap-2">
-                      <button
-                        onClick={() => setCareersPage(p => Math.max(1, p - 1))}
-                        disabled={careersPage === 1}
-                        className="px-3 py-1 rounded bg-green-100 text-green-800 font-semibold disabled:opacity-50"
-                      >
-                        Previous
-                      </button>
-                      <span className="text-green-900 font-semibold">Page {careersPage} of {totalCareersPages}</span>
-                      <button
-                        onClick={() => setCareersPage(p => Math.min(totalCareersPages, p + 1))}
-                        disabled={careersPage === totalCareersPages}
-                        className="px-3 py-1 rounded bg-green-100 text-green-800 font-semibold disabled:opacity-50"
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+          <div className="p-2 sm:p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              {paginatedCareers.map(career => (
+                <CareerCard 
+                  key={career.id}
+                  career={career}
+                  BACKEND_URL={BACKEND_URL}
+                  actions={
+                    <button
+                      onClick={() => handleOpenModal(career)}
+                      className="w-full bg-gradient-to-r from-green-700 to-green-800 hover:from-green-800 hover:to-green-900 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ease-in-out shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    >
+                      View & Apply
+                    </button>
+                  }
+                />
+              ))}
+            </div>
+            {/* Pagination controls */}
+            <div className="flex flex-wrap justify-center items-center gap-3 mt-8">
+              <button
+                onClick={() => setCareersPage(p => Math.max(1, p - 1))}
+                disabled={careersPage === 1}
+                className="px-3 py-1 rounded bg-green-100 text-green-800 font-semibold disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-green-900 font-semibold">Page {careersPage} of {totalCareersPages}</span>
+              <button
+                onClick={() => setCareersPage(p => Math.min(totalCareersPages, p + 1))}
+                disabled={careersPage === totalCareersPages}
+                className="px-3 py-1 rounded bg-green-100 text-green-800 font-semibold disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

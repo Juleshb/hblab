@@ -9,39 +9,42 @@ const EditProfileModal = ({ open, onClose, profile, onSave, onNotify }) => {
     specialization: profile?.specialization || '',
     bio: profile?.bio || '',
     phone: profile?.phone || '',
-    avatar: profile?.avatar || '',
+    sex: profile?.sex || '',
+    address: profile?.address || '',
+    dateOfBirth: profile?.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : '',
+    nationality: profile?.nationality || '',
+    image: null,
   });
+  const [imagePreview, setImagePreview] = useState(profile?.imageUrl || '');
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleAvatarFile = async (e) => {
+  const handleImageFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setUploading(true);
-    const data = new FormData();
-    data.append('avatar', file);
-    try {
-      const res = await axios.post(`/api/users/${profile.id}/avatar`, data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setForm(f => ({ ...f, avatar: res.data.url }));
-    } catch (err) {
-      toast.error('Failed to upload image. Please try again.', { icon: '🖼️' });
-      if (onNotify) onNotify('Image upload failed');
-    } finally {
-      setUploading(false);
-    }
+    setForm(f => ({ ...f, image: file }));
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await onSave(form);
-    setSaving(false);
+    const formData = new FormData();
+    Object.entries(form).forEach(([key, value]) => {
+      if (key === 'image' && value instanceof File) {
+        formData.append('image', value);
+      } else {
+        formData.append(key, value);
+      }
+    });
+    try {
+      await onSave(formData);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!open) return null;
@@ -57,7 +60,7 @@ const EditProfileModal = ({ open, onClose, profile, onSave, onNotify }) => {
           &times;
         </button>
         <h2 className="text-xl font-bold text-green-900 mb-4">Edit Profile</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto pr-2">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Name</label>
             <input
@@ -92,19 +95,17 @@ const EditProfileModal = ({ open, onClose, profile, onSave, onNotify }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Avatar</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Profile Image</label>
             <div className="flex items-center gap-3">
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleAvatarFile}
+                onChange={handleImageFile}
                 className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
-                disabled={uploading}
               />
-              {uploading && <span className="text-xs text-gray-400">Uploading...</span>}
             </div>
-            {form.avatar && (
-              <img src={form.avatar} alt="Avatar Preview" className="w-16 h-16 rounded-full mt-2 border object-cover" />
+            {imagePreview && (
+              <img src={imagePreview} alt="Profile Preview" className="w-16 h-16 rounded-full mt-2 border object-cover" />
             )}
           </div>
           <div>
@@ -125,6 +126,50 @@ const EditProfileModal = ({ open, onClose, profile, onSave, onNotify }) => {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
               rows={3}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Sex</label>
+            <select
+              name="sex"
+              value={form.sex}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+            >
+              <option value="">Select...</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Date of Birth</label>
+            <input
+              type="date"
+              name="dateOfBirth"
+              value={form.dateOfBirth}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Address</label>
+            <input
+              type="text"
+              name="address"
+              value={form.address}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Nationality</label>
+            <input
+              type="text"
+              name="nationality"
+              value={form.nationality}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
             />
           </div>
           <div className="flex justify-end gap-2 mt-4">

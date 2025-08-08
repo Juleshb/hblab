@@ -6,6 +6,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
+import CareerCard from './CareerCard'; // Import the reusable component
 
 const Carrier = () => {
   const navigate = useNavigate();
@@ -76,35 +77,19 @@ const Carrier = () => {
                   <div className="col-span-full text-center text-gray-400">No careers found.</div>
                 ) : (
                   jobOpenings.map((job) => (
-                  <div key={job.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                    <div className="flex justify-between items-start mb-4">
-                      <h2 className="text-xl font-semibold text-gray-800">{job.title}</h2>
-                      <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                        {job.type}
-                      </span>
-                    </div>
-                    <p className="text-gray-600 mb-4 flex items-center">
-                      <Icon icon="carbon:location" className="mr-2" />
-                      {job.location}
-                    </p>
-                    <p className="text-gray-700 mb-6">{job.description}</p>
-
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-500">
-                        <span className="font-medium">Start Date:</span> {formatDate(job.startDate)}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        <span className="font-medium">End Date:</span> {formatDate(job.endDate)}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => handleApply(job.id)}
-                      className="w-full bg-green-900 hover:bg-green-700 text-white py-2 px-4 rounded-md transition-colors"
-                    >
-                      Apply Now
-                    </button>
-                  </div>
+                    <CareerCard
+                      key={job.id}
+                      career={job}
+                      BACKEND_URL={'http://localhost:3000'} // You might want to use an env variable here
+                      actions={
+                        <button
+                          onClick={() => handleApply(job.id)}
+                          className="w-full bg-gradient-to-r from-green-700 to-green-800 hover:from-green-800 hover:to-green-900 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ease-in-out shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                        >
+                          Apply Now
+                        </button>
+                      }
+                    />
                   ))
                 )}
               </div>
