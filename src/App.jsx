@@ -31,11 +31,17 @@ import { StudentDashboard, CareerApplications } from './components/Student';
 import StudentCertificates from './components/Student/StudentCertificates'
 import LessonsManagement from './components/Admin/LessonsManagement'
 import StudentLessons from './components/Student/StudentLessons';
+import StudentProgress from './components/Student/StudentProgress';
+import StudentProfile from './components/Student/StudentProfile';
+import { Toaster } from 'react-hot-toast';
+import LessonDetailsView from './components/Admin/LessonDetailsView';
+import StudentLessonDetail from './components/Student/StudentLessonDetail';
 
 const App = () => {
 
   return (
     <div className="font-Poppins bg-Solitude text-sm">
+      <Toaster position="top-right" />
       <Routes>
         {/* Public routes */}
         <Route path='/' element={<ContainerPage/>}/>
@@ -67,6 +73,7 @@ const App = () => {
           <Route path="projects" element={<ProjectsManagement />} />
           <Route path="settings" element={<SettingsManagement />} />
           <Route path="lessons" element={<LessonsManagement />} />
+          <Route path="lessons/:id" element={<LessonDetailsView />} />
         </Route>
         {/* Protected routes - Admin and Student */}
         <Route path="/AddCarrier" element={
@@ -107,7 +114,26 @@ const App = () => {
             <CareerApplications />
           </ProtectedRoute>
         } />
-        <Route path="/student/lessons" element={<StudentLessons />} />
+        <Route path="/student/lessons" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentLessons />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/lessons/:lessonId" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentLessonDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/progress" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentProgress />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/profile" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentProfile />
+          </ProtectedRoute>
+        } />
       </Routes>
     </div>
   )
