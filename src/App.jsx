@@ -3,6 +3,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import ContainerPage from './components/ContainerPage'
 import Draft from './components/Footer'
 import LeadershipTeam from './components/LeadershipTeam'
+import StudioHero from './components/Studio/StudioHero'
+import StudioPortfolio from './components/Studio/StudioPortfolio'
 import GetStartedForm from "./components/GetStartedForm";
 import TermsAndConditions from './components/Terms&Conditions'
 import PrivacyPolicy from './components/PrivacyPolicy'
@@ -48,6 +50,8 @@ const App = () => {
         <Route path='/landing' element={<ContainerPage/>}/>
         <Route path='/draft' element={<Draft/>}/>
         <Route path='/leadership' element={<LeadershipTeam/>}/>
+        <Route path='/studio' element={<StudioHero/>}/>
+        <Route path='/portfolio' element={<StudioPortfolio/>}/>
         <Route path="/get-started" element={<GetStartedForm />} />
         <Route path="/terms-of-use" element={<TermsAndConditions />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
