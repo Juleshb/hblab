@@ -730,7 +730,7 @@ const StudentLessonDetail = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Topics Overview */}
             <div className="bg-white rounded-3xl shadow-xl border border-gray-100 mb-8">
