@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Carrier {
+  id              Int           @id @default(autoincrement())
+  title           String
+  type            String       
+  location        String
+  description     String
+  requirements    String[]
+  startDate       DateTime
+  endDate         DateTime
+  applicationLink String?
+  imageUrl        String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  password     String
+  name         String?
+  role         UserRole      @default(STUDENT)
+  specialization String?
+  bio          String?
+  phone        String?
+  avatar       String?
+  image        String? // profile image filename
+  cover        String? // NEW: cover image URL
+  status       String        @default("Active")
+  sex          String? // NEW: sex/gender
+  address      String? // NEW: address
+  dateOfBirth  DateTime? // NEW: date of birth
+  nationality  String? // NEW: nationality
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  lessons      Lesson[]
+  applications CareerApplication[]
+  lessonProgress LessonProgress[] // NEW: relation to progress
+  enrolledCourses EnrolledCourse[] // NEW: relation to enrolled courses
+}
+
+enum UserRole {
+  APPLICANT
+  STUDENT
+  ADMIN
+}
+
+model Certificate {
+  id             Int       @id @default(autoincrement())
+  recipientName  String
+  email          String
+  courseName     String
+  duration       String
+  dateRange      String
+  completionDate DateTime
+  skills         String[]
+  certificateId  String    @unique
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([email])
+  @@index([certificateId])
+}
+
+model CareerApplication {
+  id              Int      @id @default(autoincrement())
+  fullName        String
+  email           String
+  phone           String?
+  location        String?
+  careerTitle     String
+  careerDepartment String?
+  experienceLevel String?
+  education       String?
+  coverLetter     String?
+  resumeUrl       String?
+  status          ApplicationStatus @default(pending)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([email])
+  @@index([status])
+  @@index([userId])
+}
+
+model Project {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String?
+  manager     String
+  teamSize    Int           @default(0)
+  status      ProjectStatus @default(planning)
+  progress    Int           @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Float         @default(0)
+  client      String?
+  priority    ProjectPriority @default(medium)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status])
+  @@index([priority])
+}
+
+enum ApplicationStatus {
+  pending
+  approved
+  rejected
+  under_review
+}
+
+enum ProjectStatus {
+  planning
+  active
+  on_hold
+  completed
+  cancelled
+}
+
+enum ProjectPriority {
+  low
+  medium
+  high
+}
+
+model Assignment {
+  id            Int      @id @default(autoincrement())
+  question      String
+  type          AssignmentType
+  topic         Topic    @relation(fields: [topicId], references: [id])
+  topicId       Int
+  mark          Int
+  options       MultipleChoiceOption[]
+  correctOption Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model MultipleChoiceOption {
+  id           Int      @id @default(autoincrement())
+  text         String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  assignmentId Int
+}
+
+enum AssignmentType {
+  MULTIPLE_CHOICE
+  SHORT_ANSWER
+  ESSAY
+}
+
+model Topic {
+  id          Int      @id @default(autoincrement())
+  title       String
+  documentUrl String?
+  lesson      Lesson   @relation(fields: [lessonId], references: [id])
+  lessonId    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  assignments Assignment[]
+}
+
+model Lesson {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id])
+  topics      Topic[]
+  lessonProgress LessonProgress[] // NEW: relation to progress
+}
+
+model LessonProgress {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  lesson    Lesson   @relation(fields: [lessonId], references: [id])
+  lessonId  Int
+  progress  Int      // 0-100
+  completed Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  @@unique([userId, lessonId])
+}
+
+model EnrolledCourse {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  courseId  Int      // If you have a Course model, otherwise use lessonId
+  enrolledAt DateTime @default(now())
+}
+ 
