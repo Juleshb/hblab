@@ -219,7 +219,12 @@ const HbmsConversations = ({ startWorkerId = '' }) => {
                       {message.asDepartment ? message.departmentName : message.author}
                       {message.asDepartment ? ` · via ${message.author}` : ''}
                     </p>
-                    <p className="mt-0.5 text-sm">{message.body}</p>
+                    {message.audio?.url ? (
+                      <audio controls preload="none" src={`http://localhost:3000${message.audio.url}`} className="mt-1 h-9 max-w-full" />
+                    ) : null}
+                    {message.body === 'Voice message expired' && !message.audio ? (
+                      <p className={`mt-0.5 text-sm italic ${message.mine && !message.asDepartment ? 'text-emerald-100' : 'text-gray-500'}`}>Voice message expired</p>
+                    ) : message.body ? <p className="mt-0.5 text-sm">{message.body}</p> : null}
                     <p className={`mt-1 text-[10px] ${message.mine && !message.asDepartment ? 'text-emerald-100' : 'text-gray-400'}`}>{formatWhen(message.createdAt)}</p>
                   </div>
                 </li>

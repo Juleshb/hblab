@@ -14,7 +14,7 @@ const packages = [
       "1 full HD video",
       "All soft copy photos & videos",
     ],
-    gradient: "from-[#326567] to-[#166c44]",
+    gradient: "from-[#326567] to-[#2e6b57]",
   },
   {
     name: "Basic",
@@ -28,7 +28,7 @@ const packages = [
       "1 full HD video",
       "All soft copy photos & videos",
     ],
-    gradient: "from-[#166c44] to-[#326567]",
+    gradient: "from-[#2e6b57] to-[#326567]",
   },
   {
     name: "Medium",
@@ -43,7 +43,7 @@ const packages = [
       "1 full HD video",
       "All soft copy photos & videos",
     ],
-    gradient: "from-[#310979] to-[#166c44]",
+    gradient: "from-[#310979] to-[#2e6b57]",
   },
   {
     name: "Premium",
@@ -58,7 +58,7 @@ const packages = [
       "1 full HD video",
       "All soft copy photos & videos",
     ],
-    gradient: "from-[#166c44] to-[#310979]",
+    gradient: "from-[#2e6b57] to-[#310979]",
   },
   {
     name: "Ultra Premium",
@@ -89,7 +89,7 @@ const packages = [
       "1 full HD video",
       "Pre-wedding shoot",
     ],
-    gradient: "from-[#f6c343] to-[#166c44]",
+    gradient: "from-[#f6c343] to-[#2e6b57]",
   },
 ];
 
@@ -171,7 +171,7 @@ const StudioPricing = () => {
                   onClick={() => navigate("/get-started")}
                   className={`w-full rounded-xl py-3.5 px-6 text-sm font-semibold uppercase tracking-wider transition ${
                     pkg.popular
-                      ? "bg-gradient-to-r from-[#166c44] to-[#326567] text-white shadow-lg hover:shadow-xl"
+                      ? "bg-gradient-to-r from-[#2e6b57] to-[#326567] text-white shadow-lg hover:shadow-xl"
                       : "border-2 border-green-900/30 bg-white text-green-900 hover:border-green-900 hover:bg-green-900 hover:text-white"
                   }`}
                 >

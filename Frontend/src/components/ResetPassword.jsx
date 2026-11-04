@@ -46,15 +46,15 @@ const ResetPassword = () => {
           <p className="mt-1 text-sm text-gray-500">This replaces the password for the account in the reset email.</p>
           {!token ? <p className="mt-4 text-sm text-red-600">This reset link is missing its token. Ask for a new email.</p> : null}
           <label className="mt-5 block text-xs font-semibold text-gray-700" htmlFor="password">New password</label>
-          <input id="password" type="password" required minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1 w-full rounded-lg border-2 border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#16562e]" />
+          <input id="password" type="password" required minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1 w-full rounded-lg border-2 border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2e6b57]" />
           <label className="mt-3 block text-xs font-semibold text-gray-700" htmlFor="confirm">Confirm password</label>
-          <input id="confirm" type="password" required minLength={8} value={confirm} onChange={(event) => setConfirm(event.target.value)} className="mt-1 w-full rounded-lg border-2 border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#16562e]" />
+          <input id="confirm" type="password" required minLength={8} value={confirm} onChange={(event) => setConfirm(event.target.value)} className="mt-1 w-full rounded-lg border-2 border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2e6b57]" />
           {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
           {message ? <p className="mt-3 text-sm text-emerald-700">{message}</p> : null}
-          <button type="submit" disabled={loading || !token} className="mt-4 w-full rounded-lg bg-[#16562e] py-2 text-sm font-semibold text-white disabled:opacity-60">
+          <button type="submit" disabled={loading || !token} className="mt-4 w-full rounded-lg bg-[#2e6b57] py-2 text-sm font-semibold text-white disabled:opacity-60">
             {loading ? 'Saving…' : 'Save password'}
           </button>
-          <Link to="/LoginForm" className="mt-4 block text-center text-sm text-[#16562e]">Back to sign in</Link>
+          <Link to="/LoginForm" className="mt-4 block text-center text-sm text-[#2e6b57]">Back to sign in</Link>
         </form>
       </div>
     </>

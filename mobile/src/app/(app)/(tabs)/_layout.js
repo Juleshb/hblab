@@ -49,7 +49,7 @@ export default function TabLayout() {
           borderTopWidth: 0,
           backgroundColor: 'transparent',
           borderRadius: 32,
-          shadowColor: '#0d3b2e',
+          shadowColor: '#193a2f',
           shadowOpacity: 0.18,
           shadowRadius: 22,
           shadowOffset: { width: 0, height: 10 },
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   slotAndroid: { minWidth: 48, height: 26, paddingHorizontal: 10 },
-  slotOn: { backgroundColor: '#b7ebc8' },
+  slotOn: { backgroundColor: colors.accentMuted },
   slotGlass: { backgroundColor: 'rgba(255,255,255,0.72)' },
   glass: { flex: 1, borderRadius: 32, overflow: 'hidden' },
   sheen: {

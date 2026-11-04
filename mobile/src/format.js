@@ -21,9 +21,7 @@ export function isOpenStatus(status) {
 }
 
 export function apiError(error, fallback) {
-  if (!error?.response && (error?.message === 'Network Error' || error?.code === 'ERR_NETWORK')) {
-    return 'Cannot reach the server. Keep this phone on the same Wi-Fi as the computer running HBMS.';
-  }
+  if (!error?.response) return '';
   return error?.response?.data?.error || error?.message || fallback;
 }
 
@@ -39,6 +37,41 @@ export function formatChatTime(value) {
   yesterday.setDate(now.getDate() - 1);
   if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+export function formatLastSeen(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const time = date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) return `last seen today at ${time}`;
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return `last seen yesterday at ${time}`;
+  const day = date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() === now.getFullYear() ? undefined : 'numeric',
+  });
+  return `last seen ${day} at ${time}`;
+}
+
+export function formatMessageDay(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) return 'Today';
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return date.toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: date.getFullYear() === now.getFullYear() ? undefined : 'numeric',
+  });
 }
 
 export function formatWhen(value) {

@@ -1,15 +1,67 @@
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
+const multer = require('multer');
 const { prisma, handlePrismaError, writeAudit } = require('./utils');
 const { attachAccess } = require('./access');
 const { notifyWorkers } = require('./notify');
 const { publishUsers, publishEmployees, isUserConnected } = require('./live');
+const { firstUrl, readLinkPreview, presentLink } = require('./linkPreview');
 const { sendPush } = require('./push');
+const { EXPIRED_LABEL, voiceExpired } = require('./voiceExpiry');
 
 const router = express.Router();
 router.use(attachAccess);
 
+const voiceDir = path.join(__dirname, '../../../uploads');
+fs.mkdirSync(voiceDir, { recursive: true });
+
+function audioExtension(file) {
+  const fromName = path.extname(file.originalname || '').toLowerCase();
+  if (/^\.(m4a|aac|mp3|wav|webm|ogg|mp4)$/.test(fromName)) return fromName;
+  const type = String(file.mimetype || '').toLowerCase();
+  if (type.includes('webm')) return '.webm';
+  if (type.includes('ogg')) return '.ogg';
+  if (type.includes('wav')) return '.wav';
+  if (type.includes('mpeg') || type.includes('mp3')) return '.mp3';
+  return '.m4a';
+}
+
+function isVoiceUpload(file) {
+  const type = String(file.mimetype || '').toLowerCase().split(';')[0].trim();
+  if (type.startsWith('audio/') || type === 'video/webm' || type === 'application/octet-stream') return true;
+  return /^\.(m4a|aac|mp3|wav|webm|ogg|mp4)$/.test(path.extname(file.originalname || '').toLowerCase());
+}
+
+const voiceUpload = multer({
+  storage: multer.diskStorage({
+    destination: voiceDir,
+    filename: (req, file, cb) => {
+      cb(null, `voice-${Date.now()}-${crypto.randomBytes(6).toString('hex')}${audioExtension(file)}`);
+    },
+  }),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    cb(isVoiceUpload(file) ? null : new Error('Record a voice message'), isVoiceUpload(file));
+  },
+});
+
+function acceptVoice(req, res, next) {
+  voiceUpload.single('audio')(req, res, (error) => {
+    if (!error) return next();
+    const tooBig = error.code === 'LIMIT_FILE_SIZE';
+    res.status(400).json({ error: tooBig ? 'That voice message is too long' : 'Could not save the voice message' });
+  });
+}
+
+function discardUpload(filePath) {
+  if (!filePath) return;
+  fs.promises.unlink(filePath).catch(() => {});
+}
+
 const personSelect = { id: true, firstName: true, lastName: true, staffCode: true, departmentId: true, userId: true, photoKey: true };
-const userSelect = { id: true, name: true, email: true };
+const userSelect = { id: true, name: true, email: true, lastSeenAt: true };
 
 function personName(person) {
   return person ? `${person.firstName} ${person.lastName}` : '';
@@ -36,6 +88,24 @@ function clip(text) {
   return value.length > 140 ? `${value.slice(0, 137)}…` : value;
 }
 
+function voiceClock(ms) {
+  const total = Math.max(0, Math.round((Number(ms) || 0) / 1000));
+  const minutes = Math.floor(total / 60);
+  const seconds = String(total % 60).padStart(2, '0');
+  return `${minutes}:${seconds}`;
+}
+
+function messagePreview(message) {
+  if (!message) return '';
+  const spoken = String(message.body || '').trim();
+  if (voiceExpired(message) && !spoken) return EXPIRED_LABEL;
+  if (message.audioUrl && !spoken) {
+    const ms = Number(message.audioDuration) || 0;
+    return ms ? `Voice message · ${voiceClock(ms)}` : 'Voice message';
+  }
+  return clip(message.body);
+}
+
 function isMine(member, req) {
   if (!member) return false;
   if (member.userId && member.userId === req.userId) return true;
@@ -55,6 +125,8 @@ const messageInclude = {
     select: {
       id: true,
       body: true,
+      audioUrl: true,
+      createdAt: true,
       asDepartment: true,
       authorId: true,
       authorUserId: true,
@@ -63,6 +135,21 @@ const messageInclude = {
     },
   },
 };
+
+function presenceOf(members, req) {
+  const others = (members || []).filter((member) => !isMine(member, req) && member.userId);
+  if (!others.length) return null;
+  const online = others.some((member) => isUserConnected(member.userId));
+  const seen = others
+    .map((member) => member.user?.lastSeenAt)
+    .filter(Boolean)
+    .sort((left, right) => new Date(right) - new Date(left))[0] || null;
+  return {
+    userId: others.length === 1 ? others[0].userId : null,
+    online,
+    lastSeenAt: online || !seen ? null : new Date(seen).toISOString(),
+  };
+}
 
 function receiptOf(message, req, members) {
   if (!messageIsMine(message, req)) return null;
@@ -107,9 +194,16 @@ function presentMessage(message, req, departmentName, members) {
     if (Number(reaction.userId) === Number(req.userId)) row.mine = true;
     grouped.set(reaction.emoji, row);
   }
+  const expired = voiceExpired(message);
+  const spoken = String(message.body || '').trim();
   return {
     id: message.id,
-    body: message.body,
+    body: expired && !spoken ? EXPIRED_LABEL : message.body,
+    audio: message.audioUrl && !expired ? {
+      url: message.audioUrl,
+      duration: Number(message.audioDuration) || 0,
+    } : null,
+    forwarded: Boolean(message.forwarded),
     createdAt: message.createdAt,
     mine: messageIsMine(message, req),
     asDepartment: message.asDepartment,
@@ -119,7 +213,7 @@ function presentMessage(message, req, departmentName, members) {
     departmentName: departmentName || null,
     reply: message.replyTo ? {
       id: message.replyTo.id,
-      body: clip(message.replyTo.body),
+      body: messagePreview(message.replyTo),
       author: message.replyTo.asDepartment
         ? (departmentName || 'Department')
         : userLabel(message.replyTo.authorUser, message.replyTo.author),
@@ -127,7 +221,22 @@ function presentMessage(message, req, departmentName, members) {
     } : null,
     reactions: [...grouped.values()],
     receipt: receiptOf(message, req, members),
+    link: presentLink(message.linkPreview),
   };
+}
+
+function attachPreview(message, members) {
+  if (!message || message.linkPreview || !firstUrl(message.body)) return;
+  readLinkPreview(firstUrl(message.body)).then(async (link) => {
+    if (!link) return;
+    await prisma.hbmsConversationMessage.update({ where: { id: message.id }, data: { linkPreview: link } });
+    publishUsers((members || []).map((member) => member.userId), {
+      type: 'link',
+      conversationId: message.conversationId,
+      messageId: message.id,
+      link: presentLink(link),
+    });
+  }).catch(() => {});
 }
 
 async function visibleDepartmentIds(access) {
@@ -296,7 +405,7 @@ function summaryOf(conversation, req) {
       unitName: conversation.department?.businessUnit?.name || 'Business unit',
       departmentId: conversation.departmentId,
       memberCount: conversation.members.length,
-      lastBody: last ? clip(last.body) : '',
+      lastBody: messagePreview(last),
       lastAt: last?.createdAt || conversation.updatedAt,
       unread,
     };
@@ -312,7 +421,7 @@ function summaryOf(conversation, req) {
       projectId: conversation.projectId,
       memberCount: conversation.members.length,
       canManage: isProjectAdmin(req.access, conversation),
-      lastBody: last ? clip(last.body) : '',
+      lastBody: messagePreview(last),
       lastAt: last?.createdAt || conversation.updatedAt,
       unread,
     };
@@ -330,7 +439,7 @@ function summaryOf(conversation, req) {
     lastName: account.lastName,
     departmentId: null,
     memberCount: conversation.members.length,
-    lastBody: last ? clip(last.body) : '',
+    lastBody: messagePreview(last),
     lastAt: last?.createdAt || conversation.updatedAt,
     unread,
   };
@@ -558,6 +667,9 @@ router.get('/:id', async (req, res) => {
       orderBy: { createdAt: 'asc' },
       take: 200,
     });
+    messages.filter((message) => !message.linkPreview && firstUrl(message.body)).slice(-3).forEach((message) => {
+      attachPreview(message, fresh.members);
+    });
     const reader = fresh.members.find((member) => isMine(member, req));
     const previousRead = reader?.lastReadAt ? new Date(reader.lastReadAt).getTime() : 0;
     const markedNew = messages.some((message) => !messageIsMine(message, req) && new Date(message.createdAt).getTime() > previousRead);
@@ -608,6 +720,7 @@ router.get('/:id', async (req, res) => {
         lastName: account?.lastName || '',
         canSpeakAsDepartment: fresh.kind === 'DEPARTMENT' && canSpeakAsDepartment(req.access, fresh.department),
         canSend,
+        presence: presenceOf(fresh.members, req),
         members: fresh.members.map((member) => ({
           id: member.id,
           employeeId: member.employeeId,
@@ -623,26 +736,85 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/:id/messages', async (req, res) => {
+router.post('/:id/typing', async (req, res) => {
   try {
-    const body = String(req.body.body || '').trim();
-    if (!body) return res.status(400).json({ error: 'Write a message' });
-    if (body.length > 2000) return res.status(400).json({ error: 'Keep the message under 2000 characters' });
     const conversation = await loadConversation(req.params.id);
     if (!conversation || !(await canRead(req.access, conversation, req.userId))) {
       return res.status(404).json({ error: 'Conversation not found' });
     }
+    const mine = conversation.members.find((member) => isMine(member, req));
+    const typing = req.body.typing !== false;
+    publishUsers(
+      conversation.members.map((member) => member.userId).filter((userId) => userId && userId !== req.userId),
+      {
+        type: 'typing',
+        conversationId: conversation.id,
+        userId: req.userId,
+        name: userLabel(mine?.user, mine?.employee),
+        typing,
+      },
+    );
+    res.json({ data: { ok: true } });
+  } catch (error) {
+    handlePrismaError(res, error, 'Could not share typing');
+  }
+});
+
+async function sendConversationMessage(req, res, extras = {}) {
+  const audioFile = extras.audioFile || null;
+  let saved = false;
+  try {
+    let audioUrl = extras.audioUrl || null;
+    let audioDuration = Number(extras.audioDuration) || 0;
+    const forwardAudioId = !audioUrl && req.body.forwardAudioId ? String(req.body.forwardAudioId) : '';
+    if (forwardAudioId) {
+      const source = await prisma.hbmsConversationMessage.findUnique({
+        where: { id: forwardAudioId },
+        select: { audioUrl: true, audioDuration: true, conversationId: true },
+      });
+      if (!source?.audioUrl) {
+        discardUpload(audioFile);
+        return res.status(400).json({ error: 'That voice message is no longer available' });
+      }
+      const sourceConversation = await loadConversation(source.conversationId);
+      if (!sourceConversation || !(await canRead(req.access, sourceConversation, req.userId))) {
+        discardUpload(audioFile);
+        return res.status(404).json({ error: 'That voice message is no longer available' });
+      }
+      audioUrl = source.audioUrl;
+      audioDuration = Number(source.audioDuration) || 0;
+    }
+    const body = String(extras.body != null ? extras.body : (req.body.body || '')).trim();
+    if (!body && !audioUrl) {
+      discardUpload(audioFile);
+      return res.status(400).json({ error: 'Write a message' });
+    }
+    if (body.length > 2000) {
+      discardUpload(audioFile);
+      return res.status(400).json({ error: 'Keep the message under 2000 characters' });
+    }
+    const conversation = await loadConversation(req.params.id);
+    if (!conversation || !(await canRead(req.access, conversation, req.userId))) {
+      discardUpload(audioFile);
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
     const fresh = conversation.kind === 'DEPARTMENT' ? await loadConversation(req.params.id) : conversation;
     const member = fresh.members.some((item) => isMine(item, req));
-    if (fresh.kind === 'DIRECT' && !member) return res.status(403).json({ error: 'You are not in this conversation' });
+    if (fresh.kind === 'DIRECT' && !member) {
+      discardUpload(audioFile);
+      return res.status(403).json({ error: 'You are not in this conversation' });
+    }
     if (fresh.kind === 'PROJECT' && !member && !isProjectAdmin(req.access, fresh)) {
+      discardUpload(audioFile);
       return res.status(403).json({ error: 'You are not in this project group' });
     }
     if (fresh.kind === 'DEPARTMENT' && !member && !req.access.orgWide) {
+      discardUpload(audioFile);
       return res.status(403).json({ error: 'You are not in this conversation' });
     }
     const asDepartment = Boolean(req.body.asDepartment) && fresh.kind === 'DEPARTMENT' && canSpeakAsDepartment(req.access, fresh.department);
     if (req.body.asDepartment && !asDepartment) {
+      discardUpload(audioFile);
       return res.status(403).json({ error: 'Only the department manager can send as the department' });
     }
     const replyToId = req.body.replyToId ? String(req.body.replyToId) : null;
@@ -651,7 +823,10 @@ router.post('/:id/messages', async (req, res) => {
         where: { id: replyToId, conversationId: fresh.id },
         select: { id: true },
       });
-      if (!quoted) return res.status(400).json({ error: 'That message is no longer in this chat' });
+      if (!quoted) {
+        discardUpload(audioFile);
+        return res.status(400).json({ error: 'That message is no longer in this chat' });
+      }
     }
     const message = await prisma.hbmsConversationMessage.create({
       data: {
@@ -659,33 +834,39 @@ router.post('/:id/messages', async (req, res) => {
         authorId: req.access.employeeId || null,
         authorUserId: req.userId,
         body,
+        audioUrl: audioUrl || null,
+        audioDuration: audioUrl ? Math.max(0, Math.min(300000, Math.round(audioDuration))) : null,
         asDepartment,
+        forwarded: Boolean(req.body.forwarded),
         replyToId,
       },
       include: messageInclude,
     });
+    saved = true;
+    attachPreview(message, fresh.members);
     const deliveredAt = new Date(Math.max(Date.now(), new Date(message.createdAt).getTime()));
-    const reached = fresh.members.filter((member) => !isMine(member, req) && member.userId && isUserConnected(member.userId));
+    const reached = fresh.members.filter((item) => !isMine(item, req) && item.userId && isUserConnected(item.userId));
     if (reached.length) {
       await prisma.hbmsConversationMember.updateMany({
-        where: { id: { in: reached.map((member) => member.id) } },
+        where: { id: { in: reached.map((item) => item.id) } },
         data: { lastDeliveredAt: deliveredAt },
       });
-      for (const member of reached) member.lastDeliveredAt = deliveredAt;
+      for (const item of reached) item.lastDeliveredAt = deliveredAt;
     }
     await prisma.hbmsConversation.update({ where: { id: fresh.id }, data: { updatedAt: new Date() } });
     const person = userLabel(message.authorUser, message.author);
     const speaker = asDepartment ? (fresh.department?.name || 'The department') : person;
+    const preview = messagePreview(message);
     publishUsers(fresh.members.map((item) => item.userId), {
       type: 'message',
       conversationId: fresh.id,
       title: speaker,
-      body: clip(body),
+      body: preview,
       authorUserId: req.userId,
     });
     sendPush(
       fresh.members.map((item) => item.userId).filter((userId) => userId && userId !== req.userId),
-      { title: speaker, body: clip(body), data: { conversationId: fresh.id } },
+      { title: speaker, body: preview, data: { conversationId: fresh.id } },
     ).catch(() => {});
     publishUsers(fresh.members.map((item) => item.userId), { type: 'conversations', conversationId: fresh.id });
     await notifyWorkers(
@@ -693,19 +874,33 @@ router.post('/:id/messages', async (req, res) => {
       {
         kind: 'CONVERSATION',
         title: asDepartment ? `${speaker} sent a department message` : `Message from ${speaker}`,
-        body: clip(body),
+        body: preview,
         entityType: 'conversation',
         entityId: fresh.id,
       },
     );
-    await writeAudit(req.userId, 'conversation.message', 'HbmsConversation', fresh.id, { asDepartment });
+    await writeAudit(req.userId, 'conversation.message', 'HbmsConversation', fresh.id, { asDepartment, voice: Boolean(audioUrl) });
     res.status(201).json({
       data: presentMessage(message, req, fresh.department?.name || null, fresh.members),
     });
   } catch (error) {
+    if (!saved) discardUpload(audioFile);
     handlePrismaError(res, error, 'Could not send the message');
   }
+}
+
+router.post('/:id/voice', acceptVoice, (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Record a voice message' });
+  const duration = Math.max(0, Math.min(300000, Math.round(Number(req.body.duration) || 0)));
+  return sendConversationMessage(req, res, {
+    body: '',
+    audioUrl: `/uploads/${req.file.filename}`,
+    audioDuration: duration,
+    audioFile: req.file.path,
+  });
 });
+
+router.post('/:id/messages', (req, res) => sendConversationMessage(req, res));
 
 router.post('/:id/messages/:messageId/reactions', async (req, res) => {
   try {

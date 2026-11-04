@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { api } from '../api';
 import { ErrorText, Notice } from '../components/ui';
 import { apiError, formatWhen } from '../format';
+import { onSynced } from '../offline';
 import { colors, type } from '../theme';
 
 export default function AnnouncementScreen() {
@@ -11,21 +12,22 @@ export default function AnnouncementScreen() {
   const [item, setItem] = useState(null);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    let active = true;
-    api.get('/hbms/announcements')
-      .then((response) => {
-        if (!active) return;
-        const found = (response.data.data || []).find((row) => row.id === params.id);
-        setItem(found || null);
-      })
-      .catch((err) => {
-        if (active) setError(apiError(err, 'Could not load this announcement'));
-      });
-    return () => {
-      active = false;
-    };
+  const load = useCallback(async () => {
+    try {
+      const response = await api.get('/hbms/announcements');
+      const found = (response.data.data || []).find((row) => row.id === params.id);
+      setItem(found || null);
+      setError('');
+    } catch (err) {
+      setError(apiError(err, 'Could not load this announcement'));
+    }
   }, [params.id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => onSynced(() => load()), [load]);
 
   const title = item?.title || params.title || 'Announcement';
   const body = item?.body || params.body || '';

@@ -42,6 +42,7 @@ model User {
   nationality  String? // NEW: nationality
   passwordResetHash    String?
   passwordResetExpires DateTime?
+  lastSeenAt   DateTime?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   lessons      Lesson[]
@@ -55,6 +56,8 @@ model User {
   conversationMessages    HbmsConversationMessage[]
   pushTokens              HbmsPushToken[]
   messageReactions        HbmsMessageReaction[]
+  callsMade               HbmsCall[] @relation("CallsMade")
+  callsReceived           HbmsCall[] @relation("CallsReceived")
 }
 
 enum UserRole {
@@ -1085,9 +1088,29 @@ model HbmsConversation {
   updatedAt    DateTime                 @updatedAt
   messages     HbmsConversationMessage[]
   members      HbmsConversationMember[]
+  calls        HbmsCall[]
 
   @@index([kind])
   @@index([createdById])
+}
+
+model HbmsCall {
+  id             String           @id
+  conversationId String
+  conversation   HbmsConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  callerId       Int
+  caller         User             @relation("CallsMade", fields: [callerId], references: [id], onDelete: Cascade)
+  calleeId       Int
+  callee         User             @relation("CallsReceived", fields: [calleeId], references: [id], onDelete: Cascade)
+  status         String           @default("ringing")
+  video          Boolean          @default(false)
+  startedAt      DateTime         @default(now())
+  answeredAt     DateTime?
+  endedAt        DateTime?
+
+  @@index([callerId, startedAt])
+  @@index([calleeId, startedAt])
+  @@index([conversationId])
 }
 
 model HbmsConversationMember {
@@ -1117,7 +1140,11 @@ model HbmsConversationMessage {
   authorUserId   Int?
   authorUser     User?            @relation(fields: [authorUserId], references: [id], onDelete: SetNull)
   asDepartment   Boolean          @default(false)
+  forwarded      Boolean          @default(false)
   body           String
+  audioUrl       String?
+  audioDuration  Int?
+  linkPreview    Json?
   replyToId      String?
   replyTo        HbmsConversationMessage?  @relation("MessageReply", fields: [replyToId], references: [id], onDelete: SetNull)
   replies        HbmsConversationMessage[] @relation("MessageReply")

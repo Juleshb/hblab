@@ -35,7 +35,9 @@ function connect() {
   socket = next;
   next.onmessage = (message) => {
     try {
-      schedule(JSON.parse(message.data));
+      const event = JSON.parse(message.data);
+      if (event?.type === 'call') emit(event);
+      else schedule(event);
     } catch {
       /* ignore a malformed live event */
     }
@@ -47,15 +49,22 @@ function connect() {
   next.onerror = () => next.close();
 }
 
-export function startLive() {
-  active = true;
+export function reconnectLive() {
+  if (!active) return;
   clearTimeout(retry);
-  if (socket) {
-    socket.onclose = null;
-    socket.close();
-    socket = null;
+  const previous = socket;
+  socket = null;
+  if (previous) {
+    previous.onclose = null;
+    previous.onerror = null;
+    previous.close();
   }
   connect();
+}
+
+export function startLive() {
+  active = true;
+  reconnectLive();
 }
 
 export function stopLive() {
@@ -67,6 +76,12 @@ export function stopLive() {
     socket.close();
     socket = null;
   }
+}
+
+export function sendLive(event) {
+  if (!socket || socket.readyState !== 1) return false;
+  socket.send(JSON.stringify(event));
+  return true;
 }
 
 export function subscribeLive(listener) {

@@ -131,7 +131,7 @@ const StudioPortfolio = () => {
       {/* Hero Section */}
       <section className="relative isolate overflow-hidden pt-32 pb-16">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-900 via-[#166c44cc] to-[#310979bb]"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-green-900 via-[#2e6b57cc] to-[#310979bb]"></div>
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#01060499] to-[#010604]"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(246,195,67,0.18),transparent_55%)] mix-blend-screen"></div>
         </div>

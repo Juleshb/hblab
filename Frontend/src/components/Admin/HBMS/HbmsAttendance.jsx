@@ -301,7 +301,7 @@ const HbmsAttendance = () => {
     hours: sum.hours + Number(item.hours || 0),
   }), { present: 0, late: 0, absent: 0, leaveDays: 0, missing: 0, hours: 0 });
   const ringParts = [
-    { label: 'Present', value: totals.present, color: '#15803d' },
+    { label: 'Present', value: totals.present, color: '#2e6b57' },
     { label: 'Late', value: totals.late, color: '#f59e0b' },
     { label: 'Absent', value: totals.absent, color: '#f43f5e' },
     { label: 'Leave', value: totals.leaveDays, color: '#38bdf8' },

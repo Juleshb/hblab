@@ -13,7 +13,7 @@ const statTones = {
   amber: 'border-amber-100 bg-amber-50 text-amber-700',
 };
 
-const kindColors = ['#15803d', '#0ea5e9', '#7c3aed', '#f59e0b', '#f43f5e', '#64748b'];
+const kindColors = ['#2e6b57', '#0ea5e9', '#7c3aed', '#f59e0b', '#f43f5e', '#64748b'];
 
 function StatTile({ tone, icon, value, label, detail }) {
   return (

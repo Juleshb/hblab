@@ -7,7 +7,7 @@ import { Field, FormModal, Notice, PrimaryButton, StatusBadge, WorkerAvatar, inp
 
 const statusParts = [
   { key: 'PLANNING', label: 'Planning', color: '#64748b' },
-  { key: 'ACTIVE', label: 'Active', color: '#15803d' },
+  { key: 'ACTIVE', label: 'Active', color: '#2e6b57' },
   { key: 'ON_HOLD', label: 'On hold', color: '#d97706' },
   { key: 'COMPLETED', label: 'Completed', color: '#0284c7' },
   { key: 'CANCELLED', label: 'Cancelled', color: '#94a3b8' },
@@ -22,7 +22,7 @@ function localKey(value = new Date()) {
 }
 
 function unitColor(name) {
-  return name === 'HBStudio' ? '#7c3aed' : '#15803d';
+  return name === 'HBStudio' ? '#7c3aed' : '#2e6b57';
 }
 
 function MiniRing({ percent, color }) {
@@ -202,7 +202,7 @@ const HbmsProjects = () => {
       <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
         <div className="grid gap-4 lg:grid-cols-[auto_1fr_220px] lg:items-center">
           <div className="flex items-center gap-3">
-            <MiniRing percent={average} color="#15803d" />
+            <MiniRing percent={average} color="#2e6b57" />
             <div>
               <p className="text-sm font-semibold text-gray-900">Average progress</p>
               <p className="text-xs text-gray-500">{counted.length} project{counted.length === 1 ? '' : 's'} in view</p>

@@ -93,7 +93,7 @@ const StudioContactUs = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             className="rounded-3xl p-8 text-white shadow-2xl"
-            style={{ background: "linear-gradient(135deg, #16562e 0%, #0f3c1f 100%)" }}
+            style={{ background: "linear-gradient(135deg, #2e6b57 0%, #1a3d31 100%)" }}
           >
             <h3 className="mb-6 text-2xl font-bold">Studio Information</h3>
             <div className="space-y-6">
@@ -164,7 +164,7 @@ const StudioContactUs = () => {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all"
+                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
                   placeholder="Your full name"
                 />
               </div>
@@ -180,7 +180,7 @@ const StudioContactUs = () => {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all"
+                    className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
                     placeholder="your@email.com"
                   />
                 </div>
@@ -194,7 +194,7 @@ const StudioContactUs = () => {
                     required
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all"
+                    className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
                     placeholder="+250 788 123 456"
                   />
                 </div>
@@ -209,7 +209,7 @@ const StudioContactUs = () => {
                   required
                   value={formData.service}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all"
+                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
                 >
                   <option value="">Select a service</option>
                   <option value="videography">Videography</option>
@@ -231,7 +231,7 @@ const StudioContactUs = () => {
                   rows="5"
                   value={formData.message}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all resize-none"
+                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all resize-none"
                   placeholder="Tell us about your project..."
                 />
               </div>
@@ -240,7 +240,7 @@ const StudioContactUs = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                className="w-full rounded-xl bg-[#16562e] px-8 py-4 text-sm font-semibold uppercase tracking-wider text-white shadow-lg transition hover:bg-[#10401f]"
+                className="w-full rounded-xl bg-[#2e6b57] px-8 py-4 text-sm font-semibold uppercase tracking-wider text-white shadow-lg transition hover:bg-[#1a3d31]"
               >
                 Send Message →
               </motion.button>
@@ -254,7 +254,7 @@ const StudioContactUs = () => {
           <div className="py-4 text-center">
             <button
               onClick={handleModalClose}
-              className="rounded-xl bg-[#16562e] px-6 py-2 font-medium text-white transition hover:bg-[#10401f]"
+              className="rounded-xl bg-[#2e6b57] px-6 py-2 font-medium text-white transition hover:bg-[#1a3d31]"
             >
               Thank You
             </button>

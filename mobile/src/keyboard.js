@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Dimensions, Keyboard, Platform, ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors } from './theme';
 
 let keyboardHeight = 0;
 let windowBeforeKeyboard = Dimensions.get('window').height;
@@ -136,8 +137,8 @@ export function LiftInput({ onFocus, inputRef, ...props }) {
     <TextInput
       {...props}
       ref={setRef}
-      cursorColor="#1dab62"
-      selectionColor="#1dab62"
+      cursorColor={colors.accent}
+      selectionColor={colors.accent}
       onFocus={(event) => {
         reveal?.(ref);
         onFocus?.(event);

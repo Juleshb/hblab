@@ -191,7 +191,7 @@ const HbmsReports = () => {
                 <Ring
                   key={unit.id}
                   percent={unit.averageProgress}
-                  color={unit.name === 'HBStudio' ? '#7c3aed' : '#15803d'}
+                  color={unit.name === 'HBStudio' ? '#7c3aed' : '#2e6b57'}
                   label={unit.name}
                   caption={`${unit.activeProjects} active · ${unit.overdueTasks} overdue`}
                 />

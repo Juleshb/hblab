@@ -170,7 +170,7 @@ export function FormModal({ open, title, subtitle, onClose, children, wide = fal
         className={`flex max-h-[min(90vh,860px)] w-full flex-col overflow-hidden rounded-3xl bg-white shadow-2xl ${wide ? 'max-w-3xl' : 'max-w-xl'}`}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-4 bg-[#0d3b2e] px-5 py-4 text-white">
+        <div className="flex items-start justify-between gap-4 bg-[#2e6b57] px-5 py-4 text-white">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-wide text-emerald-200">HBMS</p>
             <h2 className="text-base font-semibold">{title}</h2>

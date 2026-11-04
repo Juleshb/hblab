@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { api } from './api';
 import { startLive, stopLive } from './live';
+import { clearOffline, prepareOffline, readCache, startOffline, writeCache } from './offline';
+import { clearPhotos, preparePhotos } from './photos';
 import { loadToken, saveToken, setUnauthorizedHandler } from './session';
 
 const AuthContext = createContext(null);
@@ -20,12 +22,14 @@ export function AuthProvider({ children }) {
     const accessData = accessResponse.data.data || null;
     const workspaceEmployee = workspace.data.data?.employee || null;
     const accessEmployee = accessData?.employee || null;
-    setEmployee(workspaceEmployee || accessEmployee ? {
+    const nextEmployee = workspaceEmployee || accessEmployee ? {
       ...accessEmployee,
       ...workspaceEmployee,
       photoKey: accessEmployee?.photoKey || null,
-    } : null);
+    } : null;
+    setEmployee(nextEmployee);
     setAccess(accessData);
+    await writeCache('profile', { employee: nextEmployee, access: accessData });
   }
 
   useEffect(() => {
@@ -39,7 +43,8 @@ export function AuthProvider({ children }) {
         setAccess(null);
       });
     });
-    loadToken()
+    Promise.all([prepareOffline(), preparePhotos()])
+      .then(() => loadToken())
       .then(async (stored) => {
         if (!active) return;
         setToken(stored);
@@ -47,7 +52,10 @@ export function AuthProvider({ children }) {
           try {
             await loadProfile();
           } catch {
-            /* screens show their own errors if the profile cannot load */
+            const saved = readCache('profile');
+            if (!active || !saved) return;
+            if (saved.employee) setEmployee(saved.employee);
+            if (saved.access) setAccess(saved.access);
           }
         }
       })
@@ -65,7 +73,11 @@ export function AuthProvider({ children }) {
       return undefined;
     }
     startLive();
-    return () => stopLive();
+    const stopOffline = startOffline();
+    return () => {
+      stopLive();
+      stopOffline();
+    };
   }, [token]);
 
   const value = useMemo(() => ({
@@ -77,9 +89,16 @@ export function AuthProvider({ children }) {
     async login(email, password) {
       const response = await api.post('/auth/login', { email, password });
       const next = response.data.token;
+      const nextUserId = response.data.user?.id ?? null;
+      const owner = readCache('owner');
+      if (owner != null && nextUserId != null && String(owner) !== String(nextUserId)) {
+        await clearOffline();
+        await clearPhotos();
+      }
       await saveToken(next);
       setToken(next);
       setUser(response.data.user || null);
+      await writeCache('owner', nextUserId);
       await loadProfile();
     },
     async refresh() {
@@ -87,6 +106,8 @@ export function AuthProvider({ children }) {
     },
     async logout() {
       await saveToken(null);
+      await clearOffline();
+      await clearPhotos();
       setToken(null);
       setUser(null);
       setEmployee(null);

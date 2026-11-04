@@ -27,7 +27,7 @@ const StudioHero = () => {
             alt="HB Studio background"
             className="h-full w-full object-cover contrast-75"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-green-900 via-[#166c44cc] to-[#310979bb]"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-green-900 via-[#2e6b57cc] to-[#310979bb]"></div>
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#01060499] to-[#010604]"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(246,195,67,0.18),transparent_55%)] mix-blend-screen"></div>
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%20viewBox=%220%200%20160%20160%22%3E%3Cpath%20d=%22M0%2080%20L80%200%20L160%2080%20L80%20160%20Z%22%20fill=%22none%22%20stroke=%22rgba(255,255,255,0.05)%22%20stroke-width=%222%22/%3E%3C/svg%3E')] opacity-60 mix-blend-overlay"></div>
@@ -96,7 +96,7 @@ const StudioHero = () => {
                   const el = document.getElementById("studio-booking");
                   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
-                className="rounded-full bg-[#166c44] px-8 py-3 text-sm font-semibold uppercase tracking-wider text-white"
+                className="rounded-full bg-[#2e6b57] px-8 py-3 text-sm font-semibold uppercase tracking-wider text-white"
               >
                 Book a Shoot
               </motion.button>

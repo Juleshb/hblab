@@ -51,7 +51,7 @@ const statusParts = [
   { key: 'IN_PROGRESS', label: 'In progress', color: '#0284c7' },
   { key: 'BLOCKED', label: 'Blocked', color: '#dc2626' },
   { key: 'IN_REVIEW', label: 'In review', color: '#7c3aed' },
-  { key: 'DONE', label: 'Done', color: '#15803d' },
+  { key: 'DONE', label: 'Done', color: '#2e6b57' },
 ];
 
 function MiniRing({ percent, color }) {
@@ -507,7 +507,7 @@ const HbmsTasks = () => {
   const statusTotal = statusCounts.reduce((sum, part) => sum + part.value, 0);
   const unitStats = ['HBLab', 'HBStudio'].map((name) => {
     const rows = openTasks.filter((task) => task.project?.businessUnit?.name === name);
-    return { name, count: rows.length, color: name === 'HBStudio' ? '#7c3aed' : '#15803d' };
+    return { name, count: rows.length, color: name === 'HBStudio' ? '#7c3aed' : '#2e6b57' };
   });
   const workspaceWorker = workers.find((worker) => worker.id === workspaceId);
   const todayLabel = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
@@ -551,7 +551,7 @@ const HbmsTasks = () => {
       <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
         <div className="grid gap-4 lg:grid-cols-[auto_1fr_220px] lg:items-center">
           <div className="flex items-center gap-3">
-            <MiniRing percent={completion} color="#15803d" />
+            <MiniRing percent={completion} color="#2e6b57" />
             <div>
               <p className="text-sm font-semibold text-gray-900">Completed</p>
               <p className="text-xs text-gray-500">{doneCount} of {counted.length} finished</p>

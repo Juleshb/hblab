@@ -222,7 +222,7 @@ const HbmsWorkerProfile = () => {
       <Link to="/admin/hbms/workers" className="text-xs font-medium text-emerald-700">Back to workers</Link>
 
       <section className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
-        <div className={`px-5 py-6 text-white sm:px-6 ${studio ? 'bg-gradient-to-r from-violet-950 to-violet-700' : 'bg-gradient-to-r from-[#0d3b2e] to-emerald-600'}`}>
+        <div className={`px-5 py-6 text-white sm:px-6 ${studio ? 'bg-gradient-to-r from-violet-950 to-violet-700' : 'bg-gradient-to-r from-[#2e6b57] to-emerald-600'}`}>
           <div className="flex flex-wrap items-center gap-5">
             <div className="flex flex-col items-start gap-2">
               <WorkerAvatar worker={worker} className="h-20 w-20 rounded-3xl bg-white/15 text-2xl tracking-wide text-white" />

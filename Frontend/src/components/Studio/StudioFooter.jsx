@@ -23,7 +23,7 @@ const StudioFooter = () => {
     >
       {/* Background matching hero section */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-r from-green-900 via-[#166c44cc] to-[#310979bb]"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-green-900 via-[#2e6b57cc] to-[#310979bb]"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#01060499] to-[#010604]"></div>
       </div>
       <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:px-10">

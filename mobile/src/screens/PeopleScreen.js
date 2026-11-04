@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { api } from '../api';
 import { ErrorText, ListRow, Notice } from '../components/ui';
 import { apiError } from '../format';
+import { ConnectLoader, onSynced, useOffline } from '../offline';
 import { KeyboardScroll, LiftInput } from '../keyboard';
 import { colors } from '../theme';
 
@@ -13,20 +14,23 @@ export default function PeopleScreen() {
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState(null);
+  const { online } = useOffline();
+
+  const load = useCallback(async () => {
+    try {
+      const response = await api.get('/hbms/conversations');
+      setPeople(response.data.data?.people || []);
+      setError('');
+    } catch (err) {
+      setError(apiError(err, 'Could not load people'));
+    }
+  }, []);
 
   useEffect(() => {
-    let active = true;
-    api.get('/hbms/conversations')
-      .then((response) => {
-        if (active) setPeople(response.data.data?.people || []);
-      })
-      .catch((err) => {
-        if (active) setError(apiError(err, 'Could not load people'));
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+    load();
+  }, [load]);
+
+  useEffect(() => onSynced(() => load()), [load]);
 
   const visible = useMemo(() => {
     const text = query.trim().toLowerCase();
@@ -69,7 +73,7 @@ export default function PeopleScreen() {
           onPress={() => open(person)}
         />
       ))}
-      {!error && visible.length === 0 ? <Notice>No one matches that search.</Notice> : null}
+      {!error && visible.length === 0 ? (online ? <Notice>No one matches that search.</Notice> : <ConnectLoader />) : null}
       {busyId ? <Pressable><Text style={styles.opening}>Opening conversation…</Text></Pressable> : null}
     </KeyboardScroll>
   );

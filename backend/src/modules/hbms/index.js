@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 router.use('/conversations', require('./conversations.routes'));
+router.use('/calls', require('./calls.routes'));
 router.use(require('./devices.routes'));
 router.use('/access', require('./access.routes'));
 router.use(require('./organization.routes'));

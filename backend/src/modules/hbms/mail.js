@@ -3,8 +3,8 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 
 const EMAILED_KINDS = new Set(['TASK_ASSIGNED', 'TASK_UPDATED', 'DEADLINE', 'MEETING', 'ANNOUNCEMENT']);
-const GREEN = '#0d3b2e';
-const LEAF = '#15803d';
+const GREEN = '#2e6b57';
+const LEAF = '#2e6b57';
 const PAPER = '#f4f7f5';
 
 const KIND_STYLE = {

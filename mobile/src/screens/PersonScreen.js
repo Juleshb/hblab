@@ -1,6 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
+  Animated,
+  Easing,
   Platform,
   Pressable,
   StyleSheet,
@@ -8,21 +11,27 @@ import {
   View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { api } from '../api';
 import { useAuth } from '../auth';
-import { Avatar, ErrorText, Notice } from '../components/ui';
+import { Avatar, ErrorText } from '../components/ui';
 import { apiError, personName } from '../format';
 import { KeyboardScroll, LiftInput } from '../keyboard';
 import { useLive } from '../live';
+import { onSynced, readCache, writeCache } from '../offline';
 import { forgetPhoto } from '../photos';
 import { colors } from '../theme';
+
+function savedPerson(personId) {
+  const saved = readCache(`person:${personId}`);
+  return saved && typeof saved === 'object' ? saved : null;
+}
 
 export default function PersonScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { employee, refresh, logout } = useAuth();
-  const [person, setPerson] = useState(null);
+  const [person, setPerson] = useState(() => savedPerson(id));
   const [editing, setEditing] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -30,27 +39,49 @@ export default function PersonScreen() {
   const [skills, setSkills] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const loadSeq = useRef(0);
 
   const mine = Boolean(person && employee?.id && person.id === employee.id);
 
+  const applyCard = useCallback((card) => {
+    setPerson(card);
+    setFirstName(card.firstName || '');
+    setLastName(card.lastName || '');
+    setPhone(card.phone || '');
+    setSkills((card.skills || []).join(', '));
+  }, []);
+
   const load = useCallback(async () => {
+    const seq = ++loadSeq.current;
     setError('');
+    const saved = savedPerson(id);
+    if (saved) setPerson((current) => current || saved);
     try {
       const response = await api.get(`/hbms/employees/${id}/card`);
+      if (seq !== loadSeq.current) return;
       const card = response.data.data;
-      setPerson(card);
-      setFirstName(card.firstName || '');
-      setLastName(card.lastName || '');
-      setPhone(card.phone || '');
-      setSkills((card.skills || []).join(', '));
+      if (editing) setPerson(card);
+      else applyCard(card);
+      await writeCache(`person:${id}`, card);
     } catch (err) {
-      setError(apiError(err, 'Could not open this profile'));
+      if (seq !== loadSeq.current) return;
+      if (!saved) setError(apiError(err, 'Could not open this profile'));
     }
-  }, [id]);
+  }, [applyCard, editing, id]);
+
+  useEffect(() => {
+    const saved = savedPerson(id);
+    setPerson(saved);
+    setError('');
+    setEditing(false);
+    if (saved) applyCard(saved);
+  }, [applyCard, id]);
 
   useFocusEffect(useCallback(() => {
     load();
   }, [load]));
+
+  useEffect(() => onSynced(() => load()), [load]);
 
   useLive(useCallback((event) => {
     if (event.type !== 'profile' || event.employeeId !== id || editing) return;
@@ -145,10 +176,13 @@ export default function PersonScreen() {
 
   const role = [person?.position?.title, person?.department?.name, person?.businessUnit?.name].filter(Boolean).join(' · ');
 
+  const waiting = !person && !error;
+
   return (
-    <KeyboardScroll style={styles.screen} contentContainerStyle={styles.content}>
+    <KeyboardScroll style={styles.screen} contentContainerStyle={waiting ? styles.loading : styles.content}>
+      <Stack.Screen options={{ title: person ? personName(person) : 'Profile' }} />
       <ErrorText>{error}</ErrorText>
-      {!person && !error ? <Notice>Loading profile…</Notice> : null}
+      {waiting ? <ProfileLoader /> : null}
       {person ? (
         <View style={styles.hero}>
           <Avatar name={personName(person)} employeeId={person.id} photoKey={person.photoKey} size={120} />
@@ -205,7 +239,52 @@ export default function PersonScreen() {
           <Row label="Skills" value={(person.skills || []).length ? person.skills.join(', ') : 'Not added'} />
         </View>
       ) : null}
+      {mine && !editing ? (
+        <Pressable accessibilityRole="button" onPress={signOut} style={styles.signOut}>
+          <Text style={styles.signOutText}>Sign out</Text>
+        </Pressable>
+      ) : null}
     </KeyboardScroll>
+  );
+}
+
+function ProfileLoader() {
+  const pulse = useRef(new Animated.Value(0.4)).current;
+  const slide = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const fading = Animated.loop(Animated.sequence([
+      Animated.timing(pulse, { toValue: 1, duration: 680, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(pulse, { toValue: 0.4, duration: 680, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    ]));
+    const moving = Animated.loop(Animated.timing(slide, {
+      toValue: 1,
+      duration: 1100,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: true,
+    }));
+    fading.start();
+    moving.start();
+    return () => {
+      fading.stop();
+      moving.stop();
+    };
+  }, [pulse, slide]);
+
+  const translateX = slide.interpolate({ inputRange: [0, 1], outputRange: [-140, 320] });
+
+  return (
+    <View style={styles.loader}>
+      <View style={styles.loaderTrack}>
+        <Animated.View style={[styles.loaderBar, { transform: [{ translateX }] }]} />
+      </View>
+      <View style={styles.loaderPhoto}>
+        <Animated.View style={[styles.loaderDisc, { opacity: pulse }]} />
+        <ActivityIndicator size="large" color={colors.accent} style={styles.loaderSpinner} />
+      </View>
+      <Animated.View style={[styles.ghost, styles.ghostName, { opacity: pulse }]} />
+      <Animated.View style={[styles.ghost, styles.ghostRole, { opacity: pulse }]} />
+    </View>
   );
 }
 
@@ -221,6 +300,28 @@ function Row({ label, value }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
+  loading: { flexGrow: 1 },
+  loader: { flex: 1, alignItems: 'center' },
+  loaderTrack: {
+    alignSelf: 'stretch',
+    height: 3,
+    backgroundColor: colors.accentSoft,
+    overflow: 'hidden',
+    marginBottom: 48,
+  },
+  loaderBar: { width: 140, height: 3, backgroundColor: colors.accent },
+  loaderPhoto: { width: 160, height: 160, alignItems: 'center', justifyContent: 'center' },
+  loaderDisc: {
+    position: 'absolute',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: colors.chip,
+  },
+  loaderSpinner: { position: 'absolute' },
+  ghost: { backgroundColor: colors.chip, borderRadius: 8 },
+  ghostName: { width: 168, height: 18, marginTop: 22 },
+  ghostRole: { width: 220, height: 12, marginTop: 12, backgroundColor: colors.line },
   hero: { alignItems: 'center', marginBottom: 16 },
   name: { marginTop: 12, fontSize: 24, fontWeight: '700', color: colors.text },
   role: { marginTop: 4, fontSize: 14, color: colors.muted, textAlign: 'center' },
@@ -254,4 +355,12 @@ const styles = StyleSheet.create({
   details: { marginTop: 8, gap: 14 },
   row: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.line, paddingBottom: 12 },
   value: { fontSize: 16, color: colors.text },
+  signOut: {
+    marginTop: 28,
+    borderRadius: 24,
+    alignItems: 'center',
+    paddingVertical: 12,
+    backgroundColor: '#fde8ec',
+  },
+  signOutText: { color: colors.danger, fontSize: 16, fontWeight: '700' },
 });

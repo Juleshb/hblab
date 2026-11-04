@@ -92,7 +92,7 @@ const LoginForm = () => {
           className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 mx-2"
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#16562e] via-[#0f3c1f] to-[#0b2c17] p-4 text-white relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#2e6b57] via-[#1a3d31] to-[#132d24] p-4 text-white relative overflow-hidden">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 right-0 w-20 h-20 bg-white rounded-full -mr-8 -mt-8"></div>
@@ -137,7 +137,7 @@ const LoginForm = () => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16562e]/30 focus:border-[#16562e] text-sm"
+                    className="w-full pl-10 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2e6b57]/30 focus:border-[#2e6b57] text-sm"
                     placeholder="your@email.com"
                   />
                 </div>
@@ -153,7 +153,7 @@ const LoginForm = () => {
                   </label>
                   <Link
                     to="/forgot-password"
-                    className="text-xs text-[#16562e] hover:text-[#10401f] transition duration-300"
+                    className="text-xs text-[#2e6b57] hover:text-[#1a3d31] transition duration-300"
                   >
                     Forgot password?
                   </Link>
@@ -172,7 +172,7 @@ const LoginForm = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16562e]/30 focus:border-[#16562e] text-sm"
+                    className="w-full pl-10 pr-10 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2e6b57]/30 focus:border-[#2e6b57] text-sm"
                     placeholder="••••••••"
                   />
                   <button
@@ -201,7 +201,7 @@ const LoginForm = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-3 w-3 text-[#16562e] focus:ring-[#16562e] border-gray-300 rounded"
+                  className="h-3 w-3 text-[#2e6b57] focus:ring-[#2e6b57] border-gray-300 rounded"
                 />
                 <label
                   htmlFor="remember-me"
@@ -214,7 +214,7 @@ const LoginForm = () => {
               <button
                 type="submit"
                 aria-label="Sign in"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow text-white bg-[#16562e] hover:bg-[#10401f] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#16562e] transition-all duration-200 font-semibold text-sm"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow text-white bg-[#2e6b57] hover:bg-[#1a3d31] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#2e6b57] transition-all duration-200 font-semibold text-sm"
               >
                 Sign in
               </button>
@@ -225,7 +225,7 @@ const LoginForm = () => {
                 Don't have an account?{' '}
                 <Link
                   to="/SignUpForm"
-                  className="font-semibold text-[#16562e] hover:text-[#10401f] transition duration-200"
+                  className="font-semibold text-[#2e6b57] hover:text-[#1a3d31] transition duration-200"
                 >
                   Sign up
                 </Link>

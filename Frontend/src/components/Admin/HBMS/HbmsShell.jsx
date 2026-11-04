@@ -123,7 +123,7 @@ const HbmsShell = ({ children }) => {
     <div className="flex h-screen bg-[#f4f7f5] text-sm text-gray-800">
       {open && <button type="button" className="fixed inset-0 z-30 bg-black/40 lg:hidden" aria-label="Close menu" onClick={() => setOpen(false)} />}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col overflow-hidden bg-[#0d3b2e] text-white transition-[width,transform] duration-200 ease-out ${navOpen ? 'lg:w-64' : 'lg:w-[4.5rem]'} ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col overflow-hidden bg-[#2e6b57] text-white transition-[width,transform] duration-200 ease-out ${navOpen ? 'lg:w-64' : 'lg:w-[4.5rem]'} ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
       >
         <div className={`flex items-center gap-3 px-4 py-4 ${navOpen ? '' : 'lg:justify-center lg:px-2'}`}>
           <img src={hblabIcon} alt="" className="h-10 w-10 shrink-0 rounded-xl bg-white object-contain p-1" />

@@ -1,10 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { api } from '../api';
 import { ErrorText, ListRow, Notice, ProjectIcon } from '../components/ui';
 import { apiError } from '../format';
 import { useLive } from '../live';
+import { ConnectLoader, onSynced, useOffline } from '../offline';
 import { colors } from '../theme';
 
 export default function ProjectGroupScreen() {
@@ -12,6 +13,7 @@ export default function ProjectGroupScreen() {
   const [projects, setProjects] = useState([]);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState(null);
+  const { online } = useOffline();
 
   const load = useCallback(async () => {
     setError('');
@@ -26,6 +28,8 @@ export default function ProjectGroupScreen() {
   useFocusEffect(useCallback(() => {
     load();
   }, [load]));
+
+  useEffect(() => onSynced(() => load()), [load]);
 
   useLive(useCallback((event) => {
     if (event.type === 'conversations') load();
@@ -67,7 +71,7 @@ export default function ProjectGroupScreen() {
           onPress={() => open(project)}
         />
       ))}
-      {!error && projects.length === 0 ? <Notice>You are not on a project team yet.</Notice> : null}
+      {!error && projects.length === 0 ? (online ? <Notice>You are not on a project team yet.</Notice> : <ConnectLoader />) : null}
       {busyId ? <Text style={styles.opening}>Creating the group…</Text> : null}
     </ScrollView>
   );

@@ -205,7 +205,7 @@ const HbmsOverview = () => {
       label: `${name} projects`,
       count: rows.length,
       average,
-      color: index === 0 ? '#15803d' : '#7c3aed',
+      color: index === 0 ? '#2e6b57' : '#7c3aed',
       value: rows.length,
     };
   });

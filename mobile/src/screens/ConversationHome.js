@@ -1,13 +1,14 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { api } from '../api';
 import { setMessageBadge, setTeamsBadge } from '../badges';
-import { useAuth } from '../auth';
-import { Avatar, Chip, ErrorText, ListRow, Notice, ProjectIcon, ScreenIntro, UnitIcon } from '../components/ui';
+import { Chip, ErrorText, ListRow, Notice, ProjectIcon, ScreenIntro, SettingsButton, UnitIcon } from '../components/ui';
 import { apiError, formatChatTime } from '../format';
 import { useLive } from '../live';
+import { ConnectLoader, decorateConversations, OfflineBanner, onSynced, readCache, useOffline, writeCache } from '../offline';
 import { colors, frame } from '../theme';
 
 const FILTERS = [
@@ -23,23 +24,28 @@ function unreadTotal(rows, kinds) {
 export default function ConversationHome({ title, kicker, work }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { employee } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [filter, setFilter] = useState('all');
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const personal = !work;
+  const { online, revision } = useOffline();
 
   const load = useCallback(async () => {
     setError('');
+    const saved = readCache('conversations');
+    if (Array.isArray(saved)) {
+      setConversations((current) => (current.length ? current : saved));
+    }
     try {
       const response = await api.get('/hbms/conversations');
       const rows = response.data.data?.conversations || [];
       setConversations(rows);
       setMessageBadge(unreadTotal(rows, 'DIRECT'));
       setTeamsBadge(unreadTotal(rows, ['DEPARTMENT', 'PROJECT']));
+      await writeCache('conversations', rows);
     } catch (err) {
-      setError(apiError(err, 'Could not load chats'));
+      if (!Array.isArray(saved)) setError(apiError(err, 'Could not load chats'));
     }
   }, []);
 
@@ -47,16 +53,18 @@ export default function ConversationHome({ title, kicker, work }) {
     load();
   }, [load]));
 
+  useEffect(() => onSynced(() => load()), [load]);
+
   useLive(useCallback((event) => {
     if (event.type === 'conversations' || event.type === 'message' || event.type === 'profile') load();
   }, [load]));
 
   const visible = useMemo(() => {
     const kinds = personal ? ['DIRECT'] : ['DEPARTMENT', 'PROJECT'];
-    let rows = conversations.filter((item) => kinds.includes(item.kind));
+    let rows = decorateConversations(conversations).filter((item) => kinds.includes(item.kind));
     if (filter === 'unread') rows = rows.filter((item) => item.unread > 0);
     return rows;
-  }, [conversations, filter, personal]);
+  }, [conversations, filter, personal, revision]);
 
   const sections = useMemo(() => {
     if (personal) return [{ key: 'people', title: '', code: null, rows: visible }];
@@ -89,22 +97,18 @@ export default function ConversationHome({ title, kicker, work }) {
           />
         )}
       >
-        <ScreenIntro
-          title={title}
-          kicker={kicker}
-          leading={personal && employee?.id ? (
-            <Avatar
-              name={`${employee.firstName || ''} ${employee.lastName || ''}`}
-              employeeId={employee.id}
-              photoKey={employee.photoKey}
-              onPress={() => router.push(`/person/${employee.id}`)}
-            />
-          ) : null}
-        />
+        <OfflineBanner />
+        <ScreenIntro title={title} kicker={kicker} trailing={<SettingsButton />} />
         <View style={styles.filters}>
           {FILTERS.map(([id, label]) => (
             <Chip key={id} label={label} active={filter === id} onPress={() => setFilter(id)} />
           ))}
+          {personal ? (
+            <Pressable accessibilityRole="button" accessibilityLabel="Call history" onPress={() => router.push('/calls')} style={styles.calls}>
+              <Ionicons name="call" size={16} color={colors.accentDark} />
+              <Text style={styles.callsText}>Calls</Text>
+            </Pressable>
+          ) : null}
         </View>
         <ErrorText>{error}</ErrorText>
         {sections.map((section) => (
@@ -136,11 +140,13 @@ export default function ConversationHome({ title, kicker, work }) {
           </View>
         ))}
         {!error && visible.length === 0 ? (
-          <Notice>
-            {personal
-              ? 'Your personal chats show up here. Start one with the green button.'
-              : 'Department chats and project groups show up here. Start a project group with the green button.'}
-          </Notice>
+          online ? (
+            <Notice>
+              {personal
+                ? 'Your personal chats show up here. Start one with the green button.'
+                : 'Department chats and project groups show up here. Start a project group with the green button.'}
+            </Notice>
+          ) : <ConnectLoader />
         ) : null}
       </ScrollView>
       <Pressable accessibilityRole="button" onPress={() => router.push(work ? '/project-group' : '/people')} style={[styles.fab, Platform.OS === 'ios' && { bottom: insets.bottom + 86 }]}>
@@ -154,6 +160,16 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { ...frame, paddingHorizontal: 16, paddingBottom: 96 },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
+  calls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: colors.chip,
+  },
+  callsText: { color: colors.accentDark, fontSize: 13, fontWeight: '700' },
   unit: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 2 },
   section: { fontSize: 13, fontWeight: '700', color: colors.accentDark },
   fab: {

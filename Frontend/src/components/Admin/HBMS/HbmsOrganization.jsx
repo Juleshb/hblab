@@ -11,7 +11,7 @@ const statTones = {
   amber: 'border-amber-100 bg-amber-50 text-amber-700',
 };
 
-const labColors = ['#15803d', '#22c55e', '#0f766e', '#65a30d', '#047857', '#4ade80'];
+const labColors = ['#2e6b57', '#548675', '#214d3e', '#7da397', '#1a3d31', '#a7c1b8'];
 const studioColors = ['#7c3aed', '#a78bfa', '#6d28d9', '#8b5cf6', '#5b21b6', '#c4b5fd'];
 
 function departmentIcon(name) {
@@ -262,7 +262,7 @@ const HbmsOrganization = () => {
                   <h3 className="mt-2 font-semibold text-gray-900">{unit.departments.length} departments</h3>
                   <p className="mt-1 text-xs text-gray-500">{unit.description || `${staff} people · ${unit._count?.projects || 0} projects`}</p>
                 </div>
-                <SplitRing parts={parts.length ? parts : [{ label: unit.name, value: 1, color: studio ? '#7c3aed' : '#15803d' }]} total={staff} caption="people" />
+                <SplitRing parts={parts.length ? parts : [{ label: unit.name, value: 1, color: studio ? '#7c3aed' : '#2e6b57' }]} total={staff} caption="people" />
               </div>
               {unit.departments.length === 0 ? (
                 <Notice tone="empty">No departments yet.</Notice>
@@ -270,7 +270,7 @@ const HbmsOrganization = () => {
                 <ul className="mt-2 space-y-2">
                   {unit.departments.map((department, index) => {
                     const share = Math.round((department._count.employees / peak) * 100);
-                    const color = parts[index]?.color || '#15803d';
+                    const color = parts[index]?.color || '#2e6b57';
                     return (
                       <li key={department.id} className="rounded-2xl bg-gray-50 px-3 py-3">
                         <div className="flex items-center gap-3">

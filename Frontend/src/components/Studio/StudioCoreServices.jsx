@@ -8,7 +8,7 @@ const coreServices = [
   {
     title: "Videography Services",
     image: videographyImg,
-    accent: "from-[#326567] to-[#166c44]",
+    accent: "from-[#326567] to-[#2e6b57]",
     description: "Multi-camera direction for cultural moments, corporate launches, and brand storytelling.",
     items: [
       "Music videos",
@@ -21,7 +21,7 @@ const coreServices = [
   {
     title: "Photography Services",
     image: photographyImg,
-    accent: "from-[#310979] to-[#166c44]",
+    accent: "from-[#310979] to-[#2e6b57]",
     description: "Editorial lighting and on-location sessions across Kigali, Rubavu, and Lake Kivu.",
     items: [
       "Events",
@@ -34,7 +34,7 @@ const coreServices = [
   {
     title: "Podcast Studio",
     image: podcastImg,
-    accent: "from-[#166c44] to-[#326567]",
+    accent: "from-[#2e6b57] to-[#326567]",
     description: "Acoustically treated space with broadcast microphones, LED sets, and remote guest routing.",
     items: ["Recording booth", "Video podcast support", "Production team on set"],
   },

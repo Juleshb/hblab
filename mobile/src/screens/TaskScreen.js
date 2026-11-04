@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Pressable,
   RefreshControl,
@@ -14,6 +14,7 @@ import { apiError, dueLabel, formatWhen, personName, PRIORITY_LABEL, STATUS_LABE
 import { EmojiTextField } from '../components/EmojiPanel';
 import { KeyboardScroll } from '../keyboard';
 import { useLive } from '../live';
+import { onSynced, readCache, writeCache } from '../offline';
 import { colors, type } from '../theme';
 
 const WORKER_STATUSES = [
@@ -36,17 +37,23 @@ export default function TaskScreen() {
 
   const load = useCallback(async () => {
     setError('');
+    const saved = readCache(`task:${id}`);
+    if (saved) setTask(saved);
     try {
       const response = await api.get(`/hbms/tasks/${id}`);
-      setTask(response.data.data);
+      const data = response.data.data;
+      setTask(data);
+      await writeCache(`task:${id}`, data);
     } catch (err) {
-      setError(apiError(err, 'Could not load this task'));
+      if (!saved) setError(apiError(err, 'Could not load this task'));
     }
   }, [id]);
 
   useFocusEffect(useCallback(() => {
     load();
   }, [load]));
+
+  useEffect(() => onSynced(() => load()), [load]);
 
   useLive(useCallback((event) => {
     if (event.type === 'tasks' && (!event.taskId || event.taskId === id)) load();

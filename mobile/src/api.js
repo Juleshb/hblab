@@ -2,6 +2,7 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import { isOfflineError, noteOffline, noteOnline } from './offline';
 import { currentToken, unauthorized } from './session';
 
 function packagerHost() {
@@ -37,8 +38,12 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    noteOnline();
+    return response;
+  },
   (error) => {
+    if (isOfflineError(error)) noteOffline();
     const path = error?.config?.url || '';
     if (error?.response?.status === 401 && !path.includes('/auth/login')) unauthorized();
     return Promise.reject(error);

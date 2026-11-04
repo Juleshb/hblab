@@ -57,12 +57,17 @@ import HbmsRoles from './components/Admin/HBMS/HbmsRoles';
 import HbmsSettings from './components/Admin/HBMS/HbmsSettings';
 import AdminGate from './components/Admin/AdminGate';
 import StudentLessonDetail from './components/Student/StudentLessonDetail';
+import ChatPage from './components/Chat/ChatPage';
+import ChatButton from './components/Chat/ChatButton';
+import DeskCall from './components/Chat/DeskCall';
 
 const App = () => {
 
   return (
     <div className="font-Poppins bg-Solitude text-sm">
       <Toaster position="top-right" />
+      <ChatButton />
+      <DeskCall />
       <Routes>
         {/* Public routes */}
         <Route path='/' element={<ContainerPage/>}/>
@@ -77,6 +82,7 @@ const App = () => {
         <Route path="/carrier" element={<Carrier />} />
         <Route path="/apply/:id" element={<ApplyCarrier />} />
         <Route path="/LoginForm" element={<LoginForm />} />
+        <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/SignUpForm" element={<SignUpForm />} />

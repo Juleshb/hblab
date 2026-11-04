@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { api } from './api';
+import { noteIncomingAction } from './callSession';
 import { useAuth } from './auth';
 import { subscribeLive } from './live';
 import { currentToken } from './session';
@@ -54,7 +55,18 @@ function shouldAlert(event) {
 try {
   Notifications.setNotificationHandler({
     handleNotification: async (notification) => {
-      const conversationId = notification.request.content.data?.conversationId;
+      const data = notification.request.content.data;
+      if (data?.type === 'call') {
+        const quiet = AppState.currentState === 'active';
+        return {
+          shouldShowBanner: !quiet,
+          shouldShowList: true,
+          shouldPlaySound: !quiet,
+          shouldSetBadge: false,
+          priority: Notifications.AndroidNotificationPriority.MAX,
+        };
+      }
+      const conversationId = data?.conversationId;
       const hidden = conversationId && String(conversationId) === openConversationId;
       return {
         shouldShowBanner: !hidden,
@@ -101,7 +113,13 @@ async function registerPushToken() {
 export function enableAlerts(openPath) {
   let cancelled = false;
   const received = Notifications.addNotificationResponseReceivedListener((response) => {
-    const path = noticePath(response.notification.request.content.data);
+    const data = response.notification.request.content.data;
+    if (data?.type === 'call') {
+      const action = response.actionIdentifier === 'decline' ? 'decline' : 'accept';
+      noteIncomingAction(String(data.callId || ''), action);
+      return;
+    }
+    const path = noticePath(data);
     if (path) openPath(path);
   });
   const live = subscribeLive((event) => {
@@ -114,7 +132,28 @@ export function enableAlerts(openPath) {
         importance: Notifications.AndroidImportance.HIGH,
         sound: 'default',
       });
+      await Notifications.setNotificationChannelAsync('calls', {
+        name: 'Calls',
+        importance: Notifications.AndroidImportance.MAX,
+        sound: 'default',
+        vibrationPattern: [0, 450, 250, 450, 250, 800],
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+        bypassDnd: true,
+        enableVibrate: true,
+      });
     }
+    await Notifications.setNotificationCategoryAsync('incoming-call', [
+      {
+        identifier: 'accept',
+        buttonTitle: 'Accept',
+        options: { opensAppToForeground: true },
+      },
+      {
+        identifier: 'decline',
+        buttonTitle: 'Decline',
+        options: { opensAppToForeground: false, isDestructive: true },
+      },
+    ]);
     const permission = await Notifications.requestPermissionsAsync();
     if (cancelled || permission.status !== 'granted') return;
     await registerPushToken().catch(() => {});

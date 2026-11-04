@@ -18,11 +18,21 @@ function attachLive(server) {
     }
     if (!clients.has(userId)) clients.set(userId, new Set());
     clients.get(userId).add(socket);
+    publishAll({ type: 'presence', userId: Number(userId), online: true, lastSeenAt: null });
+    require('./calls').onUserJoined(userId);
+    socket.on('message', (raw) => {
+      require('./calls').onCallMessage(userId, raw, socket).catch(() => {});
+    });
     socket.on('close', () => {
       const open = clients.get(userId);
       if (!open) return;
       open.delete(socket);
-      if (!open.size) clients.delete(userId);
+      if (open.size) return;
+      clients.delete(userId);
+      require('./calls').onUserLeft(userId);
+      const lastSeenAt = new Date();
+      prisma.user.update({ where: { id: Number(userId) }, data: { lastSeenAt } }).catch(() => {});
+      publishAll({ type: 'presence', userId: Number(userId), online: false, lastSeenAt: lastSeenAt.toISOString() });
     });
     socket.on('error', () => socket.close());
   });
@@ -36,13 +46,23 @@ function attachLive(server) {
   sockets.on('close', () => clearInterval(timer));
 }
 
-function send(userId, event) {
-  const open = clients.get(userId);
+function socketsOf(userId) {
+  return clients.get(userId) || clients.get(Number(userId)) || clients.get(String(userId));
+}
+
+function send(userId, event, except) {
+  const open = socketsOf(userId);
   if (!open) return;
   const body = JSON.stringify(event);
   for (const socket of open) {
-    if (socket.readyState === 1) socket.send(body);
+    if (socket === except || socket.readyState !== 1) continue;
+    socket.send(body);
   }
+}
+
+function sendSocket(socket, event) {
+  if (!socket || socket.readyState !== 1) return;
+  socket.send(JSON.stringify(event));
 }
 
 function isUserConnected(userId) {
@@ -54,8 +74,8 @@ function isUserConnected(userId) {
   return false;
 }
 
-function publishUsers(userIds, event) {
-  for (const userId of new Set((userIds || []).filter(Boolean))) send(userId, event);
+function publishUsers(userIds, event, except) {
+  for (const userId of new Set((userIds || []).filter(Boolean))) send(userId, event, except);
 }
 
 function publishAll(event) {
@@ -72,4 +92,4 @@ async function publishEmployees(employeeIds, event) {
   publishUsers(rows.map((row) => row.userId), event);
 }
 
-module.exports = { attachLive, publishUsers, publishEmployees, publishAll, isUserConnected };
+module.exports = { attachLive, publishUsers, publishEmployees, publishAll, isUserConnected, sendSocket };

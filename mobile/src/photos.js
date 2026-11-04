@@ -1,8 +1,69 @@
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
 
+const STORE = 'hbms-photos';
 const cache = new Map();
+const saved = new Map();
 const inflight = new Map();
 const listeners = new Set();
+let persistTimer = null;
+
+function webStore() {
+  if (Platform.OS === 'web' && typeof localStorage !== 'undefined') return localStorage;
+  return null;
+}
+
+async function readStored() {
+  const web = webStore();
+  const raw = web ? web.getItem(STORE) : await AsyncStorage.getItem(STORE);
+  return raw ? JSON.parse(raw) : null;
+}
+
+async function writeStored() {
+  const payload = JSON.stringify(Object.fromEntries(saved));
+  const web = webStore();
+  if (web) {
+    web.setItem(STORE, payload);
+    return;
+  }
+  await AsyncStorage.setItem(STORE, payload);
+}
+
+function schedulePersist() {
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(() => {
+    writeStored().catch(() => {});
+  }, 300);
+}
+
+export async function preparePhotos() {
+  try {
+    const parsed = await readStored();
+    if (!parsed || typeof parsed !== 'object') return;
+    Object.entries(parsed).forEach(([key, uri]) => {
+      if (typeof uri !== 'string' || !uri) return;
+      saved.set(key, uri);
+      cache.set(key, uri);
+    });
+    notify();
+  } catch {
+    /* a missing photo store just means pictures load from the network */
+  }
+}
+
+export async function clearPhotos() {
+  cache.clear();
+  saved.clear();
+  clearTimeout(persistTimer);
+  notify();
+  const web = webStore();
+  if (web) {
+    web.removeItem(STORE);
+    return;
+  }
+  await AsyncStorage.removeItem(STORE);
+}
 
 function notify() {
   listeners.forEach((listener) => listener());
@@ -24,7 +85,24 @@ export function forgetPhoto(employeeId) {
   for (const key of cache.keys()) {
     if (key.startsWith(prefix)) cache.delete(key);
   }
+  for (const key of saved.keys()) {
+    if (key.startsWith(prefix)) saved.delete(key);
+  }
   notify();
+  schedulePersist();
+}
+
+function keepPhoto(key, uri) {
+  cache.set(key, uri);
+  saved.delete(key);
+  saved.set(key, uri);
+  while (saved.size > 40) {
+    const oldest = saved.keys().next().value;
+    saved.delete(oldest);
+    cache.delete(oldest);
+  }
+  notify();
+  schedulePersist();
 }
 
 function bytesFrom(data) {
@@ -54,17 +132,25 @@ function toBase64(bytes) {
   return out;
 }
 
-export function loadPhoto(employeeId, photoKey) {
-  if (!employeeId || !photoKey) return;
+export function fetchPhoto(employeeId, photoKey) {
+  if (!employeeId || !photoKey) return Promise.resolve(null);
   const key = `${employeeId}:${photoKey}`;
-  if (cache.has(key) || inflight.has(key)) return;
+  if (cache.has(key)) return Promise.resolve(cache.get(key));
+  const existing = inflight.get(key);
+  if (existing) return existing;
   const job = api.get(`/hbms/employees/${employeeId}/photo`, { responseType: 'arraybuffer' })
     .then((response) => {
       const type = response.headers?.['content-type'] || 'image/jpeg';
-      cache.set(key, `data:${String(type).split(';')[0]};base64,${toBase64(bytesFrom(response.data))}`);
-      notify();
+      const uri = `data:${String(type).split(';')[0]};base64,${toBase64(bytesFrom(response.data))}`;
+      keepPhoto(key, uri);
+      return uri;
     })
-    .catch(() => {})
+    .catch(() => null)
     .finally(() => inflight.delete(key));
   inflight.set(key, job);
+  return job;
+}
+
+export function loadPhoto(employeeId, photoKey) {
+  fetchPhoto(employeeId, photoKey);
 }

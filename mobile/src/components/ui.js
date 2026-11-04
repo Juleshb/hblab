@@ -1,13 +1,28 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../auth';
 import { loadPhoto, photoUri, subscribePhotos } from '../photos';
 import { avatarColor, colors, type } from '../theme';
 
 export function Boot() {
+  const pulse = useRef(new Animated.Value(0.9)).current;
+  useEffect(() => {
+    const anim = Animated.loop(Animated.sequence([
+      Animated.timing(pulse, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(pulse, { toValue: 0.9, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    ]));
+    anim.start();
+    return () => anim.stop();
+  }, [pulse]);
   return (
     <View style={styles.boot}>
-      <ActivityIndicator color={colors.accent} />
+      <Animated.Image
+        source={require('../../assets/logo-icon.png')}
+        accessibilityIgnoresInvertColors
+        style={[styles.bootLogo, { transform: [{ scale: pulse }] }]}
+      />
     </View>
   );
 }
@@ -66,7 +81,7 @@ export function UnitIcon({ code, name, size = 48 }) {
   );
 }
 
-export function ScreenIntro({ kicker, title, action, onAction, leading }) {
+export function ScreenIntro({ kicker, title, action, onAction, leading, trailing }) {
   return (
     <View style={styles.intro}>
       {leading || null}
@@ -74,12 +89,33 @@ export function ScreenIntro({ kicker, title, action, onAction, leading }) {
         <Text style={type.title}>{title}</Text>
         {kicker ? <Text style={styles.kicker}>{kicker}</Text> : null}
       </View>
+      {trailing || null}
       {action ? (
         <Pressable accessibilityRole="button" onPress={onAction} hitSlop={8} style={styles.actionButton}>
           <Text style={styles.action}>{action}</Text>
         </Pressable>
       ) : null}
     </View>
+  );
+}
+
+export function SettingsButton() {
+  const router = useRouter();
+  const { employee, user } = useAuth();
+  const name = employee
+    ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim()
+    : (user?.name || 'You');
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Settings"
+      hitSlop={8}
+      onPress={() => router.push('/settings')}
+      style={styles.settings}
+    >
+      <Avatar name={name} employeeId={employee?.id} photoKey={employee?.photoKey} size={32} />
+      <Text style={styles.settingsText}>Settings</Text>
+    </Pressable>
   );
 }
 
@@ -125,13 +161,16 @@ export function ErrorText({ children }) {
 }
 
 const styles = StyleSheet.create({
-  boot: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
+  boot: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.wash },
+  bootLogo: { width: 96, height: 96 },
   avatar: { alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: '#ffffff', fontWeight: '700' },
   intro: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 8, paddingBottom: 8 },
   kicker: { marginTop: 2, fontSize: 13, color: colors.muted },
   actionButton: { backgroundColor: colors.accentSoft, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
   action: { color: colors.accentDark, fontSize: 14, fontWeight: '700' },
+  settings: { alignItems: 'center', justifyContent: 'center', minWidth: 64, minHeight: 48 },
+  settingsText: { marginTop: 2, fontSize: 11, fontWeight: '700', color: colors.accentDark },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

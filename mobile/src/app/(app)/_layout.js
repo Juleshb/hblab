@@ -14,10 +14,12 @@ export default function AppLayout() {
         headerShadowVisible: false,
         headerTintColor: colors.text,
         headerTitleStyle: { fontWeight: '600' },
+        headerBackButtonDisplayMode: 'minimal',
+        headerBackTitle: 'Back',
         contentStyle: { backgroundColor: colors.bg },
       }}
     >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'Back' }} />
       <Stack.Screen name="task/[id]" options={{ title: 'Task' }} />
       <Stack.Screen name="thread/[id]" options={{ title: 'Message' }} />
       <Stack.Screen name="meeting/[id]" options={{ title: 'Meeting' }} />
@@ -27,6 +29,8 @@ export default function AppLayout() {
       <Stack.Screen name="project-group" options={{ title: 'Project group' }} />
       <Stack.Screen name="group/[id]" options={{ title: 'Manage group' }} />
       <Stack.Screen name="person/[id]" options={{ title: 'Profile' }} />
+      <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+      <Stack.Screen name="calls" options={{ title: 'Calls' }} />
     </Stack>
   );
 }

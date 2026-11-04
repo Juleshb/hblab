@@ -10,7 +10,7 @@ const taskParts = [
   { key: 'IN_PROGRESS', label: 'In progress', color: '#0284c7' },
   { key: 'BLOCKED', label: 'Blocked', color: '#dc2626' },
   { key: 'IN_REVIEW', label: 'In review', color: '#7c3aed' },
-  { key: 'DONE', label: 'Done', color: '#15803d' },
+  { key: 'DONE', label: 'Done', color: '#2e6b57' },
 ];
 
 const priorityEdge = { URGENT: '#ef4444', HIGH: '#f97316', MEDIUM: '#0ea5e9', LOW: '#cbd5e1' };
@@ -395,7 +395,7 @@ const HbmsProjectDetail = () => {
   if (!project) return <Notice>Project not found.</Notice>;
 
   const studio = project.businessUnit?.name === 'HBStudio';
-  const accent = studio ? '#7c3aed' : '#15803d';
+  const accent = studio ? '#7c3aed' : '#2e6b57';
   const tasks = project.tasks || [];
   const openTasks = tasks.filter((item) => !['DONE', 'CANCELLED'].includes(item.status));
   const doneTasks = tasks.filter((item) => item.status === 'DONE').length;

@@ -58,6 +58,23 @@ const register = async (req, res) => {
   }
 };
 
+const ADMIN_CONTACT = 'info@hblab.rw';
+
+const checkEmail = async (req, res) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email.includes('@')) return res.status(400).json({ error: 'Enter a valid email' });
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+      select: { id: true },
+    });
+    res.json({ exists: Boolean(user), contact: ADMIN_CONTACT });
+  } catch (error) {
+    console.error('Check email error:', error);
+    res.status(500).json({ error: 'Could not check that email' });
+  }
+};
+
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -170,6 +187,7 @@ const getCurrentUser = async (req, res) => {
 
 module.exports = {
   register,
+  checkEmail,
   login,
   forgotPassword,
   resetPassword,

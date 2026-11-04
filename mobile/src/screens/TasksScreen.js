@@ -1,12 +1,13 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { api } from '../api';
 import { useAuth } from '../auth';
-import { Chip, ErrorText, ListRow, Notice, ScreenIntro } from '../components/ui';
+import { Chip, ErrorText, ListRow, Notice, ScreenIntro, SettingsButton } from '../components/ui';
 import { apiError, assignedTo, dueLabel, isOpenStatus, PRIORITY_LABEL, STATUS_LABEL } from '../format';
 import { useLive } from '../live';
+import { ConnectLoader, OfflineBanner, onSynced, readCache, useOffline, writeCache } from '../offline';
 import { colors, frame } from '../theme';
 
 const FILTERS = ['Mine', 'Due', 'Review'];
@@ -19,20 +20,27 @@ export default function TasksScreen() {
   const [filter, setFilter] = useState('Mine');
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const { online } = useOffline();
 
   const load = useCallback(async () => {
     setError('');
+    const saved = readCache('tasks');
+    if (Array.isArray(saved)) setTasks((current) => (current.length ? current : saved));
     try {
       const response = await api.get('/hbms/tasks', { params: { limit: 100 } });
-      setTasks(response.data.data || []);
+      const rows = response.data.data || [];
+      setTasks(rows);
+      await writeCache('tasks', rows);
     } catch (err) {
-      setError(apiError(err, 'Could not load tasks'));
+      if (!Array.isArray(saved)) setError(apiError(err, 'Could not load tasks'));
     }
   }, []);
 
   useFocusEffect(useCallback(() => {
     load();
   }, [load]));
+
+  useEffect(() => onSynced(() => load()), [load]);
 
   useLive(useCallback((event) => {
     if (event.type === 'tasks') load();
@@ -54,7 +62,8 @@ export default function TasksScreen() {
       contentContainerStyle={[styles.content, Platform.OS === 'ios' && { paddingBottom: insets.bottom + 108 }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} tintColor={colors.accent} />}
     >
-      <ScreenIntro title="Work" kicker="Open a task, then message the people on it" />
+      <OfflineBanner />
+      <ScreenIntro title="Work" kicker="Open a task, then message the people on it" trailing={<SettingsButton />} />
       <View style={styles.filters}>
         {FILTERS.map((item) => (
           <Chip key={item} label={item} active={filter === item} onPress={() => setFilter(item)} />
@@ -69,7 +78,7 @@ export default function TasksScreen() {
           onPress={() => router.push(`/task/${task.id}`)}
         />
       ))}
-      {!error && visible.length === 0 ? <Notice>No tasks in this view.</Notice> : null}
+      {!error && visible.length === 0 ? (online ? <Notice>No tasks in this view.</Notice> : <ConnectLoader />) : null}
     </ScrollView>
     </SafeAreaView>
   );

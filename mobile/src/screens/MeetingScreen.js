@@ -5,6 +5,7 @@ import { api } from '../api';
 import { ErrorText, ListRow, Notice } from '../components/ui';
 import { apiError, formatWhen, personName, STATUS_LABEL } from '../format';
 import { useLive } from '../live';
+import { onSynced } from '../offline';
 import { colors, type } from '../theme';
 
 export default function MeetingScreen() {
@@ -31,6 +32,8 @@ export default function MeetingScreen() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => onSynced(() => load()), [load]);
 
   useLive(useCallback((event) => {
     if (event.type === 'meetings') load();

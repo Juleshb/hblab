@@ -1,19 +1,24 @@
 const { prisma } = require('./utils');
 
-async function sendPush(userIds, { title, body, data }) {
+async function sendPush(userIds, { title, body, data, channelId, categoryId, priority, ttl, interruptionLevel }) {
   const ids = [...new Set((userIds || []).filter(Boolean))];
-  if (!ids.length || !title) return;
+  if (!ids.length || !title) return false;
   const tokens = await prisma.hbmsPushToken.findMany({
     where: { userId: { in: ids } },
     select: { token: true },
   });
-  if (!tokens.length) return;
+  if (!tokens.length) return false;
   const messages = tokens.map((item) => ({
     to: item.token,
     title,
     body: body || '',
     sound: 'default',
     data: data || {},
+    ...(channelId ? { channelId } : {}),
+    ...(categoryId ? { categoryId } : {}),
+    ...(priority ? { priority } : {}),
+    ...(ttl ? { ttl } : {}),
+    ...(interruptionLevel ? { interruptionLevel } : {}),
   }));
   try {
     await fetch('https://exp.host/--/api/v2/push/send', {
@@ -21,8 +26,10 @@ async function sendPush(userIds, { title, body, data }) {
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify(messages),
     });
+    return true;
   } catch (error) {
     console.error('Push notification failed:', error.message);
+    return false;
   }
 }
 

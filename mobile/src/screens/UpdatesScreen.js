@@ -1,10 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { api } from '../api';
 import { ErrorText, Notice } from '../components/ui';
 import { apiError, formatWhen, groupNotices, openNoticePath, sourceName, updateCountLabel } from '../format';
 import { useLive } from '../live';
+import { onSynced, readCache, writeCache } from '../offline';
 import { colors, type } from '../theme';
 
 const KIND_LABEL = {
@@ -25,16 +26,22 @@ export default function UpdatesScreen() {
 
   const load = useCallback(async () => {
     setError('');
+    const saved = readCache('notifications');
+    if (Array.isArray(saved)) {
+      setGroup(groupNotices(saved).find((item) => item.key === key) || null);
+    }
     try {
       const response = await api.get('/hbms/notifications');
-      const found = groupNotices(response.data.data || []).find((item) => item.key === key) || null;
+      const rows = response.data.data || [];
+      const found = groupNotices(rows).find((item) => item.key === key) || null;
       setGroup(found);
+      await writeCache('notifications', rows);
       const unread = (found?.items || []).filter((item) => !item.readAt);
       unread.forEach((item) => {
         api.post(`/hbms/notifications/${item.id}/read`).catch(() => {});
       });
     } catch (err) {
-      setError(apiError(err, 'Could not load these updates'));
+      if (!Array.isArray(saved)) setError(apiError(err, 'Could not load these updates'));
     } finally {
       setLoaded(true);
     }
@@ -43,6 +50,8 @@ export default function UpdatesScreen() {
   useFocusEffect(useCallback(() => {
     load();
   }, [load]));
+
+  useEffect(() => onSynced(() => load()), [load]);
 
   useLive(useCallback((event) => {
     if (event.type === 'inbox') load();

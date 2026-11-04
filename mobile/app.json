@@ -1,19 +1,38 @@
 {
   "expo": {
-    "name": "HBMS",
+    "name": "Hb-lab",
     "slug": "hbms",
     "scheme": "hbms",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/logo-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#eaf0ee"
+    },
     "plugins": [
-      ["expo-router", { "root": "src/app" }],
-      ["expo-image-picker", {
-        "photosPermission": "HBMS uses your photos so you can set a profile picture."
-      }],
-      ["expo-notifications", {
-        "color": "#1dab62"
+      [
+        "expo-router",
+        {
+          "root": "src/app"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Hb-lab uses your photos so you can set a profile picture."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#2e6b57"
+        }
+      ],
+      ["expo-audio", {
+        "microphonePermission": "Hb-lab uses the microphone so you can send voice messages."
       }]
     ],
     "ios": {
@@ -29,7 +48,7 @@
       "softwareKeyboardLayoutMode": "resize",
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "backgroundColor": "#047857",
+        "backgroundColor": "#2e6b57",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

@@ -71,7 +71,7 @@ const ContactUs = () => {
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       transition={{ duration: 0.8 }}
-      className="flex items-center justify-center mx-auto w-full text-[#16562e]"
+      className="flex items-center justify-center mx-auto w-full text-[#2e6b57]"
     >
       <div className="flex flex-col items-center gap-5 max-w-screen-xl mx-auto px-5">
         <motion.h1 
@@ -97,7 +97,7 @@ const ContactUs = () => {
                 animate={{ x: 0, opacity: 1 }} 
                 transition={{ duration: 0.6 }}
                 className="rounded-lg p-8 text-white lg:p-12 shadow-2xl"
-                style={{ background: "linear-gradient(135deg, #16562e 0%, #0f3c1f 100%)" }}
+                style={{ background: "linear-gradient(135deg, #2e6b57 0%, #1a3d31 100%)" }}
               >
                 <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
                 
@@ -174,7 +174,7 @@ const ContactUs = () => {
                         </svg>
                       </div>
                       <input 
-                        className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 focus:border-[#16562e] transition-all duration-200" 
+                        className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 focus:border-[#2e6b57] transition-all duration-200" 
                         placeholder="Your full name" 
                         type="text" 
                         id="name" 
@@ -197,7 +197,7 @@ const ContactUs = () => {
                           </svg>
                         </div>
                         <input 
-                          className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 focus:border-[#16562e] transition-all duration-200" 
+                          className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 focus:border-[#2e6b57] transition-all duration-200" 
                           placeholder="your@email.com" 
                           type="email" 
                           id="email" 
@@ -218,7 +218,7 @@ const ContactUs = () => {
                           </svg>
                         </div>
                         <input 
-                          className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 focus:border-[#16562e] transition-all duration-200" 
+                          className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 focus:border-[#2e6b57] transition-all duration-200" 
                           placeholder="+250 788 123 456" 
                           type="tel" 
                           id="phone" 
@@ -241,7 +241,7 @@ const ContactUs = () => {
                         </svg>
                       </div>
                       <textarea 
-                        className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 focus:border-[#16562e] transition-all duration-200 resize-none" 
+                        className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 focus:border-[#2e6b57] transition-all duration-200 resize-none" 
                         placeholder="Tell us how we can help you..." 
                         rows="5" 
                         id="message" 
@@ -258,7 +258,7 @@ const ContactUs = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ duration: 0.3 }}
-                    className="w-full py-4 px-6 bg-[#16562e] hover:bg-[#10401f] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                    className="w-full py-4 px-6 bg-[#2e6b57] hover:bg-[#1a3d31] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
                       type="submit"
                   >
                     Send Message →
@@ -284,7 +284,7 @@ const ContactUs = () => {
             </p>
             <button
               onClick={handleModalClose}
-              className="px-6 py-2 bg-[#16562e] hover:bg-[#10401f] text-white font-medium rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+              className="px-6 py-2 bg-[#2e6b57] hover:bg-[#1a3d31] text-white font-medium rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
             >
               Thank You
             </button>

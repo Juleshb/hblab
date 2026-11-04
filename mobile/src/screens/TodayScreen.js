@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -8,6 +8,7 @@ import { setInboxBadge, setMessageBadge, setTeamsBadge } from '../badges';
 import { ErrorText, ListRow, Notice, ScreenIntro } from '../components/ui';
 import { apiError, assignedTo, dueLabel, formatWhen, isOpenStatus, personName, STATUS_LABEL } from '../format';
 import { useLive } from '../live';
+import { ConnectLoader, onSynced, useOffline } from '../offline';
 import { colors, frame } from '../theme';
 
 function nextMeeting(meetings, employeeId) {
@@ -26,6 +27,7 @@ export default function TodayScreen() {
   const [thread, setThread] = useState(null);
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const { online } = useOffline();
 
   const load = useCallback(async () => {
     setError('');
@@ -59,6 +61,8 @@ export default function TodayScreen() {
   useFocusEffect(useCallback(() => {
     load();
   }, [load]));
+
+  useEffect(() => onSynced(() => load()), [load]);
 
   useLive(useCallback((event) => {
     if (event.type === 'tasks' || event.type === 'inbox' || event.type === 'conversations' || event.type === 'message' || event.type === 'meetings') load();
@@ -110,7 +114,7 @@ export default function TodayScreen() {
           onPress={() => router.push(`/thread/${thread.id}`)}
         />
       ) : null}
-      {!error && !tasks.length && !meeting && !thread ? <Notice>Nothing assigned yet. Pull to refresh.</Notice> : null}
+      {!error && !tasks.length && !meeting && !thread ? (online ? <Notice>Nothing assigned yet. Pull to refresh.</Notice> : <ConnectLoader />) : null}
     </ScrollView>
     </SafeAreaView>
   );

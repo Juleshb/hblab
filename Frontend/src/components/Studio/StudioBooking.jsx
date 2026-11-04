@@ -119,7 +119,7 @@ const StudioBooking = () => {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all"
+                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
                   placeholder="Your full name"
                 />
               </div>
@@ -133,7 +133,7 @@ const StudioBooking = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all"
+                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
                   placeholder="your@email.com"
                 />
               </div>
@@ -150,7 +150,7 @@ const StudioBooking = () => {
                   required
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all"
+                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
                   placeholder="+250 788 123 456"
                 />
               </div>
@@ -163,7 +163,7 @@ const StudioBooking = () => {
                   required
                   value={formData.eventType}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all"
+                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
                 >
                   <option value="">Select event type</option>
                   <option value="wedding">Wedding</option>
@@ -186,7 +186,7 @@ const StudioBooking = () => {
                   id="package"
                   value={formData.package}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all"
+                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
                 >
                   <option value="">Select a package</option>
                   <option value="s-basic">S-Basic (400,000 RWF)</option>
@@ -208,7 +208,7 @@ const StudioBooking = () => {
                   required
                   value={formData.eventDate}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all"
+                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
                 />
               </div>
             </div>
@@ -224,7 +224,7 @@ const StudioBooking = () => {
                   required
                   value={formData.eventLocation}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all"
+                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
                   placeholder="City, Venue name"
                 />
               </div>
@@ -238,7 +238,7 @@ const StudioBooking = () => {
                   min="1"
                   value={formData.guestCount}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all"
+                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
                   placeholder="Number of guests"
                 />
               </div>
@@ -253,7 +253,7 @@ const StudioBooking = () => {
                 rows="4"
                 value={formData.specialRequests}
                 onChange={handleChange}
-                className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#16562e] focus:outline-none focus:ring-4 focus:ring-[#16562e]/30 transition-all resize-none"
+                className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all resize-none"
                 placeholder="Any special requirements, timeline details, or questions..."
               />
             </div>
@@ -262,7 +262,7 @@ const StudioBooking = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              className="w-full rounded-xl bg-gradient-to-r from-[#16562e] to-[#166c44] px-8 py-4 text-sm font-semibold uppercase tracking-wider text-white shadow-lg transition hover:from-[#10401f] hover:to-[#16562e]"
+              className="w-full rounded-xl bg-gradient-to-r from-[#2e6b57] to-[#2e6b57] px-8 py-4 text-sm font-semibold uppercase tracking-wider text-white shadow-lg transition hover:from-[#1a3d31] hover:to-[#2e6b57]"
             >
               Submit Booking Request →
             </motion.button>
@@ -275,7 +275,7 @@ const StudioBooking = () => {
           <div className="py-4 text-center">
             <button
               onClick={handleModalClose}
-              className="rounded-xl bg-[#16562e] px-6 py-2 font-medium text-white transition hover:bg-[#10401f]"
+              className="rounded-xl bg-[#2e6b57] px-6 py-2 font-medium text-white transition hover:bg-[#1a3d31]"
             >
               Thank You
             </button>

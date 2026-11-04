@@ -6,10 +6,12 @@ export const colors = {
   muted: '#667781',
   faint: '#8696a0',
   line: '#e9edef',
-  accent: '#1dab62',
-  accentDark: '#0b6b4f',
-  accentSoft: '#d9fdd3',
-  bubbleMine: '#d9fdd3',
+  wash: '#eaf0ee',
+  accent: '#2e6b57',
+  accentDark: '#214d3e',
+  accentSoft: '#d9e4e1',
+  accentMuted: '#c4d6d0',
+  bubbleMine: '#d1deda',
   bubbleTheirs: '#ffffff',
   chip: '#f0f2f5',
   onAccent: '#ffffff',
@@ -29,7 +31,7 @@ export const type = {
   meta: { fontSize: 13, color: colors.muted, lineHeight: 18 },
 };
 
-const avatarTones = ['#00a884', '#53bdeb', '#7f66ff', '#ff7a59', '#e67e22', '#25d366'];
+const avatarTones = ['#2e6b57', '#53bdeb', '#7f66ff', '#ff7a59', '#e67e22', '#548675'];
 
 export function avatarColor(name) {
   const text = String(name || '');

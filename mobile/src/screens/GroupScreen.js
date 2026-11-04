@@ -1,10 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { api } from '../api';
 import { ErrorText, ListRow, Notice } from '../components/ui';
 import { apiError } from '../format';
 import { useLive } from '../live';
+import { onSynced } from '../offline';
 import { colors, type } from '../theme';
 
 export default function GroupScreen() {
@@ -27,6 +28,8 @@ export default function GroupScreen() {
   useFocusEffect(useCallback(() => {
     load();
   }, [load]));
+
+  useEffect(() => onSynced(() => load()), [load]);
 
   useLive(useCallback((event) => {
     if (event.type === 'conversations' && (!event.conversationId || event.conversationId === id)) load();

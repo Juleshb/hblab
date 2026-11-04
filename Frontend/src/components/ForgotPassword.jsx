@@ -38,15 +38,15 @@ const ForgotPassword = () => {
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-1 w-full rounded-lg border-2 border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#16562e]"
+            className="mt-1 w-full rounded-lg border-2 border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#2e6b57]"
             placeholder="your@email.com"
           />
           {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
           {message ? <p className="mt-3 text-sm text-emerald-700">{message}</p> : null}
-          <button type="submit" disabled={loading} className="mt-4 w-full rounded-lg bg-[#16562e] py-2 text-sm font-semibold text-white disabled:opacity-60">
+          <button type="submit" disabled={loading} className="mt-4 w-full rounded-lg bg-[#2e6b57] py-2 text-sm font-semibold text-white disabled:opacity-60">
             {loading ? 'Sending…' : 'Send reset link'}
           </button>
-          <Link to="/LoginForm" className="mt-4 block text-center text-sm text-[#16562e]">Back to sign in</Link>
+          <Link to="/LoginForm" className="mt-4 block text-center text-sm text-[#2e6b57]">Back to sign in</Link>
         </form>
       </div>
     </>

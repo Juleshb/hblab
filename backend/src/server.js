@@ -19,6 +19,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const hbmsRoutes = require('./modules/hbms');
 const { ensureHbmsSeed } = require('./modules/hbms/seed');
 const { startDeadlineReminders } = require('./modules/hbms/reminders');
+const { startVoiceExpiry } = require('./modules/hbms/voiceExpiry');
 const { attachLive } = require('./modules/hbms/live');
 
 // Middleware - MUST come before routes
@@ -56,4 +57,5 @@ server.listen(PORT, () => {
     console.error('HBMS seed skipped:', error.message);
   });
   startDeadlineReminders();
+  startVoiceExpiry();
 });
