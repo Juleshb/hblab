@@ -8,6 +8,7 @@ const AdminSidebar = ({ sidebarOpen, mobileSidebarOpen, toggleSidebar, toggleMob
   const location = useLocation();
   const activeTab = location.pathname.split('/')[2] || 'dashboard';
   const [learningOpen, setLearningOpen] = useState(['lessons', 'progress'].includes(activeTab));
+  const [hbmsOpen, setHbmsOpen] = useState(location.pathname.includes('/admin/hbms'));
   const { logout } = useAuth();
 
   const handleLogout = () => {
@@ -45,6 +46,7 @@ const AdminSidebar = ({ sidebarOpen, mobileSidebarOpen, toggleSidebar, toggleMob
               {/* Dashboard */}
               <NavLink
                 to="/admin"
+                end
                 className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition-all duration-200 group text-xs ${
                   isActive 
                     ? 'bg-white/10 text-white shadow-lg border border-white/20' 
@@ -108,6 +110,27 @@ const AdminSidebar = ({ sidebarOpen, mobileSidebarOpen, toggleSidebar, toggleMob
                 )}
               </NavLink>
 
+              <NavLink
+                to="/admin/certificates"
+                className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition-all duration-200 group text-xs ${
+                  isActive 
+                    ? 'bg-white/10 text-white shadow-lg border border-white/20' 
+                    : 'text-green-100 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className={`p-1 rounded-lg mr-2 transition-all duration-200 ${
+                  activeTab === 'certificates' 
+                    ? 'bg-white/20 text-white' 
+                    : 'bg-green-700/30 text-green-200 group-hover:bg-white/10 group-hover:text-white'
+                }`}>
+                  <Icon icon="carbon:certificate" className="h-4 w-4" />
+                </div>
+                <span className="font-medium">Certificates</span>
+                {activeTab === 'certificates' && (
+                  <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>
+                )}
+              </NavLink>
+
               {/* Learning Dropdown */}
               <div>
                 <button
@@ -160,6 +183,8 @@ const AdminSidebar = ({ sidebarOpen, mobileSidebarOpen, toggleSidebar, toggleMob
                   </div>
                 )}
               </div>
+
+              <HbmsNav open={hbmsOpen} setOpen={setHbmsOpen} />
 
               {/* Management */}
               <NavLink
@@ -263,6 +288,7 @@ const AdminSidebar = ({ sidebarOpen, mobileSidebarOpen, toggleSidebar, toggleMob
               {/* Dashboard */}
               <NavLink
                 to="/admin"
+                end
                 className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition-all duration-200 group text-xs ${
                   isActive 
                     ? 'bg-white/10 text-white shadow-lg border border-white/20' 
@@ -329,6 +355,28 @@ const AdminSidebar = ({ sidebarOpen, mobileSidebarOpen, toggleSidebar, toggleMob
                 )}
               </NavLink>
 
+              <NavLink
+                to="/admin/certificates"
+                className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition-all duration-200 group text-xs ${
+                  isActive 
+                    ? 'bg-white/10 text-white shadow-lg border border-white/20' 
+                    : 'text-green-100 hover:bg-white/5 hover:text-white'
+                }`}
+                onClick={toggleMobileSidebar}
+              >
+                <div className={`p-1 rounded-lg mr-2 transition-all duration-200 ${
+                  activeTab === 'certificates' 
+                    ? 'bg-white/20 text-white' 
+                    : 'bg-green-700/30 text-green-200 group-hover:bg-white/10 group-hover:text-white'
+                }`}>
+                  <Icon icon="carbon:certificate" className="h-4 w-4" />
+                </div>
+                <span className="font-medium">Certificates</span>
+                {activeTab === 'certificates' && (
+                  <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>
+                )}
+              </NavLink>
+
               {/* Learning Dropdown */}
               <div>
                 <button
@@ -383,6 +431,8 @@ const AdminSidebar = ({ sidebarOpen, mobileSidebarOpen, toggleSidebar, toggleMob
                   </div>
                 )}
               </div>
+
+              <HbmsNav open={hbmsOpen} setOpen={setHbmsOpen} onNavigate={toggleMobileSidebar} />
 
               {/* Management */}
               <NavLink
@@ -457,6 +507,61 @@ const AdminSidebar = ({ sidebarOpen, mobileSidebarOpen, toggleSidebar, toggleMob
     </>
   );
 };
+
+const hbmsLinks = [
+  { to: '/admin/hbms', label: 'Overview', icon: 'carbon:dashboard', end: true },
+  { to: '/admin/hbms/organization', label: 'Organization', icon: 'carbon:building' },
+  { to: '/admin/hbms/workers', label: 'Workers', icon: 'carbon:group' },
+  { to: '/admin/hbms/projects', label: 'Projects', icon: 'carbon:folder' },
+  { to: '/admin/hbms/programs', label: 'Programs', icon: 'carbon:education' },
+  { to: '/admin/hbms/tasks', label: 'Tasks', icon: 'carbon:task' },
+  { to: '/admin/hbms/attendance', label: 'Attendance', icon: 'carbon:time' },
+  { to: '/admin/hbms/messages', label: 'Messages', icon: 'carbon:notification' },
+  { to: '/admin/hbms/documents', label: 'Documents', icon: 'carbon:document' },
+  { to: '/admin/hbms/reports', label: 'Reports', icon: 'carbon:report' },
+  { to: '/admin/hbms/roles', label: 'Roles', icon: 'carbon:user-role' },
+];
+
+const HbmsNav = ({ open, setOpen, onNavigate }) => (
+  <div>
+    <button
+      type="button"
+      className={`flex items-center w-full px-3 py-2 rounded-lg transition-all duration-200 group text-xs ${
+        open
+          ? 'bg-white/10 text-white shadow-lg border border-white/20'
+          : 'text-green-100 hover:bg-white/5 hover:text-white'
+      }`}
+      onClick={() => setOpen((value) => !value)}
+      aria-expanded={open}
+    >
+      <div className={`p-1 rounded-lg mr-2 transition-all duration-200 ${
+        open ? 'bg-white/20 text-white' : 'bg-green-700/30 text-green-200 group-hover:bg-white/10 group-hover:text-white'
+      }`}>
+        <Icon icon="carbon:operations-record" className="h-4 w-4" />
+      </div>
+      <span className="font-medium">HBMS</span>
+      <Icon icon="carbon:chevron-down" className={`ml-auto h-3 w-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+    </button>
+    {open && (
+      <div className="ml-8 mt-1 space-y-1">
+        {hbmsLinks.map((link) => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            end={link.end}
+            onClick={onNavigate}
+            className={({ isActive }) => `flex items-center px-2 py-1 rounded-lg text-xs transition-all duration-200 ${
+              isActive ? 'bg-green-700/20 text-white' : 'text-green-100 hover:bg-green-700/10 hover:text-white'
+            }`}
+          >
+            <Icon icon={link.icon} className="h-3 w-3 mr-1" />
+            <span>{link.label}</span>
+          </NavLink>
+        ))}
+      </div>
+    )}
+  </div>
+);
 
 const UserProfileCard = () => (
   <div className="mb-8">

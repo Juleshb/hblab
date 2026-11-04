@@ -40,12 +40,19 @@ model User {
   address      String? // NEW: address
   dateOfBirth  DateTime? // NEW: date of birth
   nationality  String? // NEW: nationality
+  passwordResetHash    String?
+  passwordResetExpires DateTime?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   lessons      Lesson[]
   applications CareerApplication[]
   lessonProgress LessonProgress[] // NEW: relation to progress
   enrolledCourses EnrolledCourse[] // NEW: relation to enrolled courses
+  employeeProfile Employee?
+  hbmsRoles       HbmsUserRole[]
+  hbmsClientAccess HbmsClientAccess[]
+  conversationMemberships HbmsConversationMember[]
+  conversationMessages    HbmsConversationMessage[]
 }
 
 enum UserRole {
@@ -203,5 +210,960 @@ model EnrolledCourse {
   userId    Int
   courseId  Int      // If you have a Course model, otherwise use lessonId
   enrolledAt DateTime @default(now())
+}
+
+// HBMS — internal operations for HBLab and HBStudio.
+// Project progress is calculated from tasks: DONE / non-cancelled tasks.
+// A task may have more than one assignee.
+
+model BusinessUnit {
+  id          String       @id @default(uuid())
+  code        String       @unique
+  name        String
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  departments Department[]
+  employees   Employee[]
+  projects    HbmsProject[]
+  programs      HbmsProgram[]
+  holidays      HbmsHoliday[]
+  announcements HbmsAnnouncement[]
+  documents     HbmsDocument[]
+
+  @@index([code])
+}
+
+model Department {
+  id             String       @id @default(uuid())
+  name           String
+  businessUnitId String
+  businessUnit   BusinessUnit @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+  managerId      String?
+  manager        Employee?    @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+  employees      Employee[]   @relation("DepartmentStaff")
+  projects       HbmsProjectDepartment[]
+  conversation   HbmsConversation?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([businessUnitId, name])
+  @@index([businessUnitId])
+}
+
+model Position {
+  id               String     @id @default(uuid())
+  title            String     @unique
+  responsibilities String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  employees        Employee[]
+}
+
+model Employee {
+  id               String         @id @default(uuid())
+  userId           Int?           @unique
+  user             User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  firstName        String
+  lastName         String
+  email            String         @unique
+  phone            String?
+  staffCode        String         @unique
+  employmentType   EmploymentType @default(FULL_TIME)
+  status           EmployeeStatus @default(ACTIVE)
+  businessUnitId   String
+  businessUnit     BusinessUnit   @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  departmentId     String?
+  department       Department?    @relation("DepartmentStaff", fields: [departmentId], references: [id], onDelete: SetNull)
+  positionId       String?
+  position         Position?      @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  reportsToId      String?
+  reportsTo        Employee?      @relation("ReportingLine", fields: [reportsToId], references: [id], onDelete: SetNull)
+  directReports    Employee[]     @relation("ReportingLine")
+  managedDepartments Department[] @relation("DepartmentManager")
+  skills           String[]       @default([])
+  photoKey         String?
+  photoProvider    String?
+  managedProjects  HbmsProject[]  @relation("ProjectManager")
+  memberships      HbmsProjectMember[]
+  createdTasks     HbmsTask[]     @relation("TaskCreator")
+  assignments      HbmsTaskAssignee[]
+  comments         HbmsTaskComment[]
+  meetingAttendances HbmsMeetingAttendee[]
+  coordinatedPrograms HbmsProgram[] @relation("ProgramCoordinator")
+  trainingRoles    HbmsProgramTrainer[]
+  learnerProfile   HbmsParticipant?
+  attendancePolicy HbmsAttendancePolicy @default(OFFICE)
+  workDays         String               @default("1,2,3,4,5")
+  shiftStart       String               @default("08:00")
+  shiftEnd         String               @default("17:00")
+  attendance       HbmsAttendance[]
+  timesheets       HbmsTimesheet[]
+  leaveRequests    HbmsLeaveRequest[]
+  notifications    HbmsNotification[]
+  libraryDocuments HbmsDocument[]
+  documentGrants   HbmsDocumentGrant[]
+  conversationMembers HbmsConversationMember[]
+  authoredMessages HbmsConversationMessage[]
+  experiences      HbmsExperience[]
+  documents        HbmsStaffDocument[]
+  paymentsMade     HbmsPayment[]  @relation("PaymentPayer")
+  paymentsReceived HbmsPayment[]  @relation("PaymentReceiver")
+  expensesSpent    HbmsExpense[]  @relation("ExpenseSpender")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([businessUnitId])
+  @@index([departmentId])
+  @@index([status])
+}
+
+model HbmsProject {
+  id             String            @id @default(uuid())
+  name           String
+  code           String            @unique
+  description    String?
+  businessUnitId String
+  businessUnit   BusinessUnit      @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  managerId      String?
+  manager        Employee?         @relation("ProjectManager", fields: [managerId], references: [id], onDelete: SetNull)
+  status         HbmsProjectStatus @default(PLANNING)
+  category       HbmsProjectCategory @default(SOFTWARE)
+  startDate      DateTime?
+  endDate        DateTime?
+  clientName     String?
+  clientContactName String?
+  clientEmail    String?
+  clientPhone    String?
+  budgetAmount   Int?
+  budgetCurrency String            @default("RWF")
+  requiresApproval Boolean         @default(true)
+  members        HbmsProjectMember[]
+  departments    HbmsProjectDepartment[]
+  milestones     HbmsMilestone[]
+  tasks          HbmsTask[]
+  meetings       HbmsMeeting[]
+  attendance     HbmsAttendance[]
+  timesheets     HbmsTimesheet[]
+  expenses       HbmsExpense[]
+  payments       HbmsPayment[]
+  documents      HbmsDocument[]
+  clientAccess   HbmsClientAccess[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([businessUnitId])
+  @@index([status])
+  @@index([category])
+  @@index([managerId])
+}
+
+model HbmsProgram {
+  id             String            @id @default(uuid())
+  name           String
+  description    String?
+  objectives     String?
+  kind           HbmsProgramKind
+  status         HbmsProgramStatus @default(PLANNED)
+  businessUnitId String
+  businessUnit   BusinessUnit      @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  coordinatorId  String?
+  coordinator    Employee?         @relation("ProgramCoordinator", fields: [coordinatorId], references: [id], onDelete: SetNull)
+  startDate      DateTime?
+  endDate        DateTime?
+  capacity       Int?
+  outcomes       String?
+  trainers       HbmsProgramTrainer[]
+  sessions       HbmsProgramSession[]
+  enrollments    HbmsProgramEnrollment[]
+  materials      HbmsProgramMaterial[]
+  assignments    HbmsProgramAssignment[]
+  reports        HbmsProgramReport[]
+  documents      HbmsDocument[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([businessUnitId, status])
+  @@index([coordinatorId])
+}
+
+model HbmsParticipant {
+  id          String    @id @default(uuid())
+  firstName   String
+  lastName    String
+  email       String?   @unique
+  phone       String?
+  employeeId  String?   @unique
+  employee    Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  enrollments HbmsProgramEnrollment[]
+  attendance  HbmsProgramAttendance[]
+  submissions HbmsProgramSubmission[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model HbmsProgramTrainer {
+  id         String          @id @default(uuid())
+  programId  String
+  program    HbmsProgram     @relation(fields: [programId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  role       HbmsTrainerRole @default(TRAINER)
+  createdAt  DateTime        @default(now())
+
+  @@unique([programId, employeeId])
+  @@index([employeeId])
+}
+
+model HbmsProgramSession {
+  id         String   @id @default(uuid())
+  programId  String
+  program    HbmsProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  title      String
+  startsAt   DateTime
+  endsAt     DateTime?
+  location   String?
+  attendance HbmsProgramAttendance[]
+  createdAt  DateTime @default(now())
+
+  @@index([programId, startsAt])
+}
+
+model HbmsProgramEnrollment {
+  id            String               @id @default(uuid())
+  programId     String
+  program       HbmsProgram          @relation(fields: [programId], references: [id], onDelete: Cascade)
+  participantId String
+  participant   HbmsParticipant      @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  status        HbmsEnrollmentStatus @default(REGISTERED)
+  registeredAt  DateTime             @default(now())
+
+  @@unique([programId, participantId])
+  @@index([participantId])
+}
+
+model HbmsProgramAttendance {
+  id            String           @id @default(uuid())
+  sessionId     String
+  session       HbmsProgramSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  participantId String
+  participant   HbmsParticipant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  status        AttendanceStatus
+
+  @@unique([sessionId, participantId])
+  @@index([participantId])
+}
+
+model HbmsProgramMaterial {
+  id        String      @id @default(uuid())
+  programId String
+  program   HbmsProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  title     String
+  fileName  String
+  fileUrl   String
+  createdAt DateTime    @default(now())
+
+  @@index([programId])
+}
+
+model HbmsProgramAssignment {
+  id          String             @id @default(uuid())
+  programId   String
+  program     HbmsProgram        @relation(fields: [programId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  kind        HbmsAssignmentKind @default(ASSIGNMENT)
+  dueDate     DateTime?
+  submissions HbmsProgramSubmission[]
+  createdAt   DateTime           @default(now())
+
+  @@index([programId])
+  @@index([dueDate])
+}
+
+model HbmsProgramSubmission {
+  id            String               @id @default(uuid())
+  assignmentId  String
+  assignment    HbmsProgramAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  participantId String
+  participant   HbmsParticipant      @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  status        HbmsSubmissionStatus @default(PENDING)
+  score         Int?
+  feedback      String?
+  updatedAt     DateTime             @updatedAt
+
+  @@unique([assignmentId, participantId])
+  @@index([participantId])
+}
+
+model HbmsProgramReport {
+  id        String      @id @default(uuid())
+  programId String
+  program   HbmsProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  createdAt DateTime    @default(now())
+
+  @@index([programId])
+}
+
+model HbmsAttendance {
+  id         String           @id @default(uuid())
+  employeeId String
+  employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  workDate       DateTime
+  status         AttendanceStatus
+  hours          Decimal?             @db.Decimal(5, 2)
+  checkedInAt    DateTime?
+  checkedOutAt   DateTime?
+  note           String?
+  source         HbmsAttendanceSource @default(CHECKIN)
+  approvalStatus ApprovalStatus?
+  projectId      String?
+  project        HbmsProject?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt      DateTime             @default(now())
+
+  @@unique([employeeId, workDate])
+  @@index([workDate])
+  @@index([projectId])
+}
+
+model HbmsHoliday {
+  id             String        @id @default(uuid())
+  name           String
+  holidayDate    DateTime
+  businessUnitId String?
+  businessUnit   BusinessUnit? @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+
+  @@index([holidayDate])
+  @@index([businessUnitId])
+}
+
+model HbmsTimesheet {
+  id         String         @id @default(uuid())
+  employeeId String
+  employee   Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  projectId  String?
+  project    HbmsProject?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  workDate   DateTime
+  hours      Decimal        @db.Decimal(5, 2)
+  note       String?
+  status     ApprovalStatus @default(PENDING)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([employeeId, workDate])
+  @@index([projectId])
+  @@index([status])
+}
+
+model HbmsLeaveRequest {
+  id         String         @id @default(uuid())
+  employeeId String
+  employee   Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  startDate  DateTime
+  endDate    DateTime
+  reason     String?
+  leaveType  HbmsLeaveType  @default(ANNUAL)
+  status     ApprovalStatus @default(PENDING)
+  reviewNote String?
+  reviewedAt DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([status])
+}
+
+model HbmsExperience {
+  id           String    @id @default(uuid())
+  employeeId   String
+  employee     Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  title        String
+  organization String?
+  startDate    DateTime?
+  endDate      DateTime?
+  description  String?
+  createdAt    DateTime  @default(now())
+
+  @@index([employeeId])
+}
+
+model HbmsStaffDocument {
+  id         String            @id @default(uuid())
+  employeeId String
+  employee   Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  title      String
+  kind       StaffDocumentKind @default(CONTRACT)
+  fileName   String
+  fileUrl    String
+  createdAt  DateTime          @default(now())
+
+  @@index([employeeId])
+}
+
+model HbmsExpense {
+  id          String          @id @default(uuid())
+  projectId   String?
+  project     HbmsProject?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  amount      Int
+  currency    String          @default("RWF")
+  description String
+  status      ApprovalStatus  @default(PENDING)
+  spentOn     DateTime?
+  spentByKind HbmsMoneyParty?
+  spentById   String?
+  spentBy     Employee?       @relation("ExpenseSpender", fields: [spentById], references: [id], onDelete: SetNull)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([status])
+  @@index([spentById])
+}
+
+model HbmsPayment {
+  id           String          @id @default(uuid())
+  projectId    String
+  project      HbmsProject     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  amount       Int
+  currency     String          @default("RWF")
+  paidOn       DateTime?
+  note         String?
+  payerKind    HbmsMoneyParty?
+  payerId      String?
+  payer        Employee?       @relation("PaymentPayer", fields: [payerId], references: [id], onDelete: SetNull)
+  receiverKind HbmsMoneyParty?
+  receiverId   String?
+  receiver     Employee?       @relation("PaymentReceiver", fields: [receiverId], references: [id], onDelete: SetNull)
+  createdAt    DateTime        @default(now())
+
+  @@index([projectId])
+  @@index([payerId])
+  @@index([receiverId])
+}
+
+model HbmsProjectDepartment {
+  projectId    String
+  project      HbmsProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  departmentId String
+  department   Department  @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+
+  @@id([projectId, departmentId])
+  @@index([departmentId])
+}
+
+model HbmsProjectMember {
+  id         String          @id @default(uuid())
+  projectId  String
+  project    HbmsProject     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  role       HbmsProjectRole @default(MEMBER)
+  createdAt  DateTime        @default(now())
+
+  @@unique([projectId, employeeId])
+  @@index([employeeId])
+}
+
+model HbmsMilestone {
+  id        String              @id @default(uuid())
+  projectId String
+  project   HbmsProject         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  dueDate   DateTime?
+  status    HbmsMilestoneStatus @default(PENDING)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@index([projectId])
+  @@index([dueDate])
+}
+
+model HbmsTask {
+  id          String           @id @default(uuid())
+  projectId   String
+  project     HbmsProject      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  priority    HbmsTaskPriority @default(MEDIUM)
+  status      HbmsTaskStatus   @default(TODO)
+  startDate   DateTime?
+  dueDate     DateTime?
+  progress    Int              @default(0)
+  creatorId   String?
+  creator     Employee?        @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: SetNull)
+  parentId    String?
+  parent      HbmsTask?        @relation("TaskTree", fields: [parentId], references: [id], onDelete: SetNull)
+  subtasks    HbmsTask[]       @relation("TaskTree")
+  reviewNote  String?
+  reviewedAt  DateTime?
+  assignees   HbmsTaskAssignee[]
+  comments    HbmsTaskComment[]
+  files       HbmsTaskFile[]
+  checklist   HbmsTaskChecklistItem[]
+  events      HbmsTaskEvent[]
+  meetingId   String?
+  meeting     HbmsMeeting?     @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([creatorId])
+  @@index([meetingId])
+}
+
+model HbmsTaskAssignee {
+  id         String   @id @default(uuid())
+  taskId     String
+  task       HbmsTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([taskId, employeeId])
+  @@index([employeeId])
+}
+
+model HbmsTaskComment {
+  id        String    @id @default(uuid())
+  taskId    String
+  task      HbmsTask  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    Employee? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  body      String
+  createdAt DateTime  @default(now())
+
+  @@index([taskId])
+}
+
+model HbmsTaskFile {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      HbmsTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title     String
+  fileName  String
+  fileUrl   String
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+}
+
+model HbmsTaskChecklistItem {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      HbmsTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label     String
+  done      Boolean  @default(false)
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+}
+
+model HbmsTaskEvent {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      HbmsTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  action    String
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([taskId, createdAt])
+}
+
+model HbmsMeeting {
+  id        String    @id @default(uuid())
+  title     String
+  startsAt  DateTime
+  endsAt    DateTime?
+  projectId String?
+  project   HbmsProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  location  String?
+  agenda    String?
+  notes     String?
+  minutes   String?
+  attendees HbmsMeetingAttendee[]
+  tasks     HbmsTask[]
+  documents HbmsDocument[]
+  createdAt DateTime  @default(now())
+
+  @@index([startsAt])
+  @@index([projectId])
+}
+
+model HbmsMeetingAttendee {
+  meetingId  String
+  meeting    HbmsMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@id([meetingId, employeeId])
+  @@index([employeeId])
+}
+
+model HbmsDocument {
+  id             String                  @id @default(uuid())
+  title          String
+  category       HbmsDocumentCategory
+  sensitivity    HbmsDocumentSensitivity @default(INTERNAL)
+  fileName       String
+  mimeType       String
+  sizeBytes      Int
+  storage        HbmsFileStorage
+  storageKey     String
+  provider       String
+  employeeId     String?
+  employee       Employee?               @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  projectId      String?
+  project        HbmsProject?            @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  programId      String?
+  program        HbmsProgram?            @relation(fields: [programId], references: [id], onDelete: SetNull)
+  meetingId      String?
+  meeting        HbmsMeeting?            @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  businessUnitId String?
+  businessUnit   BusinessUnit?           @relation(fields: [businessUnitId], references: [id], onDelete: SetNull)
+  uploadedById   Int?
+  grants         HbmsDocumentGrant[]
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@index([category])
+  @@index([sensitivity])
+  @@index([employeeId])
+  @@index([projectId])
+  @@index([programId])
+  @@index([meetingId])
+  @@index([businessUnitId])
+}
+
+model HbmsDocumentGrant {
+  documentId String
+  document   HbmsDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@id([documentId, employeeId])
+  @@index([employeeId])
+}
+
+model HbmsAnnouncement {
+  id             String               @id @default(uuid())
+  title          String
+  body           String
+  kind           HbmsAnnouncementKind @default(GENERAL)
+  businessUnitId String?
+  businessUnit   BusinessUnit?        @relation(fields: [businessUnitId], references: [id], onDelete: SetNull)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([businessUnitId])
+  @@index([createdAt])
+}
+
+model HbmsNotification {
+  id         String               @id @default(uuid())
+  employeeId String
+  employee   Employee             @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  kind       HbmsNotificationKind
+  title      String
+  body       String?
+  entityType String?
+  entityId   String?
+  readAt     DateTime?
+  createdAt  DateTime             @default(now())
+
+  @@index([employeeId, createdAt])
+  @@index([entityId])
+}
+
+model HbmsAuditLog {
+  id         String   @id @default(uuid())
+  actorId    Int?
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  INTERN
+  TRAINER
+  FREELANCE
+}
+
+enum StaffDocumentKind {
+  CONTRACT
+  IDENTIFICATION
+  CERTIFICATE
+  OTHER
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  INACTIVE
+}
+
+enum HbmsProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum HbmsProjectCategory {
+  SOFTWARE
+  WEBSITE
+  ECOMMERCE
+  MOBILE
+  INFRASTRUCTURE
+  PHOTOGRAPHY
+  VIDEO
+  LIVESTREAM
+  MARKETING
+  BRANDING
+  PODCAST
+  OTHER
+}
+
+enum HbmsProgramKind {
+  COURSE
+  INTERNSHIP
+  WORKSHOP
+  SOFTWARE_TRAINING
+  MEDIA_TRAINING
+  HOLIDAY
+  HACKATHON
+}
+
+enum HbmsProgramStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum HbmsTrainerRole {
+  TRAINER
+  FACILITATOR
+}
+
+enum HbmsEnrollmentStatus {
+  REGISTERED
+  ACTIVE
+  COMPLETED
+  WITHDRAWN
+}
+
+enum HbmsAssignmentKind {
+  ASSIGNMENT
+  ASSESSMENT
+  PROJECT
+}
+
+enum HbmsSubmissionStatus {
+  PENDING
+  SUBMITTED
+  GRADED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  LEAVE
+}
+
+enum HbmsAttendancePolicy {
+  OFFICE
+  REMOTE
+  EVENT
+  FLEXIBLE
+}
+
+enum HbmsAttendanceSource {
+  CHECKIN
+  EVENT
+  ABSENCE
+}
+
+enum HbmsLeaveType {
+  ANNUAL
+  SICK
+  UNPAID
+  OTHER
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum HbmsMoneyParty {
+  CLIENT
+  MEMBER
+}
+
+enum HbmsProjectRole {
+  MANAGER
+  MEMBER
+  REVIEWER
+}
+
+enum HbmsTaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+  BLOCKED
+  CANCELLED
+}
+
+enum HbmsTaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum HbmsMilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum HbmsAnnouncementKind {
+  MEETING
+  PRODUCTION
+  INTERNSHIP
+  DEADLINE
+  TRAINING
+  GENERAL
+}
+
+enum HbmsNotificationKind {
+  MEETING
+  ANNOUNCEMENT
+  TASK_ASSIGNED
+  TASK_UPDATED
+  DEADLINE
+  CONVERSATION
+}
+
+enum HbmsConversationKind {
+  DIRECT
+  DEPARTMENT
+}
+
+model HbmsConversation {
+  id           String                   @id @default(uuid())
+  kind         HbmsConversationKind
+  departmentId String?                  @unique
+  department   Department?              @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  directKey    String?                  @unique
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  messages     HbmsConversationMessage[]
+  members      HbmsConversationMember[]
+
+  @@index([kind])
+}
+
+model HbmsConversationMember {
+  id             String           @id @default(uuid())
+  conversationId String
+  conversation   HbmsConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  employeeId     String?
+  employee       Employee?        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  userId         Int?
+  user           User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadAt     DateTime?
+  joinedAt       DateTime         @default(now())
+
+  @@unique([conversationId, employeeId])
+  @@unique([conversationId, userId])
+  @@index([employeeId])
+  @@index([userId])
+}
+
+model HbmsConversationMessage {
+  id             String           @id @default(uuid())
+  conversationId String
+  conversation   HbmsConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  authorId       String?
+  author         Employee?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorUserId   Int?
+  authorUser     User?            @relation(fields: [authorUserId], references: [id], onDelete: SetNull)
+  asDepartment   Boolean          @default(false)
+  body           String
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+enum HbmsDocumentCategory {
+  CONTRACT
+  REQUIREMENTS
+  CLIENT_AGREEMENT
+  DELIVERABLE
+  TRAINING
+  INTERNSHIP_REPORT
+  PRODUCTION
+  POLICY
+  MINUTES
+}
+
+enum HbmsDocumentSensitivity {
+  INTERNAL
+  CONFIDENTIAL
+  RESTRICTED
+}
+
+enum HbmsFileStorage {
+  OBJECT
+  PRIVATE
+}
+
+enum HbmsAccessRole {
+  SUPER_ADMIN
+  CEO
+  DEPARTMENT_MANAGER
+  PROJECT_MANAGER
+  HR
+  PROGRAM_COORDINATOR
+  TRAINER
+  WORKER
+  INTERN
+  CLIENT
+}
+
+model HbmsUserRole {
+  userId Int
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   HbmsAccessRole
+
+  @@id([userId, role])
+  @@index([role])
+}
+
+model HbmsClientAccess {
+  userId    Int
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId String
+  project   HbmsProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([userId, projectId])
+  @@index([projectId])
 }
  

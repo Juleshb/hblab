@@ -52,10 +52,18 @@ export const AuthProvider = ({ children }) => {
       // Redirect based on role
       if (user.role === 'ADMIN') {
         navigate('/admin');
-      } else if (user.role === 'STUDENT') {
-        navigate('/student/dashboard');
       } else {
-        navigate('/');
+        try {
+          const access = await axios.get('http://localhost:3000/api/hbms/access/me');
+          if (access.data.data?.allowed) {
+            navigate('/admin/hbms');
+            return;
+          }
+        } catch {
+          // A student or applicant without an HBMS role continues to their usual page.
+        }
+        if (user.role === 'STUDENT') navigate('/student/dashboard');
+        else navigate('/');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -104,6 +112,10 @@ export const AuthProvider = ({ children }) => {
     return requiredRoles.includes(user?.role);
   };
 
+  const updateUser = (next) => {
+    setUser((current) => (current ? { ...current, ...next } : current));
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -112,6 +124,7 @@ export const AuthProvider = ({ children }) => {
       login, 
       register, 
       logout, 
+      updateUser,
       hasRole, 
       hasAnyRole 
     }}>

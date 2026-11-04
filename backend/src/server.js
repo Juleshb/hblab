@@ -15,6 +15,9 @@ const lessonsRoutes = require('./routes/lessonsRoutes');
 const path = require('path');
 const app = express();
 const uploadRoutes = require('./routes/uploadRoutes');
+const hbmsRoutes = require('./modules/hbms');
+const { ensureHbmsSeed } = require('./modules/hbms/seed');
+const { startDeadlineReminders } = require('./modules/hbms/reminders');
 
 // Middleware - MUST come before routes
 app.use(cors())
@@ -35,13 +38,18 @@ app.use('/api/projects', projectsRoutes);
 app.use('/api/careers', careersRoutes);
 app.use('/api/lessons', lessonsRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/hbms', hbmsRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  ensureHbmsSeed().catch((error) => {
+    console.error('HBMS seed skipped:', error.message);
+  });
+  startDeadlineReminders();
 });

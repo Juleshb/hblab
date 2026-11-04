@@ -1,0 +1,1 @@
+ALTER TABLE "HbmsExpense" ADD COLUMN "spentOn" TIMESTAMP(3);

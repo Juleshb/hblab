@@ -5,7 +5,7 @@ import { useAuth } from "../assets/context/AuthContext.jsx";
 import axios from "axios";
 import HBLCertificateModal from "./HBLCertificateModal";
 
-const HBLCertificateGenerator = () => {
+const HBLCertificateGenerator = ({ onCreated }) => {
   const [certificateData, setCertificateData] = useState({
     recipientName: "",
     email: "",
@@ -98,6 +98,7 @@ const HBLCertificateGenerator = () => {
       setErrorMessage("");
       setSuccessMessage("Certificate generated successfully!");
       setShowModal(true);
+      if (onCreated) onCreated(response.data);
 
       // Auto-clear success message after 4 seconds
       setTimeout(() => setSuccessMessage(""), 4000);

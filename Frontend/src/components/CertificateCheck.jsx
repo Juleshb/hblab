@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import { buildCertificateHtml } from './certificate/certificateMarkup';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
@@ -64,95 +65,7 @@ const qrData = `https://www.hblab.rw/verfiy/${data.certificateId}`;
 const encodedData = encodeURIComponent(qrData);
 const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodedData}`;
 
-    certificateContainer.innerHTML = `
-       <div style="
-    border: 10px solid rgba(3, 61, 22, 0.63); 
-    width: 100%; 
-    min-height: 850px; 
-    display: flex; 
-    flex-direction: column; 
-    position: relative; 
-    background-image: url('/images/dd.jpg');
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center;
-    font-family: 'Poppins', sans-serif;
-  ">
-        
-        <!-- Top Banner -->
-        <div style="background: rgba(3, 61, 22, 0.45); color: white; text-align: center; padding: 20px;"> 
-        <div style="font-size: 40px; font-weight: bold;">
-        <center>
-            <img src="/images/logo.png" alt="Logo" style="height: 160px; width: 160px">
-            </center>
-            INTERNSHIP CERTIFICATE
-          </div>
-        </div>
-
-        <!-- Badge -->
-        <div style="margin: 30px auto 20px;">
-          <img src="/images/bdg.png" alt="Attendee Badge" style="height: 200px;" />
-        </div>
-
-        <!-- Recipient Info -->
-        <div style="text-align: center; padding: 0 60px;">
-          <p style="font-size: 18px; margin: 0 0 10px;">This Certificate is Proudly Presented to</p>
-          <h2 style="font-size: 36px; font-family: 'Silentha', cursive; font-weight: bold; margin: 10px 0; color:rgb(3, 61, 22);">${data.recipientName}</h2>
-          <p style="font-size: 18px; margin: 20px 0;">
-            We sincerely appreciate your dedication and valuable contribution during your internship at  
-            <strong>“Hb-Lab”</strong>.
-          </p>
-          ${data.dateRange ? `<p style="margin: 8px 0;"><strong>Training Period:</strong> ${data.dateRange}</p>` : ''}
-          <p style="margin: 8px 0;"><strong>Date of Completion:</strong> ${new Date(data.completionDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        </div>
-
-        <!-- Skills Section -->
-        ${data.skills?.length ? `
-          <div style="margin: 30px 60px 0;">
-            <h4 style="font-size: 20px; text-align: center; font-weight: bold; margin-bottom: 10px; color: rgb(3, 61, 22);">Skills Acquired:</h4>
-            <ul style="text-align: center; font-size: 16px; padding-left: 20px;">
-              ${data.skills.map(skill => `<li>${skill}</li>`).join('')}
-            </ul>
-          </div>` : ''}
-
-        <!-- Signatures -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin: 40px 60px 20px;">
-          <div style="text-align: center;">
-            <img src="/signatures/jules-signature.png" alt="Signature" style="height: 70px;"><br/>
-            <strong style="font-size: 16px;">Mr. Jules HABARUREMA</strong><br/>
-            <span style="font-size: 14px;">Chief Executive Officer</span><br/>
-            <span style="font-size: 14px;">HB-Lab</span>
-          </div>
-
-          
-          <div style="text-align: center;">
-            <img src="${qrCodeUrl}" style="width: 100px; height: 120px;" alt="QR Code"/><br/>
-            <span style="font-size: 12px; color: #444;">Scan to verify</span>
-          </div>
-
-          <div style="text-align: center;">
-            <img src="/signatures/ferdinard-signature.png" alt="Signature" style="height: 70px;"><br/>
-            <strong style="font-size: 16px;">Mr. Ferdnard KWIZERA</strong><br/>
-            <span style="font-size: 14px;">Training Coordinator</span><br/>
-            <span style="font-size: 14px;">HB-Lab</span>
-          </div>
-
-        </div>
-
-        <!-- Footer: Certificate ID & Sponsors -->
-        <div style="text-align: center; font-size: 12px; color: #777; margin-bottom: 10px;">
-          Certificate ID: ${data.certificateId}
-        </div>
-
-        <div style="border-top: 1px solid #ccc; margin: 10px 60px; padding-top: 10px; display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;">
-          <img src="/sponsors/buttercms.png" style="height: 30px;" alt="ButterCMS" />
-          <img src="/sponsors/twicpics.png" style="height: 30px;" alt="TwicPics" />
-          <img src="/sponsors/base.png" style="height: 30px;" alt="Base" />
-          <img src="/sponsors/progress.png" style="height: 30px;" alt="Progress" />
-          <img src="/sponsors/stormkit.png" style="height: 30px;" alt="Stormkit" />
-        </div>
-      </div>
-    `;
+    certificateContainer.innerHTML = buildCertificateHtml(data, qrCodeUrl);
 
     document.body.appendChild(certificateContainer);
     await new Promise(resolve => setTimeout(resolve, 1000));
