@@ -32,13 +32,16 @@ const HbmsPrograms = () => {
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [canManagePrograms, setCanManagePrograms] = useState(false);
 
   const load = async () => {
-    const [programRes, unitRes, workerRes] = await Promise.all([
+    const [programRes, unitRes, workerRes, accessRes] = await Promise.all([
       hbmsApi.get('/programs?limit=100'),
       hbmsApi.get('/business-units'),
       hbmsApi.get('/employees?limit=100'),
+      hbmsApi.get('/access/me'),
     ]);
+    setCanManagePrograms(Boolean(accessRes.data.data?.canManagePrograms));
     setPrograms(programRes.data.data);
     setUnits(unitRes.data.data);
     setWorkers(workerRes.data.data);
@@ -85,9 +88,11 @@ const HbmsPrograms = () => {
   return (
     <div className="space-y-4">
       <PageHeader title="Programs and training" subtitle="Training stays separate from client projects. Participants can be workers or external students.">
-        <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => setShowForm(true)}>
-          New program
-        </button>
+        {canManagePrograms ? (
+          <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => setShowForm(true)}>
+            New program
+          </button>
+        ) : null}
       </PageHeader>
       <div className="grid gap-3 md:grid-cols-2">
         {programs.length === 0 ? (

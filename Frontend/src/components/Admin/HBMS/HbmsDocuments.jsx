@@ -44,6 +44,7 @@ const HbmsDocuments = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [canManageSystem, setCanManageSystem] = useState(false);
 
   const loadDocuments = async (category = categoryFilter) => {
     const query = category ? `?category=${category}` : '';
@@ -55,14 +56,16 @@ const HbmsDocuments = () => {
     let active = true;
     (async () => {
       try {
-        const [documentRes, workerRes, projectRes, programRes, meetingRes] = await Promise.all([
+        const [documentRes, workerRes, projectRes, programRes, meetingRes, accessRes] = await Promise.all([
           hbmsApi.get('/documents'),
           hbmsApi.get('/employees?limit=100'),
           hbmsApi.get('/projects?limit=100'),
           hbmsApi.get('/programs?limit=100'),
           hbmsApi.get('/meetings'),
+          hbmsApi.get('/access/me'),
         ]);
         if (!active) return;
+        setCanManageSystem(Boolean(accessRes.data.data?.canManageSystem));
         setDocuments(documentRes.data.data);
         setWorkers(workerRes.data.data);
         setProjects(projectRes.data.data);
@@ -208,7 +211,7 @@ const HbmsDocuments = () => {
                     <td className="py-3 pr-3"><StatusBadge value={item.sensitivity} label={optionLabel(documentSensitivityOptions, item.sensitivity)} /></td>
                     <td className="py-3 text-right">
                       <button type="button" className="text-xs font-medium text-emerald-700" onClick={() => download(item)}>Download</button>
-                      <button type="button" className="ml-3 text-xs font-medium text-red-600" onClick={() => remove(item)}>Remove</button>
+                      {canManageSystem ? <button type="button" className="ml-3 text-xs font-medium text-red-600" onClick={() => remove(item)}>Remove</button> : null}
                     </td>
                   </tr>
                 ))}

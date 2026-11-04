@@ -2,6 +2,8 @@ const express = require('express');
 const { prisma, handlePrismaError, writeAudit } = require('./utils');
 const { attachAccess } = require('./access');
 const { notifyWorkers } = require('./notify');
+const { publishUsers, publishEmployees, isUserConnected } = require('./live');
+const { sendPush } = require('./push');
 
 const router = express.Router();
 router.use(attachAccess);
@@ -45,8 +47,91 @@ function messageIsMine(message, req) {
   return Boolean(req.access.employeeId && message.authorId === req.access.employeeId);
 }
 
+const messageInclude = {
+  author: { select: personSelect },
+  authorUser: { select: userSelect },
+  reactions: { select: { emoji: true, userId: true } },
+  replyTo: {
+    select: {
+      id: true,
+      body: true,
+      asDepartment: true,
+      authorId: true,
+      authorUserId: true,
+      author: { select: personSelect },
+      authorUser: { select: userSelect },
+    },
+  },
+};
+
+function receiptOf(message, req, members) {
+  if (!messageIsMine(message, req)) return null;
+  const others = (members || []).filter((member) => !isMine(member, req));
+  if (!others.length) return 'sent';
+  const sentAt = new Date(message.createdAt).getTime();
+  const read = others.every((member) => member.lastReadAt && new Date(member.lastReadAt).getTime() >= sentAt);
+  if (read) return 'read';
+  const delivered = others.every((member) => member.lastDeliveredAt && new Date(member.lastDeliveredAt).getTime() >= sentAt);
+  return delivered ? 'delivered' : 'sent';
+}
+
+async function noteDelivered(req, conversations) {
+  const now = new Date();
+  const pending = [];
+  for (const conversation of conversations || []) {
+    const mine = (conversation.members || []).find((member) => isMine(member, req));
+    const incoming = (conversation.messages || []).find((message) => !messageIsMine(message, req));
+    if (!mine || !incoming) continue;
+    const delivered = mine.lastDeliveredAt ? new Date(mine.lastDeliveredAt).getTime() : 0;
+    if (delivered >= new Date(incoming.createdAt).getTime()) continue;
+    pending.push({ id: mine.id, conversation });
+  }
+  if (!pending.length) return;
+  await prisma.hbmsConversationMember.updateMany({
+    where: { id: { in: pending.map((item) => item.id) } },
+    data: { lastDeliveredAt: now },
+  });
+  for (const item of pending) {
+    publishUsers(
+      item.conversation.members.filter((member) => !isMine(member, req)).map((member) => member.userId).filter(Boolean),
+      { type: 'delivered', conversationId: item.conversation.id },
+    );
+  }
+}
+
+function presentMessage(message, req, departmentName, members) {
+  const grouped = new Map();
+  for (const reaction of message.reactions || []) {
+    const row = grouped.get(reaction.emoji) || { emoji: reaction.emoji, count: 0, mine: false };
+    row.count += 1;
+    if (Number(reaction.userId) === Number(req.userId)) row.mine = true;
+    grouped.set(reaction.emoji, row);
+  }
+  return {
+    id: message.id,
+    body: message.body,
+    createdAt: message.createdAt,
+    mine: messageIsMine(message, req),
+    asDepartment: message.asDepartment,
+    author: userLabel(message.authorUser, message.author),
+    authorEmployeeId: message.author?.id || null,
+    authorPhotoKey: message.author?.photoKey || null,
+    departmentName: departmentName || null,
+    reply: message.replyTo ? {
+      id: message.replyTo.id,
+      body: clip(message.replyTo.body),
+      author: message.replyTo.asDepartment
+        ? (departmentName || 'Department')
+        : userLabel(message.replyTo.authorUser, message.replyTo.author),
+      mine: messageIsMine(message.replyTo, req),
+    } : null,
+    reactions: [...grouped.values()],
+    receipt: receiptOf(message, req, members),
+  };
+}
+
 async function visibleDepartmentIds(access) {
-  if (access.orgWide || access.hr) {
+  if (access.orgWide) {
     const rows = await prisma.department.findMany({
       where: { OR: [{ employees: { some: { status: { not: 'INACTIVE' } } } }, { managerId: { not: null } }] },
       select: { id: true },
@@ -104,15 +189,72 @@ async function ensureDepartmentConversation(departmentId) {
 }
 
 function canSeeDepartment(access, departmentId, memberIds) {
-  if (access.orgWide || access.hr) return true;
+  if (access.orgWide) return true;
   if (access.employeeId && memberIds.has(access.employeeId)) return true;
   return (access.departmentIds || []).includes(departmentId);
 }
 
 function canSpeakAsDepartment(access, department) {
   if (!department) return false;
-  if (access.orgWide || access.hr) return true;
+  if (access.orgWide) return true;
   return Boolean(access.employeeId && department.managerId === access.employeeId);
+}
+
+function worksOnProject(access, projectId) {
+  if (!projectId || !access.employeeId) return false;
+  if (access.orgWide) return true;
+  return (access.memberProjectIds || []).includes(projectId) || (access.managedProjectIds || []).includes(projectId);
+}
+
+function isProjectAdmin(access, conversation) {
+  if (!conversation || conversation.kind !== 'PROJECT') return false;
+  if (access.orgWide) return true;
+  if (!access.employeeId) return false;
+  if (conversation.createdById === access.employeeId) return true;
+  return conversation.project?.managerId === access.employeeId;
+}
+
+async function projectTeam(projectId) {
+  const project = await prisma.hbmsProject.findUnique({
+    where: { id: projectId },
+    select: {
+      id: true,
+      name: true,
+      code: true,
+      status: true,
+      managerId: true,
+      businessUnit: { select: { code: true, name: true } },
+      manager: { select: { id: true, userId: true, status: true } },
+      members: {
+        where: { employee: { status: { not: 'INACTIVE' } } },
+        select: { employee: { select: { id: true, userId: true } } },
+      },
+    },
+  });
+  if (!project) return null;
+  const people = new Map();
+  for (const member of project.members) people.set(member.employee.id, member.employee.userId || null);
+  if (project.manager && project.manager.status !== 'INACTIVE') {
+    people.set(project.manager.id, project.manager.userId || null);
+  }
+  return { project, people };
+}
+
+async function syncProjectMembers(conversationId, people) {
+  const current = await prisma.hbmsConversationMember.findMany({
+    where: { conversationId },
+    select: { id: true, employeeId: true },
+  });
+  const wanted = new Set(people.keys());
+  const remove = current.filter((member) => member.employeeId && !wanted.has(member.employeeId)).map((member) => member.id);
+  const present = new Set(current.map((member) => member.employeeId).filter(Boolean));
+  const add = [...people.entries()].filter(([employeeId]) => !present.has(employeeId));
+  if (remove.length) await prisma.hbmsConversationMember.deleteMany({ where: { id: { in: remove } } });
+  if (add.length) {
+    await prisma.hbmsConversationMember.createMany({
+      data: add.map(([employeeId, userId]) => ({ conversationId, employeeId, userId })),
+    });
+  }
 }
 
 const memberInclude = {
@@ -124,7 +266,8 @@ async function loadConversation(id) {
   return prisma.hbmsConversation.findUnique({
     where: { id },
     include: {
-      department: { select: { id: true, name: true, managerId: true, businessUnit: { select: { name: true } } } },
+      department: { select: { id: true, name: true, managerId: true, businessUnit: { select: { code: true, name: true } } } },
+      project: { select: { id: true, name: true, code: true, managerId: true, businessUnit: { select: { code: true, name: true } } } },
       members: { include: memberInclude },
     },
   });
@@ -132,9 +275,9 @@ async function loadConversation(id) {
 
 async function canRead(access, conversation, userId) {
   if (!conversation) return false;
-  if (conversation.kind === 'DIRECT') {
-    return conversation.members.some((member) => member.userId === userId || (access.employeeId && member.employeeId === access.employeeId));
-  }
+  const member = conversation.members.some((item) => item.userId === userId || (access.employeeId && item.employeeId === access.employeeId));
+  if (conversation.kind === 'DIRECT') return member;
+  if (conversation.kind === 'PROJECT') return member || isProjectAdmin(access, conversation);
   const ensured = await ensureDepartmentConversation(conversation.departmentId);
   return Boolean(ensured && canSeeDepartment(access, conversation.departmentId, ensured.memberIds));
 }
@@ -149,8 +292,26 @@ function summaryOf(conversation, req) {
       kind: conversation.kind,
       title: conversation.department?.name || 'Department',
       detail: conversation.department?.businessUnit?.name || 'Department',
+      unitCode: conversation.department?.businessUnit?.code || null,
+      unitName: conversation.department?.businessUnit?.name || 'Business unit',
       departmentId: conversation.departmentId,
       memberCount: conversation.members.length,
+      lastBody: last ? clip(last.body) : '',
+      lastAt: last?.createdAt || conversation.updatedAt,
+      unread,
+    };
+  }
+  if (conversation.kind === 'PROJECT') {
+    return {
+      id: conversation.id,
+      kind: conversation.kind,
+      title: conversation.project?.name || 'Project',
+      detail: conversation.project?.code || 'Project group',
+      unitCode: conversation.project?.businessUnit?.code || null,
+      unitName: conversation.project?.businessUnit?.name || 'Project',
+      projectId: conversation.projectId,
+      memberCount: conversation.members.length,
+      canManage: isProjectAdmin(req.access, conversation),
       lastBody: last ? clip(last.body) : '',
       lastAt: last?.createdAt || conversation.updatedAt,
       unread,
@@ -250,26 +411,66 @@ router.get('/', async (req, res) => {
     for (const departmentId of departmentIds) {
       await ensureDepartmentConversation(departmentId);
     }
-    const conversations = await prisma.hbmsConversation.findMany({
-      where: {
-        OR: [
-          { kind: 'DIRECT', members: { some: { OR: [{ userId: req.userId }, ...(me ? [{ employeeId: me }] : [])] } } },
-          ...(departmentIds.length ? [{ kind: 'DEPARTMENT', departmentId: { in: departmentIds } }] : []),
-        ],
-      },
-      include: {
-        department: { select: { id: true, name: true, businessUnit: { select: { name: true } } } },
-        members: { include: memberInclude },
-        messages: { orderBy: { createdAt: 'desc' }, take: 20 },
-      },
-      orderBy: { updatedAt: 'desc' },
-    });
+    const mine = [{ userId: req.userId }, ...(me ? [{ employeeId: me }] : [])];
+    const projectIds = req.access.orgWide
+      ? null
+      : [...new Set([...(req.access.memberProjectIds || []), ...(req.access.managedProjectIds || [])])];
+    const [conversations, projects] = await Promise.all([
+      prisma.hbmsConversation.findMany({
+        where: {
+          OR: [
+            { kind: 'DIRECT', members: { some: { OR: mine } } },
+            { kind: 'PROJECT', ...(req.access.orgWide ? {} : { members: { some: { OR: mine } } }) },
+            ...(departmentIds.length ? [{ kind: 'DEPARTMENT', departmentId: { in: departmentIds } }] : []),
+          ],
+        },
+        include: {
+          department: { select: { id: true, name: true, businessUnit: { select: { code: true, name: true } } } },
+          project: { select: { id: true, name: true, code: true, managerId: true, businessUnit: { select: { code: true, name: true } } } },
+          members: { include: memberInclude },
+          messages: { orderBy: { createdAt: 'desc' }, take: 20 },
+        },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      prisma.hbmsProject.findMany({
+        where: {
+          status: { not: 'CANCELLED' },
+          ...(projectIds ? { id: { in: projectIds } } : {}),
+        },
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          businessUnit: { select: { code: true, name: true } },
+          members: { where: { employee: { status: { not: 'INACTIVE' } } }, select: { employeeId: true } },
+          manager: { select: { id: true, status: true } },
+          conversation: {
+            select: {
+              id: true,
+              ...(me ? { members: { where: { employeeId: me }, select: { id: true } } } : {}),
+            },
+          },
+        },
+        orderBy: { name: 'asc' },
+      }),
+    ]);
+    await noteDelivered(req, conversations);
     res.json({
       data: {
         me,
         canSend: true,
         conversations: conversations.map((conversation) => summaryOf(conversation, req)),
         people: await messageableUsers(req.userId),
+        projects: projects.map((project) => ({
+          id: project.id,
+          name: project.name,
+          code: project.code,
+          unitCode: project.businessUnit?.code || null,
+          unitName: project.businessUnit?.name || '',
+          memberCount: project.members.length + (project.manager && project.manager.status !== 'INACTIVE' && !project.members.some((member) => member.employeeId === project.manager.id) ? 1 : 0),
+          conversationId: project.conversation?.id || null,
+          joined: Boolean(project.conversation?.members?.length),
+        })),
       },
     });
   } catch (error) {
@@ -279,6 +480,37 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    const projectId = req.body.projectId || null;
+    if (projectId) {
+      if (!req.access.employeeId) return res.status(400).json({ error: 'A staff profile is required to create a project group' });
+      if (!worksOnProject(req.access, projectId)) return res.status(403).json({ error: 'You can start a group only for a project you work on' });
+      const team = await projectTeam(projectId);
+      if (!team) return res.status(404).json({ error: 'Project not found' });
+      if (team.project.status === 'CANCELLED') return res.status(400).json({ error: 'This project is cancelled' });
+      if (!team.people.size) return res.status(400).json({ error: 'This project has no team members' });
+      const existing = await prisma.hbmsConversation.findUnique({
+        where: { projectId },
+        include: { members: { select: { employeeId: true } }, project: { select: { managerId: true } } },
+      });
+      if (existing) {
+        const joined = existing.members.some((member) => member.employeeId === req.access.employeeId) || isProjectAdmin(req.access, existing);
+        if (!joined) return res.status(403).json({ error: 'This project group already exists. Ask the admin to update the members.' });
+        return res.status(201).json({ data: { id: existing.id } });
+      }
+      const created = await prisma.hbmsConversation.create({
+        data: {
+          kind: 'PROJECT',
+          projectId,
+          createdById: req.access.employeeId,
+          members: {
+            create: [...team.people.entries()].map(([employeeId, userId]) => ({ employeeId, userId })),
+          },
+        },
+      });
+      await writeAudit(req.userId, 'conversation.project-create', 'HbmsConversation', created.id, { projectId, members: team.people.size });
+      publishEmployees([...team.people.keys()], { type: 'conversations' }).catch(() => {});
+      return res.status(201).json({ data: { id: created.id } });
+    }
     const departmentId = req.body.departmentId || null;
     if (departmentId) {
       const ensured = await ensureDepartmentConversation(departmentId);
@@ -306,6 +538,7 @@ router.post('/', async (req, res) => {
         },
       },
     });
+    publishUsers([req.userId, other.userId], { type: 'conversations' });
     res.status(201).json({ data: { id: created.id } });
   } catch (error) {
     handlePrismaError(res, error, 'Could not open the conversation');
@@ -319,6 +552,15 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Conversation not found' });
     }
     const fresh = conversation.kind === 'DEPARTMENT' ? await loadConversation(req.params.id) : conversation;
+    const messages = await prisma.hbmsConversationMessage.findMany({
+      where: { conversationId: fresh.id },
+      include: messageInclude,
+      orderBy: { createdAt: 'asc' },
+      take: 200,
+    });
+    const reader = fresh.members.find((member) => isMine(member, req));
+    const previousRead = reader?.lastReadAt ? new Date(reader.lastReadAt).getTime() : 0;
+    const markedNew = messages.some((message) => !messageIsMine(message, req) && new Date(message.createdAt).getTime() > previousRead);
     await prisma.hbmsConversationMember.updateMany({
       where: {
         conversationId: fresh.id,
@@ -326,26 +568,40 @@ router.get('/:id', async (req, res) => {
       },
       data: { lastReadAt: new Date() },
     });
-    const messages = await prisma.hbmsConversationMessage.findMany({
-      where: { conversationId: fresh.id },
-      include: { author: { select: personSelect }, authorUser: { select: userSelect } },
-      orderBy: { createdAt: 'asc' },
-      take: 200,
-    });
+    if (markedNew) {
+      publishUsers(
+        fresh.members.filter((member) => !isMine(member, req)).map((member) => member.userId).filter(Boolean),
+        { type: 'read', conversationId: fresh.id },
+      );
+    }
     const other = fresh.members.find((member) => !isMine(member, req));
     const account = fresh.kind === 'DIRECT' ? accountOf(other?.user, other?.employee) : null;
-    const canSend = fresh.kind === 'DIRECT'
-      || Boolean(req.access.employeeId && fresh.members.some((member) => member.employeeId === req.access.employeeId))
-      || req.access.orgWide
-      || req.access.hr;
+    const projectTitle = fresh.project?.name || 'Project';
+    const canSend = fresh.kind === 'PROJECT'
+      ? fresh.members.some((member) => isMine(member, req)) || isProjectAdmin(req.access, fresh)
+      : fresh.kind === 'DIRECT'
+        || Boolean(req.access.employeeId && fresh.members.some((member) => member.employeeId === req.access.employeeId))
+        || req.access.orgWide;
+    const title = fresh.kind === 'DEPARTMENT'
+      ? fresh.department?.name
+      : fresh.kind === 'PROJECT'
+        ? projectTitle
+        : account.name;
+    const detail = fresh.kind === 'DEPARTMENT'
+      ? `${fresh.department?.businessUnit?.name || 'Department'} · ${fresh.members.length === 1 ? '1 person' : `${fresh.members.length} people`}`
+      : fresh.kind === 'PROJECT'
+        ? `${fresh.project?.code || 'Project'} · ${fresh.members.length === 1 ? '1 person' : `${fresh.members.length} people`}`
+        : (account.email || 'Direct message');
     res.json({
       data: {
         id: fresh.id,
         kind: fresh.kind,
-        title: fresh.kind === 'DEPARTMENT' ? fresh.department?.name : account.name,
-        detail: fresh.kind === 'DEPARTMENT'
-          ? `${fresh.department?.businessUnit?.name || 'Department'} · ${fresh.members.length === 1 ? '1 person' : `${fresh.members.length} people`}`
-          : (account.email || 'Direct message'),
+        title,
+        detail,
+        unitCode: fresh.kind === 'PROJECT' ? fresh.project?.businessUnit?.code || null : fresh.department?.businessUnit?.code || null,
+        unitName: fresh.kind === 'PROJECT' ? fresh.project?.businessUnit?.name || null : fresh.department?.businessUnit?.name || null,
+        projectId: fresh.projectId || null,
+        canManage: isProjectAdmin(req.access, fresh),
         employeeId: account?.employeeId || null,
         photoKey: account?.photoKey || null,
         firstName: account?.firstName || '',
@@ -353,19 +609,13 @@ router.get('/:id', async (req, res) => {
         canSpeakAsDepartment: fresh.kind === 'DEPARTMENT' && canSpeakAsDepartment(req.access, fresh.department),
         canSend,
         members: fresh.members.map((member) => ({
-          id: member.userId || member.employeeId,
+          id: member.id,
+          employeeId: member.employeeId,
           name: userLabel(member.user, member.employee),
           staffCode: member.employee?.staffCode || '',
+          photoKey: member.employee?.photoKey || null,
         })),
-        messages: messages.map((message) => ({
-          id: message.id,
-          body: message.body,
-          createdAt: message.createdAt,
-          mine: messageIsMine(message, req),
-          asDepartment: message.asDepartment,
-          author: userLabel(message.authorUser, message.author),
-          departmentName: fresh.department?.name || null,
-        })),
+        messages: messages.map((message) => presentMessage(message, req, fresh.department?.name || null, fresh.members)),
       },
     });
   } catch (error) {
@@ -385,12 +635,23 @@ router.post('/:id/messages', async (req, res) => {
     const fresh = conversation.kind === 'DEPARTMENT' ? await loadConversation(req.params.id) : conversation;
     const member = fresh.members.some((item) => isMine(item, req));
     if (fresh.kind === 'DIRECT' && !member) return res.status(403).json({ error: 'You are not in this conversation' });
-    if (fresh.kind === 'DEPARTMENT' && !member && !req.access.orgWide && !req.access.hr) {
+    if (fresh.kind === 'PROJECT' && !member && !isProjectAdmin(req.access, fresh)) {
+      return res.status(403).json({ error: 'You are not in this project group' });
+    }
+    if (fresh.kind === 'DEPARTMENT' && !member && !req.access.orgWide) {
       return res.status(403).json({ error: 'You are not in this conversation' });
     }
     const asDepartment = Boolean(req.body.asDepartment) && fresh.kind === 'DEPARTMENT' && canSpeakAsDepartment(req.access, fresh.department);
     if (req.body.asDepartment && !asDepartment) {
       return res.status(403).json({ error: 'Only the department manager can send as the department' });
+    }
+    const replyToId = req.body.replyToId ? String(req.body.replyToId) : null;
+    if (replyToId) {
+      const quoted = await prisma.hbmsConversationMessage.findFirst({
+        where: { id: replyToId, conversationId: fresh.id },
+        select: { id: true },
+      });
+      if (!quoted) return res.status(400).json({ error: 'That message is no longer in this chat' });
     }
     const message = await prisma.hbmsConversationMessage.create({
       data: {
@@ -399,12 +660,34 @@ router.post('/:id/messages', async (req, res) => {
         authorUserId: req.userId,
         body,
         asDepartment,
+        replyToId,
       },
-      include: { author: { select: personSelect }, authorUser: { select: userSelect } },
+      include: messageInclude,
     });
+    const deliveredAt = new Date(Math.max(Date.now(), new Date(message.createdAt).getTime()));
+    const reached = fresh.members.filter((member) => !isMine(member, req) && member.userId && isUserConnected(member.userId));
+    if (reached.length) {
+      await prisma.hbmsConversationMember.updateMany({
+        where: { id: { in: reached.map((member) => member.id) } },
+        data: { lastDeliveredAt: deliveredAt },
+      });
+      for (const member of reached) member.lastDeliveredAt = deliveredAt;
+    }
     await prisma.hbmsConversation.update({ where: { id: fresh.id }, data: { updatedAt: new Date() } });
     const person = userLabel(message.authorUser, message.author);
     const speaker = asDepartment ? (fresh.department?.name || 'The department') : person;
+    publishUsers(fresh.members.map((item) => item.userId), {
+      type: 'message',
+      conversationId: fresh.id,
+      title: speaker,
+      body: clip(body),
+      authorUserId: req.userId,
+    });
+    sendPush(
+      fresh.members.map((item) => item.userId).filter((userId) => userId && userId !== req.userId),
+      { title: speaker, body: clip(body), data: { conversationId: fresh.id } },
+    ).catch(() => {});
+    publishUsers(fresh.members.map((item) => item.userId), { type: 'conversations', conversationId: fresh.id });
     await notifyWorkers(
       fresh.members.map((item) => item.employeeId).filter((id) => id && id !== req.access.employeeId),
       {
@@ -417,18 +700,77 @@ router.post('/:id/messages', async (req, res) => {
     );
     await writeAudit(req.userId, 'conversation.message', 'HbmsConversation', fresh.id, { asDepartment });
     res.status(201).json({
-      data: {
-        id: message.id,
-        body: message.body,
-        createdAt: message.createdAt,
-        mine: true,
-        asDepartment,
-        author: person,
-        departmentName: fresh.department?.name || null,
-      },
+      data: presentMessage(message, req, fresh.department?.name || null, fresh.members),
     });
   } catch (error) {
     handlePrismaError(res, error, 'Could not send the message');
+  }
+});
+
+router.post('/:id/messages/:messageId/reactions', async (req, res) => {
+  try {
+    const emoji = String(req.body.emoji || '').trim();
+    if (!emoji || emoji.length > 16 || /\s/.test(emoji)) {
+      return res.status(400).json({ error: 'Choose an emoji' });
+    }
+    const conversation = await loadConversation(req.params.id);
+    if (!conversation || !(await canRead(req.access, conversation, req.userId))) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+    const message = await prisma.hbmsConversationMessage.findFirst({
+      where: { id: req.params.messageId, conversationId: conversation.id },
+      select: { id: true },
+    });
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+    const where = { messageId_userId: { messageId: message.id, userId: req.userId } };
+    const existing = await prisma.hbmsMessageReaction.findUnique({ where });
+    if (existing && existing.emoji === emoji) {
+      await prisma.hbmsMessageReaction.delete({ where: { id: existing.id } });
+    } else if (existing) {
+      await prisma.hbmsMessageReaction.update({ where: { id: existing.id }, data: { emoji } });
+    } else {
+      await prisma.hbmsMessageReaction.create({
+        data: { messageId: message.id, userId: req.userId, emoji },
+      });
+    }
+    publishUsers(conversation.members.map((item) => item.userId), {
+      type: 'reaction',
+      conversationId: conversation.id,
+    });
+    res.json({ data: { ok: true } });
+  } catch (error) {
+    handlePrismaError(res, error, 'Could not react to the message');
+  }
+});
+
+router.post('/:id/members', async (req, res) => {
+  try {
+    const conversation = await loadConversation(req.params.id);
+    if (!conversation || conversation.kind !== 'PROJECT') return res.status(404).json({ error: 'Project group not found' });
+    if (!isProjectAdmin(req.access, conversation)) return res.status(403).json({ error: 'Only the group admin can update members' });
+    const team = await projectTeam(conversation.projectId);
+    if (!team || !team.people.size) return res.status(400).json({ error: 'This project has no team members' });
+    await syncProjectMembers(conversation.id, team.people);
+    await writeAudit(req.userId, 'conversation.project-members', 'HbmsConversation', conversation.id, { members: team.people.size });
+    publishEmployees([...team.people.keys()], { type: 'conversations', conversationId: conversation.id }).catch(() => {});
+    res.json({ data: { members: team.people.size } });
+  } catch (error) {
+    handlePrismaError(res, error, 'Could not update the group');
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const conversation = await loadConversation(req.params.id);
+    if (!conversation || conversation.kind !== 'PROJECT') return res.status(404).json({ error: 'Project group not found' });
+    if (!isProjectAdmin(req.access, conversation)) return res.status(403).json({ error: 'Only the group admin can delete this group' });
+    const memberIds = conversation.members.map((member) => member.employeeId);
+    await prisma.hbmsConversation.delete({ where: { id: conversation.id } });
+    publishEmployees(memberIds, { type: 'conversations', conversationId: conversation.id }).catch(() => {});
+    await writeAudit(req.userId, 'conversation.project-delete', 'HbmsConversation', conversation.id, { projectId: conversation.projectId });
+    res.json({ data: { deleted: true } });
+  } catch (error) {
+    handlePrismaError(res, error, 'Could not delete the group');
   }
 });
 

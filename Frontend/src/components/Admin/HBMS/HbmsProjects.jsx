@@ -78,13 +78,16 @@ const HbmsProjects = () => {
   const [showForm, setShowForm] = useState(false);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [canCreateProject, setCanCreateProject] = useState(false);
 
   const load = async () => {
-    const [projectRes, unitRes, workerRes] = await Promise.all([
+    const [projectRes, unitRes, workerRes, accessRes] = await Promise.all([
       hbmsApi.get('/projects?limit=100'),
       hbmsApi.get('/business-units'),
       hbmsApi.get('/employees?limit=100&status=ACTIVE'),
+      hbmsApi.get('/access/me'),
     ]);
+    setCanCreateProject(Boolean(accessRes.data.data?.canCreateProject));
     setProjects(projectRes.data.data);
     setUnits(unitRes.data.data);
     setWorkers(workerRes.data.data);
@@ -188,9 +191,11 @@ const HbmsProjects = () => {
             <option value="">All statuses</option>
             {projectStatusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
-          <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => setShowForm(true)}>
-            New project
-          </button>
+          {canCreateProject ? (
+            <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => setShowForm(true)}>
+              New project
+            </button>
+          ) : null}
         </div>
       </div>
 

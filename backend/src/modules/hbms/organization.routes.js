@@ -4,7 +4,29 @@ const { attachAccess, guardWrites } = require('./access');
 
 const router = express.Router();
 router.use(attachAccess);
-router.use(guardWrites((req) => req.access.orgWide));
+router.use(guardWrites((req) => {
+  if (!/^\/(positions|departments)(\/|$)/.test(req.path)) return true;
+  if (req.access.orgWide) return true;
+  return req.method === 'PATCH' && /^\/departments\/[^/]+$/.test(req.path) && req.access.departmentScope;
+}));
+
+function visibleDepartments(units, access) {
+  if (access.orgWide) return units;
+  const allowed = new Set(
+    access.departmentScope
+      ? access.departmentIds
+      : [access.employee?.departmentId].filter(Boolean),
+  );
+  return units.map((unit) => {
+    const departments = unit.departments.filter((department) => allowed.has(department.id));
+    const employees = departments.reduce((sum, department) => sum + department._count.employees, 0);
+    return {
+      ...unit,
+      departments,
+      _count: { employees, projects: departments.length ? unit._count.projects : 0 },
+    };
+  }).filter((unit) => unit.departments.length > 0);
+}
 
 router.get('/business-units', async (req, res) => {
   try {
@@ -21,7 +43,7 @@ router.get('/business-units', async (req, res) => {
         _count: { select: { employees: true, projects: true } },
       },
     });
-    res.json({ data: units });
+    res.json({ data: visibleDepartments(units, req.access) });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to load business units');
   }
@@ -104,6 +126,11 @@ router.post('/departments', async (req, res) => {
 
 router.patch('/departments/:id', async (req, res) => {
   try {
+    const current = await prisma.department.findUnique({ where: { id: req.params.id }, select: { id: true } });
+    if (!current) return res.status(404).json({ error: 'Department not found' });
+    if (!req.access.orgWide && !req.access.departmentIds.includes(current.id)) {
+      return res.status(403).json({ error: 'You can manage only your own department' });
+    }
     const name = req.body.name !== undefined ? String(req.body.name).trim() : undefined;
     if (name === '') return res.status(400).json({ error: 'Department name is required' });
 
@@ -111,7 +138,7 @@ router.patch('/departments/:id', async (req, res) => {
       where: { id: req.params.id },
       data: {
         ...(name !== undefined ? { name } : {}),
-        ...(req.body.managerId !== undefined ? { managerId: req.body.managerId || null } : {}),
+        ...(req.access.orgWide && req.body.managerId !== undefined ? { managerId: req.body.managerId || null } : {}),
       },
       include: {
         manager: { select: { id: true, firstName: true, lastName: true } },

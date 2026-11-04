@@ -6,8 +6,10 @@ const { notifyWorkers, activeWorkerIds } = require('./notify');
 const router = express.Router();
 router.use(attachAccess);
 router.use(guardWrites((req) => {
-  if (req.method === 'POST' && /^\/notifications\/[^/]+\/read$/.test(req.path)) return Boolean(req.access.employeeId) || req.access.orgWide || req.access.hr;
-  return req.access.orgWide || req.access.hr || req.access.departmentScope || req.access.managedProjectIds.length > 0;
+  if (!/^\/(notifications|announcements|meetings)(\/|$)/.test(req.path)) return true;
+  if (req.method === 'POST' && /^\/notifications\/[^/]+\/read$/.test(req.path)) return Boolean(req.access.employeeId) || req.access.orgWide;
+  if (req.path === '/announcements' || req.path === '/notifications/reminders') return req.access.orgWide;
+  return req.access.orgWide || req.access.departmentScope || req.access.managedProjectIds.length > 0;
 }));
 
 const ANNOUNCEMENT_KINDS = ['MEETING', 'PRODUCTION', 'INTERNSHIP', 'DEADLINE', 'TRAINING', 'GENERAL'];
@@ -78,7 +80,7 @@ async function ensureProjectMember(tx, projectId, employeeId) {
 router.get('/notifications', async (req, res) => {
   try {
     const where = {};
-    if (!req.access.orgWide && !req.access.hr) {
+    if (!req.access.orgWide) {
       if (!req.access.employeeId) return res.json({ data: [] });
       where.employeeId = req.access.employeeId;
     } else if (req.query.employeeId) where.employeeId = req.query.employeeId;
@@ -149,6 +151,11 @@ router.post('/notifications/reminders', async (req, res) => {
 
 router.post('/notifications/:id/read', async (req, res) => {
   try {
+    const current = await prisma.hbmsNotification.findUnique({ where: { id: req.params.id } });
+    if (!current) return res.status(404).json({ error: 'Notification not found' });
+    if (!req.access.orgWide && current.employeeId !== req.access.employeeId) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
     const notice = await prisma.hbmsNotification.update({
       where: { id: req.params.id },
       data: { readAt: new Date() },
@@ -162,9 +169,9 @@ router.post('/notifications/:id/read', async (req, res) => {
 router.get('/announcements', async (req, res) => {
   try {
     const where = {};
-    if (!req.access.orgWide && !req.access.hr) {
-      if (!req.access.businessUnitId) return res.json({ data: [] });
-      where.OR = [{ businessUnitId: null }, { businessUnitId: req.access.businessUnitId }];
+    if (!req.access.orgWide) {
+      where.OR = [{ businessUnitId: null }];
+      if (req.access.businessUnitId) where.OR.push({ businessUnitId: req.access.businessUnitId });
     } else if (req.query.businessUnitId) where.businessUnitId = req.query.businessUnitId;
     const announcements = await prisma.hbmsAnnouncement.findMany({
       where,

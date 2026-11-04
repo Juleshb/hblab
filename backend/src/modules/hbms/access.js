@@ -6,10 +6,10 @@ const ROLE_INFO = [
   ['CEO', 'CEO / Director', 'Organization-wide overview, reports, projects, staff, and approvals.'],
   ['DEPARTMENT_MANAGER', 'Department Manager', 'Department workers, and projects linked to that department. Not confidential HR records, and not every project in the other business unit.'],
   ['PROJECT_MANAGER', 'Project Manager', 'Assigned projects, milestones, and project teams.'],
-  ['HR', 'HR / Administrator', 'Staff records, attendance, leave, and documents.'],
+  ['HR', 'HR / Administrator', 'The people, projects, and documents this person is assigned to manage. Company-wide control stays with the administrator and CEO.'],
   ['PROGRAM_COORDINATOR', 'Program Coordinator', 'Training programs, participants, schedules, and reports for their business unit.'],
   ['TRAINER', 'Trainer', 'Assigned programs, attendance, assignments, and assessments.'],
-  ['WORKER', 'Worker / Employee', 'Personal profile, assigned projects, tasks, announcements, and permitted documents.'],
+  ['WORKER', 'Worker / Employee', 'Own profile, assigned projects and tasks, own attendance, assigned notifications, and assigned documents.'],
   ['INTERN', 'Intern', 'Assigned training, tasks, learning materials, and feedback.'],
   ['CLIENT', 'Client', 'Selected project progress and approved deliverables.'],
 ];
@@ -52,15 +52,13 @@ function buildAccess(facts) {
   const programIds = orgWide
     ? null
     : unique([...coordinatedProgramIds, ...unitProgramIds, ...trainerProgramIds, ...enrolledProgramIds]);
-  const staffIds = orgWide || hr
-    ? null
-    : unique([
-      ...(employee ? [employee.id] : []),
-      ...(departmentScope ? facts.departmentEmployeeIds || [] : []),
-    ]);
-  const directoryIds = orgWide || hr
-    ? null
-    : unique([...(staffIds || []), ...(facts.teammateIds || [])]);
+  const managedPeople = unique([
+    ...(employee ? [employee.id] : []),
+    ...(departmentScope ? facts.departmentEmployeeIds || [] : []),
+    ...(facts.managedMemberIds || []),
+  ]);
+  const staffIds = orgWide ? null : managedPeople;
+  const directoryIds = orgWide ? null : managedPeople;
 
   const tabs = [];
   const add = (tab) => {
@@ -72,15 +70,15 @@ function buildAccess(facts) {
     add('documents');
   } else {
     if (orgWide || hr || departmentScope || isWorker || managedProjectIds.length) add('overview');
-    if (orgWide || hr || departmentScope) add('organization');
-    if (orgWide || hr || departmentScope || isWorker) add('workers');
+    if (orgWide || departmentScope) add('organization');
+    if (orgWide || departmentScope || isWorker || managedProjectIds.length) add('workers');
     if (orgWide || (projectIds && projectIds.length) || roles.has('PROJECT_MANAGER')) add('projects');
     if (orgWide || roles.has('PROGRAM_COORDINATOR') || trainerProgramIds.length || enrolledProgramIds.length) add('programs');
     if (orgWide || departmentScope || managedProjectIds.length || isWorker) add('tasks');
-    if (orgWide || hr || departmentScope || (isWorker && !isClient)) add('attendance');
-    if (orgWide || hr || departmentScope || (isWorker && !clientOnly)) add('messages');
-    if (orgWide || hr || departmentScope || isWorker || isClient) add('documents');
-    if (orgWide || hr || departmentScope || managedProjectIds.length || roles.has('PROGRAM_COORDINATOR') || trainerProgramIds.length) add('reports');
+    if (orgWide || (isWorker && !isClient)) add('attendance');
+    if (orgWide || departmentScope || (isWorker && !clientOnly)) add('messages');
+    if (orgWide || departmentScope || isWorker || isClient || managedProjectIds.length) add('documents');
+    if (orgWide || isWorker || departmentScope || managedProjectIds.length || roles.has('PROGRAM_COORDINATOR') || trainerProgramIds.length) add('reports');
   }
   if (unrestricted || roles.has('CEO')) add('roles');
   const orderedTabs = TAB_ORDER.filter((tab) => tabs.includes(tab));
@@ -95,6 +93,7 @@ function buildAccess(facts) {
     departmentScope,
     departmentIds: departmentScope ? departmentIds : [],
     managedProjectIds,
+    departmentProjectIds,
     trainerProgramIds,
     clientProjectIds,
     projectIds,
@@ -161,7 +160,10 @@ async function factsForEmployee(employee, roles, clientProjectIds) {
         select: { id: true },
       })
       : [],
-    prisma.hbmsProject.findMany({ where: { managerId: employee.id }, select: { id: true } }),
+    prisma.hbmsProject.findMany({
+      where: { managerId: employee.id },
+      select: { id: true, members: { select: { employeeId: true } } },
+    }),
     prisma.hbmsProjectMember.findMany({
       where: { employeeId: employee.id },
       select: { projectId: true, project: { select: { members: { select: { employeeId: true } } } } },
@@ -185,6 +187,7 @@ async function factsForEmployee(employee, roles, clientProjectIds) {
     departmentProjectIds: departmentProjects.map((project) => project.id),
     departmentEmployeeIds: departmentEmployees.map((person) => person.id),
     managedProjectIds: managedProjects.map((project) => project.id),
+    managedMemberIds: managedProjects.flatMap((project) => project.members.map((member) => member.employeeId)),
     memberProjectIds: memberships.map((membership) => membership.projectId),
     teammateIds,
     coordinatedProgramIds: programs.map((program) => program.id),
@@ -289,15 +292,35 @@ function canManageProject(access, project) {
 
 function canApprove(access, employee) {
   if (!employee) return false;
-  if (access.orgWide || access.hr) return true;
+  if (access.orgWide) return true;
   if (access.departmentScope && employee.departmentId && access.departmentIds.includes(employee.departmentId)) return true;
   return false;
 }
 
 function canRecordFor(access, employee) {
   if (!employee) return false;
-  if (access.employeeId && access.employeeId === employee.id) return true;
-  return canApprove(access, employee);
+  if (access.orgWide) return true;
+  return Boolean(access.employeeId && access.employeeId === employee.id);
+}
+
+function canSeeTask(access, task) {
+  if (!task) return false;
+  if (access.orgWide) return true;
+  const assigned = (task.assignees || []).some((item) => (item.employeeId || item.employee?.id) === access.employeeId);
+  if (assigned) return true;
+  if (!allowsProject(access, task.projectId)) return false;
+  const managed = new Set([...(access.managedProjectIds || []), ...(access.departmentProjectIds || [])]);
+  return managed.has(task.projectId);
+}
+
+function visibleTaskFilter(access) {
+  if (access.orgWide) return null;
+  const managed = unique([...(access.managedProjectIds || []), ...(access.departmentProjectIds || [])]);
+  const or = [];
+  if (access.employeeId) or.push({ assignees: { some: { employeeId: access.employeeId } } });
+  if (managed.length) or.push({ projectId: { in: managed } });
+  if (!or.length) return { id: { in: [] } };
+  return { OR: or };
 }
 
 function canManageProgram(access, program) {
@@ -333,6 +356,11 @@ function publicAccess(access) {
     canReadConfidentialHr: access.canReadConfidentialHr,
     employee: access.employee,
     clientOnly: access.clientOnly,
+    canManageSystem: access.orgWide,
+    ownAttendance: !access.orgWide,
+    canAssignWork: access.orgWide || access.departmentScope || access.managedProjectIds.length > 0,
+    canCreateProject: access.orgWide || access.departmentScope,
+    canManagePrograms: access.orgWide || access.roles.includes('PROGRAM_COORDINATOR'),
     projectCount: access.projectIds ? access.projectIds.length : null,
     programCount: access.programIds ? access.programIds.length : null,
   };
@@ -368,7 +396,10 @@ function scopeReport(data, access) {
   if (access.projectIds) next.projects = data.projects.filter((project) => access.projectIds.includes(project.id));
   if (access.staffIds) next.workers = data.workers.filter((worker) => access.staffIds.includes(worker.id));
   if (access.programIds) next.programs = data.programs.filter((program) => access.programIds.includes(program.id));
-  if (!access.hr) {
+  if (!access.orgWide && access.employeeId) {
+    next.workers = data.workers.filter((worker) => worker.id === access.employeeId);
+  }
+  if (!access.orgWide) {
     next.projects = next.projects.map((project) => (
       access.managedProjectIds.includes(project.id) ? project : { ...project, financial: { enabled: false } }
     ));
@@ -414,7 +445,7 @@ function scopeDashboard(data, access) {
     };
     next.programs.active = next.programs.items.length;
   }
-  if (!access.hr) {
+  if (!access.orgWide) {
     next.workers = { total: access.staffIds ? access.staffIds.length : 0, byType: {} };
     next.attendance = {
       present: 0,
@@ -427,7 +458,7 @@ function scopeDashboard(data, access) {
     };
     next.approvals = { total: 0, tasks: 0, leave: 0, expenses: 0, items: [] };
     next.activity = [];
-    next.summary = 'Showing the work in your role. Organization-wide totals stay with directors and HR.';
+    next.summary = 'Showing your assigned work. Organization-wide totals stay with the administrator and CEO.';
   }
   return next;
 }
@@ -444,6 +475,8 @@ module.exports = {
   canManageProject,
   canApprove,
   canRecordFor,
+  canSeeTask,
+  visibleTaskFilter,
   canManageProgram,
   canTrainProgram,
   applyIdScope,

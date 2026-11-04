@@ -1,12 +1,13 @@
 const express = require('express');
 const { prisma, parseDate, handlePrismaError, writeAudit } = require('./utils');
-const { attachAccess, guardWrites, canRecordFor, canApprove, allowsStaff } = require('./access');
+const { attachAccess, guardWrites, canRecordFor, canApprove } = require('./access');
 
 const router = express.Router();
 router.use(attachAccess);
 router.use(guardWrites((req) => {
-  if (req.path.startsWith('/holidays')) return req.access.orgWide || req.access.hr;
-  if (req.access.orgWide || req.access.hr || req.access.departmentScope) return true;
+  if (req.path.startsWith('/holidays')) return req.access.orgWide;
+  if (req.access.orgWide) return true;
+  if (/^\/timesheets\/[^/]+\/decision$/.test(req.path) || /^\/[^/]+\/decision$/.test(req.path)) return false;
   return ['/check-in', '/check-out', '/event-hours', '/timesheets', '/absence'].includes(req.path) && Boolean(req.access.employeeId);
 }));
 
@@ -28,6 +29,13 @@ const workerSelect = {
   businessUnit: { select: { id: true, name: true } },
   reportsTo: { select: { id: true, firstName: true, lastName: true } },
 };
+
+function attendanceEmployeeId(req) {
+  if (req.access.orgWide) return req.query.employeeId || null;
+  if (!req.access.employeeId) return false;
+  if (req.query.employeeId && req.query.employeeId !== req.access.employeeId) return false;
+  return req.access.employeeId;
+}
 
 function dateOnly(value) {
   const date = value instanceof Date ? value : new Date(value);
@@ -98,18 +106,17 @@ router.get('/report', async (req, res) => {
     const to = parseDate(req.query.to);
     if (!from || from.invalid || !to || to.invalid) return res.status(400).json({ error: 'A start and end date are required' });
     const where = {};
-    if (req.access.staffIds) where.id = { in: req.access.staffIds };
-    if (req.query.businessUnitId) where.businessUnitId = req.query.businessUnitId;
-    if (req.query.employeeId) {
-      if (!allowsStaff(req.access, req.query.employeeId)) return res.json({ data: [], meta: { from, to, holidays: [] } });
-      where.id = req.query.employeeId;
-    }
+    const subjectId = attendanceEmployeeId(req);
+    if (subjectId === false) return res.json({ data: [], meta: { from, to, holidays: [] } });
+    if (subjectId) where.id = subjectId;
+    else if (req.access.staffIds) where.id = { in: req.access.staffIds };
+    if (req.access.orgWide && req.query.businessUnitId) where.businessUnitId = req.query.businessUnitId;
     const [workers, rows, holidays, leave, timesheets] = await Promise.all([
       prisma.employee.findMany({ where, select: workerSelect, orderBy: { staffCode: 'asc' } }),
       prisma.hbmsAttendance.findMany({
         where: {
           workDate: { gte: from, lte: to },
-          ...(req.query.employeeId ? { employeeId: req.query.employeeId } : {}),
+          ...(subjectId ? { employeeId: subjectId } : {}),
         },
         include: attendanceInclude,
       }),
@@ -119,13 +126,13 @@ router.get('/report', async (req, res) => {
           status: 'APPROVED',
           startDate: { lte: to },
           endDate: { gte: from },
-          ...(req.query.employeeId ? { employeeId: req.query.employeeId } : {}),
+          ...(subjectId ? { employeeId: subjectId } : {}),
         },
       }),
       prisma.hbmsTimesheet.findMany({
         where: {
           workDate: { gte: from, lte: to },
-          ...(req.query.employeeId ? { employeeId: req.query.employeeId } : {}),
+          ...(subjectId ? { employeeId: subjectId } : {}),
         },
         select: { employeeId: true, hours: true, status: true },
       }),
@@ -229,7 +236,9 @@ router.delete('/holidays/:id', async (req, res) => {
 router.get('/timesheets', async (req, res) => {
   try {
     const where = {};
-    if (req.query.employeeId) where.employeeId = req.query.employeeId;
+    const subjectId = attendanceEmployeeId(req);
+    if (subjectId === false) return res.json({ data: [] });
+    if (subjectId) where.employeeId = subjectId;
     if (req.query.status) where.status = req.query.status;
     const sheets = await prisma.hbmsTimesheet.findMany({
       where,
@@ -253,6 +262,9 @@ router.post('/timesheets', async (req, res) => {
     if (!req.body.employeeId) return res.status(400).json({ error: 'Worker is required' });
     if (!workDate || workDate.invalid) return res.status(400).json({ error: 'Work date is required' });
     if (hours.invalid) return res.status(400).json({ error: 'Hours must be between 0 and 24' });
+    const employee = await prisma.employee.findUnique({ where: { id: req.body.employeeId }, select: { id: true } });
+    if (!employee) return res.status(404).json({ error: 'Worker not found' });
+    if (!canRecordFor(req.access, employee)) return res.status(403).json({ error: 'You can record only your own attendance' });
     const sheet = await prisma.hbmsTimesheet.create({
       data: {
         employeeId: req.body.employeeId,
@@ -294,10 +306,9 @@ router.post('/timesheets/:id/decision', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const where = {};
-    if (req.access.staffIds) {
-      if (req.query.employeeId && !allowsStaff(req.access, req.query.employeeId)) return res.json({ data: [] });
-      where.employeeId = req.query.employeeId || { in: req.access.staffIds };
-    } else if (req.query.employeeId) where.employeeId = req.query.employeeId;
+    const subjectId = attendanceEmployeeId(req);
+    if (subjectId === false) return res.json({ data: [] });
+    if (subjectId) where.employeeId = subjectId;
     if (req.query.from || req.query.to) {
       where.workDate = {};
       const from = parseDate(req.query.from);

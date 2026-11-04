@@ -191,6 +191,8 @@ const HbmsTasks = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const dragged = useRef(false);
+  const [canAssignWork, setCanAssignWork] = useState(false);
+  const [canManageSystem, setCanManageSystem] = useState(false);
 
   const loadTasks = async (current = filters, personId = workspaceId) => {
     const params = new URLSearchParams({ limit: '100' });
@@ -232,12 +234,15 @@ const HbmsTasks = () => {
     let active = true;
     (async () => {
       try {
-        const [workspaceRes, projectRes, workerRes] = await Promise.all([
+        const [workspaceRes, projectRes, workerRes, accessRes] = await Promise.all([
           hbmsApi.get('/tasks/workspace'),
           hbmsApi.get('/projects?limit=100'),
           hbmsApi.get('/employees?limit=100'),
+          hbmsApi.get('/access/me'),
         ]);
         if (!active) return;
+        setCanAssignWork(Boolean(accessRes.data.data?.canAssignWork));
+        setCanManageSystem(Boolean(accessRes.data.data?.canManageSystem));
         setProjects(projectRes.data.data);
         setWorkers(workerRes.data.data);
         const employee = workspaceRes.data.data.employee;
@@ -529,15 +534,17 @@ const HbmsTasks = () => {
           <label className="text-xs font-medium text-gray-600">
             Workspace
             <select className={`${inputClass} mt-1 min-w-52`} value={workspaceId} onChange={(e) => changeWorkspace(e.target.value)}>
-              <option value="">All work</option>
+              {canManageSystem ? <option value="">All work</option> : null}
               {workers.map((worker) => (
                 <option key={worker.id} value={worker.id}>{workerName(worker)} · {worker.staffCode}</option>
               ))}
             </select>
           </label>
-          <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => setShowForm(true)}>
-            New task
-          </button>
+          {canAssignWork ? (
+            <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => setShowForm(true)}>
+              New task
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -950,14 +957,18 @@ const HbmsTasks = () => {
                     ))}
                   </ul>
                 )}
-                <form className="mt-2 flex gap-2" onSubmit={addChecklist}>
-                  <input className={inputClass} value={checkItem} onChange={(e) => setCheckItem(e.target.value)} placeholder="Add a step" required />
-                  <PrimaryButton type="submit">Add</PrimaryButton>
-                </form>
-                <form className="mt-2 space-y-2" onSubmit={pasteChecklist}>
-                  <textarea className={inputClass} rows={5} value={pastedSteps} onChange={(e) => setPastedSteps(e.target.value)} placeholder={'Paste one step per line. Bullets are removed.\n• School application.\n• School profile.'} required />
-                  <PrimaryButton type="submit">Add each line</PrimaryButton>
-                </form>
+                {canAssignWork ? (
+                  <>
+                    <form className="mt-2 flex gap-2" onSubmit={addChecklist}>
+                      <input className={inputClass} value={checkItem} onChange={(e) => setCheckItem(e.target.value)} placeholder="Add a step" required />
+                      <PrimaryButton type="submit">Add</PrimaryButton>
+                    </form>
+                    <form className="mt-2 space-y-2" onSubmit={pasteChecklist}>
+                      <textarea className={inputClass} rows={5} value={pastedSteps} onChange={(e) => setPastedSteps(e.target.value)} placeholder={'Paste one step per line. Bullets are removed.\n• School application.\n• School profile.'} required />
+                      <PrimaryButton type="submit">Add each line</PrimaryButton>
+                    </form>
+                  </>
+                ) : null}
               </div>
 
               <div>

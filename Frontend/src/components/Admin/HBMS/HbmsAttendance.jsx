@@ -132,6 +132,8 @@ const HbmsAttendance = () => {
   const [loading, setLoading] = useState(true);
   const [pane, setPane] = useState(() => (window.location.hash === '#leave' ? 'leave' : 'attendance'));
   const [modal, setModal] = useState('');
+  const [canManageSystem, setCanManageSystem] = useState(false);
+  const [ownAttendance, setOwnAttendance] = useState(true);
 
   const loadWorker = async (id, people = workers) => {
     if (!id) return;
@@ -174,9 +176,16 @@ const HbmsAttendance = () => {
     let active = true;
     (async () => {
       try {
-        const people = await loadShared();
+        const [people, accessRes] = await Promise.all([
+          loadShared(),
+          hbmsApi.get('/access/me'),
+        ]);
         if (!active) return;
-        const first = people[0]?.id || '';
+        const rights = accessRes.data.data || {};
+        setCanManageSystem(Boolean(rights.canManageSystem));
+        setOwnAttendance(rights.ownAttendance !== false);
+        const selfId = rights.employee?.id || '';
+        const first = rights.ownAttendance === false ? (people[0]?.id || selfId) : (selfId || people[0]?.id || '');
         setWorkerId(first);
         await loadWorker(first, people);
       } catch (err) {
@@ -315,12 +324,16 @@ const HbmsAttendance = () => {
             <p className="text-sm font-medium text-gray-800">{todayLabel}</p>
             <p className="text-[11px] text-gray-400">{monthLabel}</p>
           </div>
-          <label className="text-xs font-medium text-gray-600">
-            Worker
-            <select className={`${inputClass} mt-1 min-w-56`} value={workerId} onChange={(e) => chooseWorker(e.target.value)}>
-              {workers.map((item) => <option key={item.id} value={item.id}>{personName(item)} · {item.staffCode}</option>)}
-            </select>
-          </label>
+          {ownAttendance ? (
+            <p className="rounded-2xl border border-gray-100 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm">{worker ? personName(worker) : 'My attendance'}</p>
+          ) : (
+            <label className="text-xs font-medium text-gray-600">
+              Worker
+              <select className={`${inputClass} mt-1 min-w-56`} value={workerId} onChange={(e) => chooseWorker(e.target.value)}>
+                {workers.map((item) => <option key={item.id} value={item.id}>{personName(item)} · {item.staffCode}</option>)}
+              </select>
+            </label>
+          )}
         </div>
       </div>
 
@@ -333,7 +346,7 @@ const HbmsAttendance = () => {
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_280px]">
         <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
-          <h3 className="font-semibold text-gray-900">Team this month</h3>
+          <h3 className="font-semibold text-gray-900">{ownAttendance ? 'This month' : 'Team this month'}</h3>
           <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-gray-500">
             <span className="inline-flex items-center gap-1"><i className="h-2 w-2 rounded-full bg-emerald-500" /> Present</span>
             <span className="inline-flex items-center gap-1"><i className="h-2 w-2 rounded-full bg-amber-400" /> Late</span>
@@ -400,7 +413,7 @@ const HbmsAttendance = () => {
                 {mine ? ` · ${mine.present} present · ${mine.late} late · ${mine.absent} absent` : ''}
               </p>
             </div>
-            <button type="button" className="rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white" onClick={() => setModal('policy')}>Edit policy</button>
+            {canManageSystem ? <button type="button" className="rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white" onClick={() => setModal('policy')}>Edit policy</button> : null}
           </div>
           <FormModal open={modal === 'policy'} title="Attendance policy" subtitle={`${personName(worker)} · ${worker.staffCode}`} onClose={() => setModal('')}>
           <form className="space-y-3" onSubmit={savePolicy}>
@@ -628,7 +641,7 @@ const HbmsAttendance = () => {
         <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between gap-2">
             <h3 className="font-semibold text-gray-900">Public holidays</h3>
-            <button type="button" className="rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white" onClick={() => setModal('holiday')}>Add holiday</button>
+            {canManageSystem ? <button type="button" className="rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white" onClick={() => setModal('holiday')}>Add holiday</button> : null}
           </div>
           <FormModal open={modal === 'holiday'} title="Add holiday" subtitle="A public holiday is not counted as an absence." onClose={() => setModal('')}>
           <form className="grid gap-3" onSubmit={async (event) => {

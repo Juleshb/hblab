@@ -8,6 +8,7 @@ const { INCOMING_ROOT, storeUploadedFile, openStoredFile, deleteStoredFile, remo
 const { updateLoginAccount } = require('./loginAccount');
 const { sendTemporaryPassword } = require('./mail');
 const { attachAccess, guardWrites, allowsDirectory, allowsStaff, canApprove } = require('./access');
+const { publishAll } = require('./live');
 const {
   prisma,
   EMPLOYMENT_TYPES,
@@ -24,12 +25,13 @@ const {
 const router = express.Router();
 router.use(attachAccess);
 router.use(guardWrites((req) => {
-  if (req.path.includes('/documents')) return req.access.orgWide || req.access.roles.includes('HR');
-  if (req.access.orgWide || req.access.hr) return true;
+  if (req.access.orgWide) return true;
   if (req.path === '/leave' || /^\/leave\/[^/]+\/decision$/.test(req.path)) {
     return Boolean(req.access.employeeId) || req.access.departmentScope;
   }
-  return req.access.departmentScope;
+  if (/^\/[^/]+\/photo$/.test(req.path)) return Boolean(req.access.employeeId);
+  if (req.method === 'PATCH' && req.access.employeeId && req.path === `/${req.access.employeeId}`) return true;
+  return false;
 }));
 
 const DOCUMENT_KINDS = ['CONTRACT', 'IDENTIFICATION', 'CERTIFICATE', 'OTHER'];
@@ -54,7 +56,7 @@ const photoUpload = multer({
 });
 
 function canIssueLogin(access) {
-  return Boolean(access?.orgWide || access?.hr);
+  return Boolean(access?.orgWide);
 }
 
 async function deliverTemporaryPassword(data) {
@@ -523,7 +525,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/accounts', async (req, res) => {
   try {
-    if (!canIssueLogin(req.access)) return res.status(403).json({ error: 'Only a director or HR can create staff logins' });
+    if (!canIssueLogin(req.access)) return res.status(403).json({ error: 'Only an administrator or the CEO can create staff logins' });
     const missing = await prisma.employee.findMany({
       where: { userId: null },
       select: { id: true },
@@ -543,7 +545,7 @@ router.post('/accounts', async (req, res) => {
 
 router.post('/:id/account', async (req, res) => {
   try {
-    if (!canIssueLogin(req.access)) return res.status(403).json({ error: 'Only a director or HR can create staff logins' });
+    if (!canIssueLogin(req.access)) return res.status(403).json({ error: 'Only an administrator or the CEO can create staff logins' });
     const changing = req.body && (req.body.email != null || req.body.name != null || (req.body.password != null && String(req.body.password) !== ''));
     if (changing && !req.body.reset) {
       const employee = await prisma.employee.findUnique({ where: { id: req.params.id }, select: { userId: true } });
@@ -571,13 +573,72 @@ router.post('/:id/account', async (req, res) => {
   }
 });
 
+async function canViewParticipantPhoto(access, employeeId) {
+  if (allowsDirectory(access, employeeId) || access.orgWide) return true;
+  const managed = [...new Set([...(access.managedProjectIds || []), ...(access.departmentProjectIds || [])])];
+  const shared = [];
+  if (access.employeeId) shared.push({ assignees: { some: { employeeId: access.employeeId } } });
+  if (managed.length) shared.push({ projectId: { in: managed } });
+  if (!shared.length) return false;
+  const task = await prisma.hbmsTask.findFirst({
+    where: {
+      assignees: { some: { employeeId } },
+      OR: shared,
+    },
+    select: { id: true },
+  });
+  return Boolean(task);
+}
+
+async function canSeeCard(req, employeeId) {
+  if (!employeeId) return false;
+  if (req.access.orgWide || req.access.employeeId === employeeId) return true;
+  if (allowsDirectory(req.access, employeeId)) return true;
+  if (await canViewParticipantPhoto(req.access, employeeId)) return true;
+  if (!req.access.employeeId) return false;
+  const person = await prisma.employee.findUnique({
+    where: { id: employeeId },
+    select: { status: true },
+  });
+  return Boolean(person && person.status !== 'INACTIVE');
+}
+
+const cardSelect = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  phone: true,
+  staffCode: true,
+  skills: true,
+  photoKey: true,
+  employmentType: true,
+  businessUnit: { select: { name: true } },
+  department: { select: { name: true } },
+  position: { select: { title: true } },
+};
+
+router.get('/:id/card', async (req, res) => {
+  try {
+    if (!(await canSeeCard(req, req.params.id))) return res.status(404).json({ error: 'Profile not found' });
+    const employee = await prisma.employee.findUnique({
+      where: { id: req.params.id },
+      select: cardSelect,
+    });
+    if (!employee) return res.status(404).json({ error: 'Profile not found' });
+    res.json({ data: employee });
+  } catch (error) {
+    handlePrismaError(res, error, 'Failed to load profile');
+  }
+});
+
 router.get('/:id/photo', async (req, res) => {
   try {
     const employee = await prisma.employee.findUnique({
       where: { id: req.params.id },
       select: { id: true, photoKey: true, photoProvider: true },
     });
-    if (!employee || !employee.photoKey || !allowsDirectory(req.access, employee.id)) {
+    if (!employee || !employee.photoKey || !(await canSeeCard(req, employee.id))) {
       return res.status(404).json({ error: 'No profile picture' });
     }
     const stream = await openStoredFile({
@@ -604,7 +665,9 @@ router.post('/:id/photo', (req, res, next) => {
   });
 }, async (req, res) => {
   try {
-    if (!allowsStaff(req.access, req.params.id)) return res.status(403).json({ error: 'You do not have permission to update this worker' });
+    if (!(req.access.orgWide || req.access.employeeId === req.params.id)) {
+      return res.status(403).json({ error: 'You can change only your own profile picture' });
+    }
     if (!req.file) return res.status(400).json({ error: 'Choose a picture' });
     const current = await prisma.employee.findUnique({
       where: { id: req.params.id },
@@ -632,6 +695,7 @@ router.post('/:id/photo', (req, res, next) => {
       select: employeeSelect,
     });
     await writeAudit(req.userId, 'employee.photo', 'Employee', employee.id, { photoKey: stored.storageKey });
+    publishAll({ type: 'profile', employeeId: employee.id });
     res.json({ data: employee });
   } catch (error) {
     if (req.file?.path) await removePath(req.file.path);
@@ -645,11 +709,7 @@ router.post('/', async (req, res) => {
     if (parsed.error) return res.status(400).json({ error: parsed.error });
     const placementError = await assertPlacement(parsed.data);
     if (placementError) return res.status(400).json({ error: placementError });
-    if (!req.access.orgWide && !req.access.hr) {
-      if (!req.access.departmentScope || !req.access.departmentIds.includes(parsed.data.departmentId)) {
-        return res.status(403).json({ error: 'You can add workers only in a department you manage' });
-      }
-    }
+    if (!req.access.orgWide) return res.status(403).json({ error: 'Only an administrator or the CEO can add workers' });
 
     const employee = await prisma.$transaction(async (tx) => tx.employee.create({
       data: {
@@ -675,9 +735,26 @@ router.patch('/:id', async (req, res) => {
   try {
     const parsed = readEmployeeBody(req.body, { partial: true });
     if (parsed.error) return res.status(400).json({ error: parsed.error });
+    const own = req.access.employeeId === req.params.id;
+    if (!req.access.orgWide && !own) {
+      return res.status(403).json({ error: 'You do not have permission to update this worker' });
+    }
+    if (!req.access.orgWide) {
+      const safe = {};
+      if (parsed.data.firstName !== undefined) safe.firstName = parsed.data.firstName;
+      if (parsed.data.lastName !== undefined) safe.lastName = parsed.data.lastName;
+      if (parsed.data.phone !== undefined) safe.phone = parsed.data.phone;
+      if (parsed.data.skills !== undefined) safe.skills = parsed.data.skills;
+      if (!safe.firstName && parsed.data.firstName !== undefined) return res.status(400).json({ error: 'First name is required' });
+      if (!safe.lastName && parsed.data.lastName !== undefined) return res.status(400).json({ error: 'Last name is required' });
+      if (!Object.keys(safe).length) return res.status(400).json({ error: 'Nothing to update' });
+      parsed.data = safe;
+    }
     const placementError = await assertPlacement(parsed.data, req.params.id);
     if (placementError) return res.status(400).json({ error: placementError });
-    if (!allowsStaff(req.access, req.params.id)) return res.status(403).json({ error: 'You do not have permission to update this worker' });
+    if (req.access.orgWide && !allowsStaff(req.access, req.params.id)) {
+      return res.status(403).json({ error: 'You do not have permission to update this worker' });
+    }
 
     const employee = await prisma.employee.update({
       where: { id: req.params.id },
@@ -685,6 +762,7 @@ router.patch('/:id', async (req, res) => {
       select: employeeSelect,
     });
     await writeAudit(req.userId, 'employee.update', 'Employee', employee.id, { status: employee.status });
+    publishAll({ type: 'profile', employeeId: employee.id });
     res.json({ data: employee });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to update worker');

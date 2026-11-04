@@ -229,8 +229,19 @@ router.get('/:id', async (req, res) => {
     const shaped = withProgress(project, { keepTasks: true });
     shaped.viewer = {
       clientOnly: Boolean(req.access.clientOnly),
-      canIssueLogin: Boolean(req.access.orgWide || req.access.hr),
+      canIssueLogin: Boolean(req.access.orgWide),
+      canManage: canManageProject(req.access, project),
     };
+    if (!canManageProject(req.access, project)) {
+      shaped.budgetAmount = null;
+      shaped.payments = [];
+      shaped.expenses = [];
+    }
+    if (!req.access.orgWide && !req.access.clientOnly && !canManageProject(req.access, project)) {
+      shaped.tasks = (shaped.tasks || []).filter((task) => (
+        (task.assignees || []).some((item) => item.employeeId === req.access.employeeId || item.employee?.id === req.access.employeeId)
+      ));
+    }
     if (req.access.clientOnly) {
       shaped.budgetAmount = null;
       shaped.payments = [];
@@ -402,8 +413,8 @@ router.patch('/:id', async (req, res) => {
 router.post('/:id/client-login', async (req, res) => {
   try {
     if (!await assertManaged(req, res, req.params.id)) return;
-    if (!(req.access.orgWide || req.access.hr)) {
-      return res.status(403).json({ error: 'Only a director or HR can give a client login' });
+    if (!req.access.orgWide) {
+      return res.status(403).json({ error: 'Only an administrator or the CEO can give a client login' });
     }
     const name = cleanText(req.body.name);
     const email = String(req.body.email || '').trim().toLowerCase();

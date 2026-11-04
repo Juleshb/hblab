@@ -99,16 +99,22 @@ const HbmsOrganization = () => {
   const [posOpen, setPosOpen] = useState(false);
   const [positionTitle, setPositionTitle] = useState('');
   const [positionResponsibilities, setPositionResponsibilities] = useState('');
+  const [canManageAll, setCanManageAll] = useState(false);
+  const [canManageOwn, setCanManageOwn] = useState(false);
 
   const load = async () => {
     setLoading(true);
     setError('');
     try {
-      const [unitRes, positionRes, employeeRes] = await Promise.all([
+      const [unitRes, positionRes, employeeRes, accessRes] = await Promise.all([
         hbmsApi.get('/business-units'),
         hbmsApi.get('/positions'),
         hbmsApi.get('/employees?limit=100'),
+        hbmsApi.get('/access/me'),
       ]);
+      const rights = accessRes.data.data || {};
+      setCanManageAll(Boolean(rights.canManageSystem));
+      setCanManageOwn(Boolean(rights.departmentScope));
       setUnits(unitRes.data.data);
       setPositions(positionRes.data.data);
       setEmployees(employeeRes.data.data);
@@ -149,7 +155,7 @@ const HbmsOrganization = () => {
     try {
       await hbmsApi.patch(`/departments/${editing.id}`, {
         name: editing.name,
-        managerId: editing.managerId || null,
+        ...(canManageAll ? { managerId: editing.managerId || null } : {}),
       });
       toast.success('Department updated');
       setEditing(null);
@@ -217,14 +223,24 @@ const HbmsOrganization = () => {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Departments</h2>
-          <p className="mt-1 max-w-3xl text-sm text-gray-500">Each business unit keeps its own departments. A person still has one primary department.</p>
+          <p className="mt-1 max-w-3xl text-sm text-gray-500">
+            {canManageAll
+              ? 'Each business unit keeps its own departments. A person still has one primary department.'
+              : canManageOwn
+                ? 'You can manage the department you head.'
+                : 'You can view the department you are assigned to.'}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="rounded-2xl border border-gray-100 bg-white px-3 py-2 text-right shadow-sm">
             <p className="text-sm font-medium text-gray-800">{todayLabel}</p>
           </div>
-          <button type="button" className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-emerald-800" onClick={() => setPosOpen(true)}>Add position</button>
-          <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => setDeptOpen(true)}>Add department</button>
+          {canManageAll ? (
+            <>
+              <button type="button" className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-emerald-800" onClick={() => setPosOpen(true)}>Add position</button>
+              <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => setDeptOpen(true)}>Add department</button>
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -277,10 +293,12 @@ const HbmsOrganization = () => {
                           </div>
                           <div className="shrink-0 text-right">
                             <p className="text-sm font-semibold text-gray-900">{department._count.employees}</p>
-                            <span className="mt-1 flex justify-end gap-2 text-xs font-medium">
-                              <button type="button" className="text-emerald-700" onClick={() => setEditing({ id: department.id, name: department.name, managerId: department.managerId || '' })}>Edit</button>
-                              <button type="button" className="text-red-600" onClick={() => removeDepartment(department)}>Remove</button>
-                            </span>
+                            {(canManageAll || canManageOwn) ? (
+                              <span className="mt-1 flex justify-end gap-2 text-xs font-medium">
+                                <button type="button" className="text-emerald-700" onClick={() => setEditing({ id: department.id, name: department.name, managerId: department.managerId || '' })}>Edit</button>
+                                {canManageAll ? <button type="button" className="text-red-600" onClick={() => removeDepartment(department)}>Remove</button> : null}
+                              </span>
+                            ) : null}
                           </div>
                         </div>
                       </li>
@@ -318,7 +336,7 @@ const HbmsOrganization = () => {
           )}
         </section>
 
-        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+        {canManageAll ? <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-gray-900">Positions</h3>
             <button type="button" className="text-xs font-medium text-emerald-700" onClick={() => setPosOpen(true)}>Add</button>
@@ -339,7 +357,7 @@ const HbmsOrganization = () => {
               ))}
             </div>
           )}
-        </section>
+        </section> : null}
       </div>
 
       <FormModal open={deptOpen} title="Add department" subtitle="A department belongs to one business unit." onClose={() => setDeptOpen(false)}>
@@ -372,14 +390,16 @@ const HbmsOrganization = () => {
             <Field label="Name">
               <input className={inputClass} value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} required />
             </Field>
-            <Field label="Manager">
-              <select className={inputClass} value={editing.managerId} onChange={(e) => setEditing({ ...editing, managerId: e.target.value })}>
-                <option value="">No manager</option>
-                {employees.map((person) => (
-                  <option key={person.id} value={person.id}>{person.firstName} {person.lastName}</option>
-                ))}
-              </select>
-            </Field>
+            {canManageAll ? (
+              <Field label="Manager">
+                <select className={inputClass} value={editing.managerId} onChange={(e) => setEditing({ ...editing, managerId: e.target.value })}>
+                  <option value="">No manager</option>
+                  {employees.map((person) => (
+                    <option key={person.id} value={person.id}>{person.firstName} {person.lastName}</option>
+                  ))}
+                </select>
+              </Field>
+            ) : null}
             <div className="flex justify-end">
               <PrimaryButton type="submit">Save</PrimaryButton>
             </div>

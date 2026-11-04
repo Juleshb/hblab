@@ -90,13 +90,14 @@ function actorFrom(req) {
 
 function canStoreDocument(req) {
   const access = req.access;
-  if (access.orgWide || access.roles.includes('HR')) return true;
+  if (access.orgWide) return true;
   const category = String(req.body?.category || '');
   if (category === 'CONTRACT' || category === 'CLIENT_AGREEMENT') return false;
-  if (req.body?.projectId && access.managedProjectIds.includes(req.body.projectId)) return true;
-  if (req.body?.projectId && access.departmentScope && (access.projectIds || []).includes(req.body.projectId)) return true;
-  if (req.body?.programId && access.trainerProgramIds.includes(req.body.programId)) return true;
-  if (req.body?.programId && access.roles.includes('PROGRAM_COORDINATOR') && (access.programIds || []).includes(req.body.programId)) return true;
+  const employeeId = req.body?.employeeId || null;
+  if (employeeId && employeeId !== access.employeeId) return false;
+  if (req.body?.projectId && (access.projectIds || []).includes(req.body.projectId)) return true;
+  if (req.body?.programId && (access.programIds || []).includes(req.body.programId)) return true;
+  if (employeeId && employeeId === access.employeeId) return true;
   return false;
 }
 

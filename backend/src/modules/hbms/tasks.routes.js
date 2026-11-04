@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const multer = require('multer');
-const { attachAccess, guardWrites, allowsProject, canManageProject } = require('./access');
+const { attachAccess, guardWrites, canManageProject, canSeeTask, visibleTaskFilter } = require('./access');
 const {
   prisma,
   TASK_PRIORITIES,
@@ -14,6 +14,20 @@ const {
   writeAudit,
 } = require('./utils');
 const { notifyWorkers } = require('./notify');
+const { publishEmployees } = require('./live');
+
+async function signalTask(taskId) {
+  if (!taskId) return;
+  const task = await prisma.hbmsTask.findUnique({
+    where: { id: taskId },
+    select: { id: true, creatorId: true, assignees: { select: { employeeId: true } } },
+  });
+  if (!task) return;
+  publishEmployees(
+    [task.creatorId, ...task.assignees.map((item) => item.employeeId)],
+    { type: 'tasks', taskId: task.id },
+  ).catch(() => {});
+}
 
 const router = express.Router();
 router.use(attachAccess);
@@ -89,6 +103,26 @@ function personName(person) {
 function formatDay(value) {
   if (!value) return 'none';
   return new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function managesTask(access, task) {
+  if (!task) return false;
+  if (access.orgWide) return true;
+  const managed = new Set([...(access.managedProjectIds || []), ...(access.departmentProjectIds || [])]);
+  return managed.has(task.projectId);
+}
+
+async function taskIsVisible(req) {
+  const task = await prisma.hbmsTask.findUnique({
+    where: { id: req.params.id },
+    select: {
+      id: true,
+      projectId: true,
+      assignees: { select: { employeeId: true } },
+    },
+  });
+  if (!task || !canSeeTask(req.access, task)) return null;
+  return task;
 }
 
 async function actorLabel(userId) {
@@ -209,14 +243,14 @@ router.get('/', async (req, res) => {
   try {
     const { page, limit, skip } = parsePagination(req.query);
     const where = {};
-    if (req.access.projectIds && req.query.projectId && !req.access.projectIds.includes(req.query.projectId)) {
-      return res.json({ data: [], meta: { page, limit, total: 0 } });
-    }
-    if (req.query.projectId) where.projectId = req.query.projectId;
-    else if (req.access.projectIds) where.projectId = { in: req.access.projectIds };
-    if (req.access.isIntern && !req.access.orgWide && !req.access.departmentScope && !req.access.managedProjectIds.length) {
-      where.assignees = { some: { employeeId: req.access.employeeId } };
-    }
+    const visibility = visibleTaskFilter(req.access);
+    if (visibility) where.AND = [...(where.AND || []), visibility];
+    if (req.query.projectId) {
+      if (req.access.projectIds && !req.access.projectIds.includes(req.query.projectId)) {
+        return res.json({ data: [], meta: { page, limit, total: 0 } });
+      }
+      where.projectId = req.query.projectId;
+    } else if (!visibility && req.access.projectIds) where.projectId = { in: req.access.projectIds };
     if (req.query.priority) where.priority = req.query.priority;
     if (req.query.assigneeId) {
       where.assignees = { some: { employeeId: req.query.assigneeId } };
@@ -261,8 +295,7 @@ router.get('/:id', async (req, res) => {
       where: { id: req.params.id },
       include: detailInclude,
     });
-    if (!task) return res.status(404).json({ error: 'Task not found' });
-    if (!allowsProject(req.access, task.projectId)) return res.status(404).json({ error: 'Task not found' });
+    if (!task || !canSeeTask(req.access, task)) return res.status(404).json({ error: 'Task not found' });
     res.json({ data: task });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to load task');
@@ -331,6 +364,7 @@ router.post('/', async (req, res) => {
       entityType: 'HbmsTask',
       entityId: task.id,
     });
+    signalTask(task.id);
     res.status(201).json({ data: task });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to create task');
@@ -460,6 +494,7 @@ router.patch('/:id', async (req, res) => {
       });
     }
 
+    signalTask(task.id);
     res.json({ data: task });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to update task');
@@ -470,6 +505,7 @@ router.post('/:id/comments', async (req, res) => {
   try {
     const body = String(req.body.body || '').trim();
     if (!body) return res.status(400).json({ error: 'Comment is required' });
+    if (!(await taskIsVisible(req))) return res.status(404).json({ error: 'Task not found' });
     const actor = await actorLabel(req.userId);
 
     const comment = await prisma.$transaction(async (tx) => {
@@ -486,6 +522,7 @@ router.post('/:id/comments', async (req, res) => {
       await addEvent(tx, req.params.id, 'comment', `${actor} commented`);
       return created;
     });
+    signalTask(req.params.id);
     res.status(201).json({ data: comment });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to add comment');
@@ -501,8 +538,9 @@ router.post('/:id/checklist', async (req, res) => {
         : checklistLines(req.body.label);
     if (!labels.length) return res.status(400).json({ error: 'Checklist item is required' });
     if (labels.length > 80) return res.status(400).json({ error: 'Paste up to 80 steps at a time' });
-    const task = await prisma.hbmsTask.findUnique({ where: { id: req.params.id }, select: { id: true } });
+    const task = await taskIsVisible(req);
     if (!task) return res.status(404).json({ error: 'Task not found' });
+    if (!managesTask(req.access, task)) return res.status(403).json({ error: 'You do not have permission to add checklist steps' });
     const actor = await actorLabel(req.userId);
     const count = await prisma.hbmsTaskChecklistItem.count({ where: { taskId: task.id } });
 
@@ -520,6 +558,7 @@ router.post('/:id/checklist', async (req, res) => {
       await addEvent(tx, task.id, 'checklist', message);
       return created;
     });
+    signalTask(req.params.id);
     res.status(201).json({ data: items.length === 1 ? items[0] : items });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to add checklist item');
@@ -532,6 +571,14 @@ router.patch('/:id/checklist/:itemId', async (req, res) => {
       where: { id: req.params.itemId, taskId: req.params.id },
     });
     if (!existing) return res.status(404).json({ error: 'Checklist item not found' });
+    const task = await taskIsVisible(req);
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+    const assigned = task.assignees.some((item) => item.employeeId === req.access.employeeId);
+    const manages = managesTask(req.access, task);
+    if (!assigned && !manages) return res.status(403).json({ error: 'You do not have permission to change this checklist' });
+    if (req.body.label !== undefined && !manages) {
+      return res.status(403).json({ error: 'You can tick steps on a task assigned to you' });
+    }
     const data = {};
     if (req.body.label !== undefined) {
       const label = String(req.body.label).trim();
@@ -551,6 +598,7 @@ router.patch('/:id/checklist/:itemId', async (req, res) => {
       }
       return updated;
     });
+    signalTask(existing.taskId);
     res.json({ data: item });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to update checklist item');
@@ -563,12 +611,15 @@ router.delete('/:id/checklist/:itemId', async (req, res) => {
       where: { id: req.params.itemId, taskId: req.params.id },
     });
     if (!existing) return res.status(404).json({ error: 'Checklist item not found' });
+    const task = await taskIsVisible(req);
+    if (!task || !managesTask(req.access, task)) return res.status(403).json({ error: 'You do not have permission to remove checklist steps' });
     const actor = await actorLabel(req.userId);
     await prisma.$transaction(async (tx) => {
       await tx.hbmsTaskChecklistItem.delete({ where: { id: existing.id } });
       await refreshChecklistProgress(tx, existing.taskId);
       await addEvent(tx, existing.taskId, 'checklist', `${actor} removed "${existing.label}" from the checklist`);
     });
+    signalTask(existing.taskId);
     res.json({ data: { removed: true } });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to remove checklist item');
@@ -579,10 +630,12 @@ router.post('/:id/submit-review', async (req, res) => {
   try {
     const existing = await prisma.hbmsTask.findUnique({
       where: { id: req.params.id },
-      include: { project: { select: { requiresApproval: true } } },
+      include: {
+        project: { select: { requiresApproval: true } },
+        assignees: { select: { employeeId: true } },
+      },
     });
-    if (!existing) return res.status(404).json({ error: 'Task not found' });
-    if (!allowsProject(req.access, existing.projectId)) return res.status(404).json({ error: 'Task not found' });
+    if (!existing || !canSeeTask(req.access, existing)) return res.status(404).json({ error: 'Task not found' });
     const change = resolveStatus(existing, 'IN_REVIEW');
     if (change.error) return res.status(400).json({ error: change.error });
     const actor = await actorLabel(req.userId);
@@ -593,6 +646,7 @@ router.post('/:id/submit-review', async (req, res) => {
       return tx.hbmsTask.findUnique({ where: { id: existing.id }, include: detailInclude });
     });
     await writeAudit(req.userId, 'task.submit_review', 'HbmsTask', task.id, {});
+    signalTask(task.id);
     res.json({ data: task });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to submit task for review');
@@ -639,6 +693,7 @@ router.post('/:id/review', async (req, res) => {
       return tx.hbmsTask.findUnique({ where: { id: existing.id }, include: detailInclude });
     });
     await writeAudit(req.userId, 'task.review', 'HbmsTask', task.id, { decision });
+    signalTask(task.id);
     res.json({ data: task });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to review task');
@@ -653,7 +708,7 @@ router.post('/:id/files', (req, res, next) => {
 }, async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Choose a file to upload' });
-    const task = await prisma.hbmsTask.findUnique({ where: { id: req.params.id }, select: { id: true } });
+    const task = await taskIsVisible(req);
     if (!task) return res.status(404).json({ error: 'Task not found' });
     const actor = await actorLabel(req.userId);
     const file = await prisma.$transaction(async (tx) => {
@@ -669,6 +724,7 @@ router.post('/:id/files', (req, res, next) => {
       return created;
     });
     await writeAudit(req.userId, 'task.file', 'HbmsTask', task.id, { title: file.title });
+    signalTask(task.id);
     res.status(201).json({ data: file });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to store task file');
@@ -681,11 +737,13 @@ router.delete('/:id/files/:fileId', async (req, res) => {
       where: { id: req.params.fileId, taskId: req.params.id },
     });
     if (!existing) return res.status(404).json({ error: 'File not found' });
+    if (!(await taskIsVisible(req))) return res.status(404).json({ error: 'Task not found' });
     const actor = await actorLabel(req.userId);
     await prisma.$transaction(async (tx) => {
       await tx.hbmsTaskFile.delete({ where: { id: existing.id } });
       await addEvent(tx, req.params.id, 'file', `${actor} removed ${existing.title}`);
     });
+    signalTask(req.params.id);
     res.json({ data: { removed: true } });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to remove task file');

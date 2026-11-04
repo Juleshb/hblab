@@ -51,22 +51,11 @@ function canReadDocument(actor, document) {
       && (actor.visibleProjectIds || []).includes(document.projectId);
   }
   if (document.sensitivity === 'RESTRICTED') return hasGrant(actor, document);
-  if ((actor.isHr || actor.isCeo) && (document.sensitivity === 'INTERNAL' || document.sensitivity === 'CONFIDENTIAL')) {
-    return true;
-  }
+  if (actor.isCeo && (document.sensitivity === 'INTERNAL' || document.sensitivity === 'CONFIDENTIAL')) return true;
   const employee = actor.employee;
   if (!employee || employee.status === 'INACTIVE') return false;
-  if (document.sensitivity === 'INTERNAL') {
-    if (document.category === 'POLICY' || document.category === 'TRAINING') return true;
-    if (!document.projectId && !document.businessUnitId) return true;
-    if (document.employeeId === employee.id) return true;
-    if (document.projectId && (actor.visibleProjectIds || []).includes(document.projectId)) return true;
-    if (document.programId && (actor.visibleProgramIds || []).includes(document.programId)) return true;
-    if (document.businessUnitId && (actor.businessUnitIds || []).includes(document.businessUnitId) && !document.projectId) return true;
-    return false;
-  }
-  if (document.sensitivity === 'CONFIDENTIAL') return relatedEmployeeIds(document).has(employee.id);
-  return false;
+  if (hasGrant(actor, document)) return true;
+  return relatedEmployeeIds(document).has(employee.id);
 }
 
 module.exports = {

@@ -182,7 +182,7 @@ router.get('/', async (req, res) => {
 
 router.get('/participants', async (req, res) => {
   try {
-    if (!req.access.orgWide && !req.access.roles.includes('PROGRAM_COORDINATOR') && !req.access.trainerProgramIds.length && !req.access.hr) {
+    if (!req.access.orgWide && !req.access.roles.includes('PROGRAM_COORDINATOR') && !req.access.trainerProgramIds.length) {
       return res.status(403).json({ error: 'You do not have permission to view participants' });
     }
     const where = {};

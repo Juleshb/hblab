@@ -53,6 +53,8 @@ model User {
   hbmsClientAccess HbmsClientAccess[]
   conversationMemberships HbmsConversationMember[]
   conversationMessages    HbmsConversationMessage[]
+  pushTokens              HbmsPushToken[]
+  messageReactions        HbmsMessageReaction[]
 }
 
 enum UserRole {
@@ -305,6 +307,7 @@ model Employee {
   documentGrants   HbmsDocumentGrant[]
   conversationMembers HbmsConversationMember[]
   authoredMessages HbmsConversationMessage[]
+  projectGroups    HbmsConversation[] @relation("ProjectGroupAdmin")
   experiences      HbmsExperience[]
   documents        HbmsStaffDocument[]
   paymentsMade     HbmsPayment[]  @relation("PaymentPayer")
@@ -349,6 +352,7 @@ model HbmsProject {
   payments       HbmsPayment[]
   documents      HbmsDocument[]
   clientAccess   HbmsClientAccess[]
+  conversation   HbmsConversation?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
@@ -1064,6 +1068,7 @@ enum HbmsNotificationKind {
 enum HbmsConversationKind {
   DIRECT
   DEPARTMENT
+  PROJECT
 }
 
 model HbmsConversation {
@@ -1071,6 +1076,10 @@ model HbmsConversation {
   kind         HbmsConversationKind
   departmentId String?                  @unique
   department   Department?              @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  projectId    String?                  @unique
+  project      HbmsProject?             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdById  String?
+  createdBy    Employee?                @relation("ProjectGroupAdmin", fields: [createdById], references: [id], onDelete: SetNull)
   directKey    String?                  @unique
   createdAt    DateTime                 @default(now())
   updatedAt    DateTime                 @updatedAt
@@ -1078,6 +1087,7 @@ model HbmsConversation {
   members      HbmsConversationMember[]
 
   @@index([kind])
+  @@index([createdById])
 }
 
 model HbmsConversationMember {
@@ -1089,6 +1099,7 @@ model HbmsConversationMember {
   userId         Int?
   user           User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
   lastReadAt     DateTime?
+  lastDeliveredAt DateTime?
   joinedAt       DateTime         @default(now())
 
   @@unique([conversationId, employeeId])
@@ -1107,9 +1118,38 @@ model HbmsConversationMessage {
   authorUser     User?            @relation(fields: [authorUserId], references: [id], onDelete: SetNull)
   asDepartment   Boolean          @default(false)
   body           String
+  replyToId      String?
+  replyTo        HbmsConversationMessage?  @relation("MessageReply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies        HbmsConversationMessage[] @relation("MessageReply")
+  reactions      HbmsMessageReaction[]
   createdAt      DateTime         @default(now())
 
   @@index([conversationId, createdAt])
+  @@index([replyToId])
+}
+
+model HbmsMessageReaction {
+  id        String                  @id @default(uuid())
+  messageId String
+  message   HbmsConversationMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime                @default(now())
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+}
+
+model HbmsPushToken {
+  id        String   @id @default(uuid())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  platform  String   @default("unknown")
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 enum HbmsDocumentCategory {

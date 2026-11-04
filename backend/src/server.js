@@ -1,4 +1,5 @@
-require('dotenv').config(); 
+require('dotenv').config();
+const http = require('http');
 const morgan = require('morgan');
 const express = require('express');
 const userRoutes = require('./routes/userRoutes');
@@ -18,6 +19,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const hbmsRoutes = require('./modules/hbms');
 const { ensureHbmsSeed } = require('./modules/hbms/seed');
 const { startDeadlineReminders } = require('./modules/hbms/reminders');
+const { attachLive } = require('./modules/hbms/live');
 
 // Middleware - MUST come before routes
 app.use(cors())
@@ -46,7 +48,9 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = http.createServer(app);
+attachLive(server);
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   ensureHbmsSeed().catch((error) => {
     console.error('HBMS seed skipped:', error.message);

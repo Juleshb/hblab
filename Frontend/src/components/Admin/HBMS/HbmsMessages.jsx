@@ -97,6 +97,8 @@ const HbmsMessages = () => {
   const [meetings, setMeetings] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [notices, setNotices] = useState([]);
+  const [canManageSystem, setCanManageSystem] = useState(false);
+  const [canAssignWork, setCanAssignWork] = useState(false);
   const [meetingId, setMeetingId] = useState('');
   const [noticeWorker, setNoticeWorker] = useState('');
   const [meetingForm, setMeetingForm] = useState({
@@ -145,15 +147,18 @@ const HbmsMessages = () => {
     let active = true;
     (async () => {
       try {
-        const [workerRes, projectRes, unitRes, meetingRes, announcementRes, noticeRes] = await Promise.all([
+        const [workerRes, projectRes, unitRes, meetingRes, announcementRes, noticeRes, accessRes] = await Promise.all([
           hbmsApi.get('/employees?limit=100'),
           hbmsApi.get('/projects?limit=100'),
           hbmsApi.get('/business-units'),
           hbmsApi.get('/meetings'),
           hbmsApi.get('/announcements'),
           hbmsApi.get('/notifications'),
+          hbmsApi.get('/access/me'),
         ]);
         if (!active) return;
+        setCanManageSystem(Boolean(accessRes.data.data?.canManageSystem));
+        setCanAssignWork(Boolean(accessRes.data.data?.canAssignWork));
         setWorkers(workerRes.data.data);
         setProjects(projectRes.data.data);
         setUnits(unitRes.data.data);
@@ -304,8 +309,8 @@ const HbmsMessages = () => {
           </div>
           {view === 'meetings' ? (
             <>
-              <button type="button" className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-emerald-800" onClick={() => setAnnounceOpen(true)}>New announcement</button>
-              <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => setShowMeetingForm(true)}>Schedule meeting</button>
+              {canManageSystem ? <button type="button" className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-emerald-800" onClick={() => setAnnounceOpen(true)}>New announcement</button> : null}
+              {canAssignWork ? <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => setShowMeetingForm(true)}>Schedule meeting</button> : null}
             </>
           ) : null}
         </div>
@@ -426,7 +431,7 @@ const HbmsMessages = () => {
             </ul>
           )}
           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
-            <PrimaryButton type="button" onClick={remind}>Send deadline reminders</PrimaryButton>
+            {canManageSystem ? <PrimaryButton type="button" onClick={remind}>Send deadline reminders</PrimaryButton> : null}
             <p className="text-xs text-gray-500">Open tasks that are overdue or due within 14 days. Unassigned tasks go to the project manager.</p>
           </div>
         </section>

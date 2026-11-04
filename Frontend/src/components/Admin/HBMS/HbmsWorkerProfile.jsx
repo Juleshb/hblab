@@ -325,14 +325,16 @@ const HbmsWorkerProfile = () => {
               <>
                 <Link to={`/admin/hbms/messages?worker=${worker.id}`} className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white">Message</Link>
                 {worker.login.canManage ? (
-                  <button type="button" className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700" onClick={openLogin}>Edit login</button>
+                  <>
+                    <button type="button" className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700" onClick={openLogin}>Edit login</button>
+                    <button type="button" className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700" onClick={() => saveLogin(false)}>Update access</button>
+                    <PrimaryButton type="button" onClick={() => saveLogin(true)}>Reset password</PrimaryButton>
+                  </>
                 ) : null}
-                <button type="button" className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700" onClick={() => saveLogin(false)}>Update access</button>
-                <PrimaryButton type="button" onClick={() => saveLogin(true)}>Reset password</PrimaryButton>
               </>
-            ) : (
+            ) : worker.login?.canManage ? (
               <PrimaryButton type="button" onClick={() => saveLogin(false)}>Create login</PrimaryButton>
-            )}
+            ) : null}
           </div>
         </div>
       </Panel>

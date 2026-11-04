@@ -35,6 +35,7 @@ const HbmsWorkers = () => {
   const [loading, setLoading] = useState(true);
   const [issued, setIssued] = useState([]);
   const [issuing, setIssuing] = useState(false);
+  const [canManageSystem, setCanManageSystem] = useState(false);
 
   const loadOptions = async () => {
     const [unitRes, positionRes] = await Promise.all([
@@ -66,8 +67,12 @@ const HbmsWorkers = () => {
     let active = true;
     (async () => {
       try {
-        await loadOptions();
+        const [accessRes] = await Promise.all([
+          hbmsApi.get('/access/me'),
+          loadOptions(),
+        ]);
         if (!active) return;
+        setCanManageSystem(Boolean(accessRes.data.data?.canManageSystem));
         await loadWorkers();
       } catch (err) {
         if (active) setError(apiError(err, 'Could not load workers'));
@@ -193,12 +198,16 @@ const HbmsWorkers = () => {
             ))}
           </select>
           <PrimaryButton type="submit">Search</PrimaryButton>
-          <button type="button" className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-emerald-800 disabled:opacity-60" disabled={issuing} onClick={createMissingLogins}>
-            {issuing ? 'Creating logins…' : 'Create missing logins'}
-          </button>
-          <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => { setEditingId(null); setPhotoFile(null); setForm({ ...emptyForm, businessUnitId: units[0]?.id || '' }); setShowForm(true); }}>
-            Add worker
-          </button>
+          {canManageSystem ? (
+            <>
+              <button type="button" className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-emerald-800 disabled:opacity-60" disabled={issuing} onClick={createMissingLogins}>
+                {issuing ? 'Creating logins…' : 'Create missing logins'}
+              </button>
+              <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => { setEditingId(null); setPhotoFile(null); setForm({ ...emptyForm, businessUnitId: units[0]?.id || '' }); setShowForm(true); }}>
+                Add worker
+              </button>
+            </>
+          ) : null}
         </form>
       </PageHeader>
       <Panel title="Staff directory">
@@ -244,7 +253,7 @@ const HbmsWorkers = () => {
                     <td className="py-3 text-right">
                       <Link to={`/admin/hbms/workers/${worker.id}`} className="text-xs font-medium text-emerald-700">View</Link>
                       {worker.userId ? <Link to={`/admin/hbms/messages?worker=${worker.id}`} className="ml-3 text-xs font-medium text-emerald-700">Message</Link> : null}
-                      <button type="button" className="ml-3 text-xs font-medium text-gray-500" onClick={() => { startEdit(worker); setPhotoFile(null); setShowForm(true); }}>Edit</button>
+                      {canManageSystem ? <button type="button" className="ml-3 text-xs font-medium text-gray-500" onClick={() => { startEdit(worker); setPhotoFile(null); setShowForm(true); }}>Edit</button> : null}
                     </td>
                   </tr>
                 ))}

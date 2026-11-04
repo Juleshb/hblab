@@ -148,6 +148,7 @@ function StatCard({ tone, icon, value, label, detail, to }) {
 const HbmsOverview = () => {
   const { user } = useAuth();
   const [data, setData] = useState(null);
+  const [access, setAccess] = useState(null);
   const [meetings, setMeetings] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -158,11 +159,13 @@ const HbmsOverview = () => {
     Promise.all([
       hbmsApi.get('/dashboard'),
       hbmsApi.get('/meetings').catch(() => ({ data: { data: [] } })),
+      hbmsApi.get('/access/me').catch(() => ({ data: { data: null } })),
     ])
-      .then(([dashboard, meetingResponse]) => {
+      .then(([dashboard, meetingResponse, accessResponse]) => {
         if (!active) return;
         setData(dashboard.data.data);
         setMeetings(meetingResponse.data.data || []);
+        setAccess(accessResponse.data.data);
       })
       .catch((err) => {
         if (active) setError(apiError(err, 'Could not load the dashboard'));
@@ -237,13 +240,13 @@ const HbmsOverview = () => {
     .slice(0, 4);
   const unitTotal = unitStats.reduce((sum, unit) => sum + unit.count, 0) || 1;
   const actions = [
-    ['carbon:folder-add', 'Create project', '/admin/hbms/projects'],
-    ['carbon:user-follow', 'Add worker', '/admin/hbms/workers'],
-    ['carbon:education', 'Create program', '/admin/hbms/programs'],
-    ['carbon:task-add', 'New task', '/admin/hbms/tasks'],
-    ['carbon:calendar', 'Schedule meeting', '/admin/hbms/messages'],
-    ['carbon:document-add', 'Upload file', '/admin/hbms/documents'],
-  ];
+    ['carbon:folder-add', 'Create project', '/admin/hbms/projects', access?.canCreateProject],
+    ['carbon:user-follow', 'Add worker', '/admin/hbms/workers', access?.canManageSystem],
+    ['carbon:education', 'Create program', '/admin/hbms/programs', access?.canManageSystem],
+    ['carbon:task-add', 'New task', '/admin/hbms/tasks', access?.canAssignWork],
+    ['carbon:calendar', 'Schedule meeting', '/admin/hbms/messages', access?.canAssignWork],
+    ['carbon:document-add', 'Upload file', '/admin/hbms/documents', true],
+  ].filter((item) => item[3]);
 
   return (
     <div className="space-y-4">

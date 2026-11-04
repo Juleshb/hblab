@@ -76,6 +76,7 @@ const HbmsReports = () => {
   const [expenseParties, setExpenseParties] = useState([]);
   const [saving, setSaving] = useState(false);
   const [expenseOpen, setExpenseOpen] = useState(false);
+  const [canAssignWork, setCanAssignWork] = useState(false);
 
   const load = async (start = from, end = to) => {
     setLoading(true);
@@ -91,6 +92,9 @@ const HbmsReports = () => {
   };
 
   useEffect(() => {
+    hbmsApi.get('/access/me')
+      .then((response) => setCanAssignWork(Boolean(response.data.data?.canAssignWork)))
+      .catch(() => {});
     load(initial.from, initial.to);
   }, []);
 
@@ -163,9 +167,9 @@ const HbmsReports = () => {
             <input className={inputClass} type="date" value={to} onChange={(event) => setTo(event.target.value)} required />
           </Field>
           <PrimaryButton type="submit">Update</PrimaryButton>
-          {trackedProjects.length > 0 && (
-            <button type="button" className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800" onClick={() => setExpenseOpen(true)}>Record expense</button>
-          )}
+            {trackedProjects.length > 0 && canAssignWork ? (
+              <button type="button" className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800" onClick={() => setExpenseOpen(true)}>Record expense</button>
+            ) : null}
         </form>
       </div>
       {error ? <Notice>{error}</Notice> : null}
@@ -379,7 +383,7 @@ const HbmsReports = () => {
                     );
                   })}
                 </ul>
-                <button type="button" className="mt-4 rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => setExpenseOpen(true)}>Record expense</button>
+                {canAssignWork ? <button type="button" className="mt-4 rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => setExpenseOpen(true)}>Record expense</button> : null}
               </>
             )}
           </section>

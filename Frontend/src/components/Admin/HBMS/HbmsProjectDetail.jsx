@@ -435,7 +435,7 @@ const HbmsProjectDetail = () => {
               {` · ${optionLabel(projectCategoryOptions, project.category)}`}
             </p>
           </div>
-          {clientView ? null : <div className="flex flex-wrap items-center gap-2">
+          {clientView || !project.viewer?.canManage ? null : <div className="flex flex-wrap items-center gap-2">
             <select className={`${inputClass} !w-auto`} value={project.status} onChange={(e) => updateStatus(e.target.value)}>
               {projectStatusOptions.map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
