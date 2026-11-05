@@ -1210,7 +1210,7 @@ export function CallCard({ call, minimized, onMinimize, onExpand }) {
   const localOn = videoStage && !call.cameraOff && Boolean(media.local?.getVideoTracks().some((track) => track.enabled && track.readyState === 'live'));
   return (
     <div className={`fixed inset-0 z-[200] flex items-center justify-center text-white ${call.video ? 'bg-black' : 'bg-[#214d3e]'}`}>
-      {remoteOn ? <StreamVideo stream={media.remote} className="absolute inset-0 h-full w-full object-cover" /> : null}
+      {remoteOn ? <StreamVideo stream={media.remote} muted className="absolute inset-0 h-full w-full object-cover" /> : null}
       {onMinimize && !incoming && call.phase !== 'ended' ? (
         <button type="button" onClick={onMinimize} className="absolute left-5 top-5 z-10 flex items-center gap-1 rounded-full bg-black/35 px-4 py-2 text-sm font-semibold">
           <Icon icon="carbon:chevron-down" className="h-5 w-5" />

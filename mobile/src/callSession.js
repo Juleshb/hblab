@@ -210,7 +210,10 @@ function syncRing() {
 }
 
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
-  document.addEventListener('pointerdown', () => unlockRing(), true);
+  document.addEventListener('pointerdown', () => unlockSpeaker(), true);
+  document.addEventListener('pointerdown', () => {
+    if (remoteAudio?.srcObject) remoteAudio.play().catch(() => {});
+  }, true);
 }
 
 function emit() {
@@ -288,17 +291,51 @@ function supportsCalls() {
     && Boolean(navigator.mediaDevices?.getUserMedia);
 }
 
-function playRemote(stream) {
-  if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+function ensureSpeaker() {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return null;
   if (!remoteAudio) {
     remoteAudio = document.createElement('audio');
     remoteAudio.autoplay = true;
+    remoteAudio.playsInline = true;
     remoteAudio.setAttribute('playsinline', 'true');
-    remoteAudio.style.display = 'none';
+    remoteAudio.volume = 1;
+    remoteAudio.style.position = 'fixed';
+    remoteAudio.style.width = '1px';
+    remoteAudio.style.height = '1px';
+    remoteAudio.style.opacity = '0';
     document.body.appendChild(remoteAudio);
   }
-  if (remoteAudio.srcObject !== stream) remoteAudio.srcObject = stream;
-  remoteAudio.play().catch(() => {});
+  return remoteAudio;
+}
+
+function unlockSpeaker() {
+  const ctx = unlockRing();
+  const audio = ensureSpeaker();
+  if (!audio) return;
+  if (audio.srcObject) {
+    audio.play().catch(() => {});
+    return;
+  }
+  if (!ctx) return;
+  const dest = ctx.createMediaStreamDestination();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  osc.connect(gain);
+  gain.connect(dest);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.05);
+  audio.srcObject = dest.stream;
+  audio.play().catch(() => {});
+}
+
+function playRemote(stream) {
+  const audio = ensureSpeaker();
+  if (!audio) return;
+  if (audio.srcObject !== stream) audio.srcObject = stream;
+  audio.muted = false;
+  audio.volume = 1;
+  audio.play().catch(() => {});
   watchRemote(stream);
 }
 
@@ -398,7 +435,7 @@ async function flushIce() {
 
 export async function startCall(peer, options = {}) {
   if (call || !peer?.conversationId) return;
-  unlockRing();
+  unlockSpeaker();
   stopVoice();
   if (!supportsCalls()) {
     show({
@@ -494,6 +531,7 @@ export async function acceptCall() {
     dismiss(call.video ? 'Video calls work in the browser. This phone cannot answer yet.' : 'Audio calls work in the browser. This phone cannot place a call yet.');
     return;
   }
+  unlockSpeaker();
   const current = call;
   let stream;
   try {

@@ -107,7 +107,7 @@ export function CallOverlay() {
   return (
     <Modal visible animationType="fade" presentationStyle="fullScreen" onRequestClose={incoming ? rejectCall : hangup}>
       <View style={[styles.screen, call.video && styles.videoScreen]}>
-        {remoteOn ? <WebVideo stream={media.remote} style={styles.remoteVideo} /> : null}
+        {remoteOn ? <WebVideo stream={media.remote} muted style={styles.remoteVideo} /> : null}
         {incoming || call.phase === 'ended' ? null : (
           <Pressable accessibilityRole="button" accessibilityLabel="Minimize" onPress={() => setMiniId(call.id)} style={styles.minimize}>
             <Ionicons name="chevron-down" size={22} color={colors.onAccent} />

@@ -162,9 +162,12 @@ export function primeRing() {
   if (ringPrimed) return;
   ringPrimed = true;
   window.addEventListener('pointerdown', () => {
-    unlockRing();
+    unlockSpeaker();
     if (deskToken) connectDesk(deskToken);
   }, { once: true });
+  window.addEventListener('pointerdown', () => {
+    if (remoteAudio?.srcObject) remoteAudio.play().catch(() => {});
+  });
 }
 
 export function hushRing(quiet) {
@@ -286,6 +289,40 @@ function unlockRing() {
   return ringAudio;
 }
 
+function ensureSpeaker() {
+  if (typeof document === 'undefined') return null;
+  if (!remoteAudio) {
+    remoteAudio = document.createElement('audio');
+    remoteAudio.autoplay = true;
+    remoteAudio.playsInline = true;
+    remoteAudio.setAttribute('playsinline', 'true');
+    remoteAudio.volume = 1;
+    document.body.appendChild(remoteAudio);
+  }
+  return remoteAudio;
+}
+
+function unlockSpeaker() {
+  const ctx = unlockRing();
+  const audio = ensureSpeaker();
+  if (!audio) return;
+  if (audio.srcObject) {
+    audio.play().catch(() => {});
+    return;
+  }
+  if (!ctx) return;
+  const dest = ctx.createMediaStreamDestination();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  osc.connect(gain);
+  gain.connect(dest);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.05);
+  audio.srcObject = dest.stream;
+  audio.play().catch(() => {});
+}
+
 function tone(ctx, when, frequency, length) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -393,14 +430,12 @@ function dismiss(reason) {
 }
 
 function playRemote(stream) {
-  if (!remoteAudio) {
-    remoteAudio = document.createElement('audio');
-    remoteAudio.autoplay = true;
-    remoteAudio.setAttribute('playsinline', 'true');
-    document.body.appendChild(remoteAudio);
-  }
-  if (remoteAudio.srcObject !== stream) remoteAudio.srcObject = stream;
-  remoteAudio.play().catch(() => {});
+  const audio = ensureSpeaker();
+  if (!audio) return;
+  if (audio.srcObject !== stream) audio.srcObject = stream;
+  audio.muted = false;
+  audio.volume = 1;
+  audio.play().catch(() => {});
   watchRemote(stream);
 }
 
@@ -437,7 +472,7 @@ export async function startCall(peer, options = {}) {
   if (call) return;
   const id = `call-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const wantVideo = Boolean(options.video);
-  unlockRing();
+  unlockSpeaker();
   show({
     id,
     phase: 'ringing',
@@ -534,7 +569,7 @@ export async function acceptCall() {
   }
   if (!call || call.direction !== 'in' || call.phase !== 'ringing') return;
   const current = call;
-  unlockRing();
+  unlockSpeaker();
   let stream;
   try {
     stream = await capture(Boolean(current.video));
