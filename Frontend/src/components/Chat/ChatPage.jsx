@@ -5,6 +5,7 @@ import hbmsApi, { apiError, formatWhen } from '../Admin/HBMS/api';
 import { useAuth } from '../../assets/context/AuthContext.jsx';
 import EmojiPicker, { QUICK_REACTIONS } from './EmojiPicker';
 import { rememberEmoji } from './emojis';
+import { apiOrigin } from '../../apiOrigin';
 import {
   acceptCall,
   connectDesk,
@@ -748,7 +749,7 @@ function ThreadPane({ thread, draft, reply, people, sending, recording, typing, 
                   </div>
                 ) : null}
                 {message.forwarded ? <p className="text-xs italic text-[#667781]">Forwarded</p> : null}
-                {message.audio?.url ? <audio controls preload="none" src={`http://localhost:3000${message.audio.url}`} className="mt-1 h-8 max-w-full" /> : null}
+                {message.audio?.url ? <audio controls preload="none" src={`${apiOrigin}${message.audio.url}`} className="mt-1 h-8 max-w-full" /> : null}
                 {message.body === 'Voice message expired' && !message.audio ? <p className="text-sm italic text-[#667781]">Voice message expired</p> : null}
                 {message.body && message.body !== 'Voice message expired' ? <p className="text-[15px] leading-5">{linkify(message.body)}</p> : null}
                 <p className="flex items-center justify-end text-[11px] text-[#667781]">

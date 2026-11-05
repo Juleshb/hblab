@@ -1,3 +1,4 @@
+import { apiOrigin } from '../../apiOrigin';
 // Carrier.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -31,7 +32,7 @@ const Carrier = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/careers');
+        const response = await axios.get(`${apiOrigin}/api/careers`);
         setJobOpenings(response.data.careers);
         setLoading(false);
       } catch (err) {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from './Navbar';
+import { apiOrigin } from '../apiOrigin';
 
 const ResetPassword = () => {
   const [params] = useSearchParams();
@@ -26,7 +27,7 @@ const ResetPassword = () => {
     }
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/reset-password', { token, password });
+      const response = await axios.post(`${apiOrigin}/api/auth/reset-password`, { token, password });
       setMessage(response.data.message || 'Password updated. You can sign in.');
       setPassword('');
       setConfirm('');

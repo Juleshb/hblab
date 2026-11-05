@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { apiOrigin } from '../../../apiOrigin';
 
 const hbmsApi = axios.create({
-  baseURL: 'http://localhost:3000/api/hbms',
+  baseURL: `${apiOrigin}/api/hbms`,
 });
 
 hbmsApi.interceptors.request.use((config) => {

@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react";
 import { useAuth } from "../assets/context/AuthContext.jsx";
 import axios from "axios";
 import HBLCertificateModal from "./HBLCertificateModal";
+import { apiOrigin } from '../apiOrigin';
 
 const HBLCertificateGenerator = ({ onCreated }) => {
   const [certificateData, setCertificateData] = useState({
@@ -78,7 +79,7 @@ const HBLCertificateGenerator = ({ onCreated }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post("http://localhost:3000/api/certificates", {
+      const response = await axios.post(`${apiOrigin}/api/certificates`, {
         recipientName: certificateData.recipientName,
         email: certificateData.email,
         courseName: certificateData.courseName,

@@ -1,3 +1,4 @@
+import { apiOrigin } from '../../apiOrigin';
 // pages/DashboardHome.jsx
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -51,11 +52,11 @@ const DashboardHome = () => {
         activitiesResponse,
         coursesResponse
       ] = await Promise.all([
-        axios.get('http://localhost:3000/api/dashboard/stats'),
-        axios.get('http://localhost:3000/api/dashboard/user-growth'),
-        axios.get('http://localhost:3000/api/dashboard/certificate-status'),
-        axios.get('http://localhost:3000/api/dashboard/recent-activities'),
-        axios.get('http://localhost:3000/api/dashboard/top-courses')
+        axios.get(`${apiOrigin}/api/dashboard/stats`),
+        axios.get(`${apiOrigin}/api/dashboard/user-growth`),
+        axios.get(`${apiOrigin}/api/dashboard/certificate-status`),
+        axios.get(`${apiOrigin}/api/dashboard/recent-activities`),
+        axios.get(`${apiOrigin}/api/dashboard/top-courses`)
       ]);
 
       setStats(statsResponse.data.stats);

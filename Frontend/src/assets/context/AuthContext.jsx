@@ -1,10 +1,11 @@
+import { apiOrigin } from '../../apiOrigin';
 // context/AuthContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 // Set base URL for API calls - using proxy in development
-axios.defaults.baseURL = import.meta.env.PROD ? 'https://your-production-domain.com' : '';
+axios.defaults.baseURL = apiOrigin;
 
 const AuthContext = createContext();
 
@@ -20,7 +21,7 @@ export const AuthProvider = ({ children }) => {
       if (storedToken) {
         try {
           axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-          const response = await axios.get('http://localhost:3000/api/auth/me');
+          const response = await axios.get(`${apiOrigin}/api/auth/me`);
           setUser(response.data);
           setToken(storedToken);
         } catch (error) {
@@ -36,7 +37,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password, rememberMe) => {
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', { email, password });
+      const response = await axios.post(`${apiOrigin}/api/auth/login`, { email, password });
       const { user, token } = response.data;
       
       if (rememberMe) {
@@ -54,7 +55,7 @@ export const AuthProvider = ({ children }) => {
         navigate('/admin');
       } else {
         try {
-          const access = await axios.get('http://localhost:3000/api/hbms/access/me');
+          const access = await axios.get(`${apiOrigin}/api/hbms/access/me`);
           if (access.data.data?.allowed) {
             navigate('/admin/hbms');
             return;
@@ -73,7 +74,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (email, password, name, role) => {
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/register', { email, password, name, role });
+      const response = await axios.post(`${apiOrigin}/api/auth/register`, { email, password, name, role });
       const { user, token } = response.data;
       
       localStorage.setItem('token', token);

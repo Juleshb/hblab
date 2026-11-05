@@ -1,3 +1,4 @@
+import { apiOrigin } from '../../apiOrigin';
 // components/AddStudentModal.jsx
 import { useState } from 'react';
 import { Icon } from '@iconify/react';
@@ -57,7 +58,7 @@ const AddStudentModal = ({ isOpen, onClose, onAddStudent }) => {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:3000/api/admin/users', {
+      const response = await axios.post(`${apiOrigin}/api/admin/users`, {
         ...formData,
         role: 'STUDENT'
       }, {

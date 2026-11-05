@@ -1,3 +1,4 @@
+import { wsOrigin } from '../../apiOrigin';
 const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 const listeners = new Set();
 const callListeners = new Set();
@@ -223,7 +224,7 @@ export function connectDesk(token) {
     stale.onerror = null;
     stale.close();
   }
-  const next = new WebSocket(`ws://localhost:3000/api/hbms/live?token=${encodeURIComponent(deskToken)}`);
+  const next = new WebSocket(`${wsOrigin}/api/hbms/live?token=${encodeURIComponent(deskToken)}`);
   socket = next;
   socketOpenedAt = Date.now();
   lastRx = Date.now();

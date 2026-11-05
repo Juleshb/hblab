@@ -6,6 +6,7 @@ import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../assets/context/AuthContext';
 import toast from 'react-hot-toast';
+import { apiOrigin } from '../apiOrigin';
 
 const ApplyCarrier = () => {
   const { id } = useParams();
@@ -28,7 +29,7 @@ const ApplyCarrier = () => {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/api/careers/${id}`);
+        const response = await axios.get(`${apiOrigin}/api/careers/${id}`);
         setJob(response.data.career || response.data); // support both formats
         setLoading(false);
       } catch (err) {
@@ -60,13 +61,13 @@ const ApplyCarrier = () => {
         // Upload resume file (optional, implement endpoint if needed)
         const fileData = new FormData();
         fileData.append('file', formData.resume);
-        const uploadRes = await axios.post('http://localhost:3000/api/upload', fileData, {
+        const uploadRes = await axios.post(`${apiOrigin}/api/upload`, fileData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         resumeUrl = uploadRes.data.url;
       }
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:3000/api/applications', {
+      await axios.post(`${apiOrigin}/api/applications`, {
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,

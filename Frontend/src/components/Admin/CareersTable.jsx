@@ -3,6 +3,7 @@ import { Icon } from '@iconify/react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import CareerCard from '../CareerCard'; // Import the reusable component
+import { apiOrigin } from '../../apiOrigin';
 
 const CareersTable = ({ onCareersCount }) => {
   const [careers, setCareers] = useState([]);
@@ -69,7 +70,7 @@ const CareersTable = ({ onCareersCount }) => {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/careers', {
+      const response = await axios.get(`${apiOrigin}/api/careers`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCareers(response.data.careers || []);
@@ -90,7 +91,7 @@ const CareersTable = ({ onCareersCount }) => {
     if (!window.confirm('Are you sure you want to delete this career?')) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3000/api/careers/${id}`, {
+      await axios.delete(`${apiOrigin}/api/careers/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCareers(careers.filter(career => career.id !== id));
@@ -202,7 +203,7 @@ const CareersTable = ({ onCareersCount }) => {
       let response;
       if (editingCareer) {
         // Update existing career
-        response = await axios.put(`http://localhost:3000/api/careers/${editingCareer.id}`, careerData, {
+        response = await axios.put(`${apiOrigin}/api/careers/${editingCareer.id}`, careerData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         // Use the correct property from the response object
@@ -210,7 +211,7 @@ const CareersTable = ({ onCareersCount }) => {
         toast.success('Career updated successfully!');
       } else {
         // Add new career
-        response = await axios.post('http://localhost:3000/api/careers', careerData, {
+        response = await axios.post(`${apiOrigin}/api/careers`, careerData, {
           headers: { Authorization: `Bearer ${token}` }
       });
       setCareers([response.data.career, ...careers]);
@@ -227,7 +228,7 @@ const CareersTable = ({ onCareersCount }) => {
     }
   };
 
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+  const BACKEND_URL = apiOrigin;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

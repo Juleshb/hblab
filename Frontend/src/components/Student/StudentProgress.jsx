@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Icon } from '@iconify/react';
 import { StudentLayout } from './index';
 import { useAuth } from '../../assets/context/AuthContext';
+import { apiOrigin } from '../../apiOrigin';
 
 const ProgressBar = ({ progress }) => (
   <div className="w-full bg-gray-200 rounded-full h-1.5 mb-2">
@@ -47,7 +48,7 @@ const StudentProgress = () => {
 
   useEffect(() => {
     if (!user?.id) return;
-    fetch(`http://localhost:3000/api/users/student/progress?userId=${user.id}`)
+    fetch(`${apiOrigin}/api/users/student/progress?userId=${user.id}`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch progress');
         return res.json();

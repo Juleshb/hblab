@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from './Navbar';
+import { apiOrigin } from '../apiOrigin';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +16,7 @@ const ForgotPassword = () => {
     setMessage('');
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/forgot-password', { email });
+      const response = await axios.post(`${apiOrigin}/api/auth/forgot-password`, { email });
       setMessage(response.data.message || 'If an account uses that email, a reset link is on its way.');
     } catch (err) {
       setError(err.response?.data?.error || 'Could not send the reset email');

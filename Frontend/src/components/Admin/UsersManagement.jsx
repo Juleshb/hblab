@@ -1,3 +1,4 @@
+import { apiOrigin } from '../../apiOrigin';
 // pages/UsersManagement.jsx
 import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
@@ -35,7 +36,7 @@ const UsersManagement = () => {
         search: searchTerm,
         role: roleFilter
       });
-      const response = await axios.get(`http://localhost:3000/api/admin/users?${params}`);
+      const response = await axios.get(`${apiOrigin}/api/admin/users?${params}`);
       setUsers(response.data.users);
       setPagination(response.data.pagination);
     } catch (error) {
@@ -118,9 +119,9 @@ const UsersManagement = () => {
   const handleSaveUser = async (userData, isEditing) => {
     try {
       if (isEditing) {
-        await axios.put(`http://localhost:3000/api/admin/users/${editingUser.id}`, userData);
+        await axios.put(`${apiOrigin}/api/admin/users/${editingUser.id}`, userData);
       } else {
-        await axios.post('http://localhost:3000/api/admin/users', userData);
+        await axios.post(`${apiOrigin}/api/admin/users`, userData);
       }
       
       // Refresh the current page
@@ -141,7 +142,7 @@ const UsersManagement = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:3000/api/admin/users/${userId}`);
+      await axios.delete(`${apiOrigin}/api/admin/users/${userId}`);
       fetchUsers(pagination.currentPage);
       console.log('User deleted successfully');
     } catch (error) {

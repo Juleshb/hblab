@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { apiOrigin } from '../../apiOrigin';
 
 const CareerApplications = ({ userId }) => {
   const [applications, setApplications] = useState([]);
@@ -11,7 +12,7 @@ const CareerApplications = ({ userId }) => {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `http://localhost:3000/api/applications/by-user/${userId}`,
+          `${apiOrigin}/api/applications/by-user/${userId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setApplications(response.data.applications || []);

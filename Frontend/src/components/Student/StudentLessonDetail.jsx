@@ -6,6 +6,7 @@ import StudentSidebar from './StudentSidebar';
 import StudentHeader from './StudentHeader';
 import { useAuth } from '../../assets/context/AuthContext';
 import toast from 'react-hot-toast';
+import { apiOrigin } from '../../apiOrigin';
 
 const PASS_MARK = 70;
 
@@ -46,7 +47,7 @@ const StudentLessonDetail = () => {
     setError(null);
     try {
       // Fetch lesson details with topics
-      const lessonRes = await axios.get(`http://localhost:3000/api/lessons/${lessonId}/details`);
+      const lessonRes = await axios.get(`${apiOrigin}/api/lessons/${lessonId}/details`);
       setLesson(lessonRes.data);
       setTopics(lessonRes.data.topics || []);
 
@@ -55,7 +56,7 @@ const StudentLessonDetail = () => {
       await Promise.all(
         (lessonRes.data.topics || []).map(async (topic) => {
           try {
-            const assignmentRes = await axios.get(`http://localhost:3000/api/lessons/topics/${topic.id}/assignments`);
+            const assignmentRes = await axios.get(`${apiOrigin}/api/lessons/topics/${topic.id}/assignments`);
             assignmentsObj[topic.id] = assignmentRes.data[0] || null;
           } catch (err) {
             console.error(`Failed to fetch assignment for topic ${topic.id}:`, err);
@@ -67,7 +68,7 @@ const StudentLessonDetail = () => {
 
       // Fetch user's progress for this lesson
       try {
-        const progressRes = await axios.get(`http://localhost:3000/api/lessons/${lessonId}/progress`, {
+        const progressRes = await axios.get(`${apiOrigin}/api/lessons/${lessonId}/progress`, {
           params: { userId: user.id }
         });
         if (progressRes.data) {
@@ -92,7 +93,7 @@ const StudentLessonDetail = () => {
     
     setSavingProgress(true);
     try {
-      await axios.post(`http://localhost:3000/api/lessons/${lessonId}/progress`, {
+      await axios.post(`${apiOrigin}/api/lessons/${lessonId}/progress`, {
         userId: user.id,
         progress,
         completed
@@ -542,7 +543,7 @@ const StudentLessonDetail = () => {
                                 </div>
                                 <div className="h-96 bg-white">
                                   <iframe
-                                    src={`http://localhost:3000${topics[currentTopicIndex].documentUrl}`}
+                                    src={`${apiOrigin}${topics[currentTopicIndex].documentUrl}`}
                                     className="w-full h-full border-0"
                                     title="Document Viewer"
                                     onLoad={() => console.log('Document loaded')}

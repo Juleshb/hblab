@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Icon } from '@iconify/react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import { apiOrigin } from '../../apiOrigin';
 
 const LessonsManagement = () => {
   const [lessons, setLessons] = useState([]);
@@ -44,16 +45,16 @@ const LessonsManagement = () => {
     setLoading(true);
     try {
       // Fetch lessons
-      const lessonsRes = await axios.get('http://localhost:3000/api/lessons/all');
+      const lessonsRes = await axios.get(`${apiOrigin}/api/lessons/all`);
       const lessonsData = lessonsRes.data.lessons || [];
       setLessons(lessonsData);
       // Fetch dashboard stats for total students
-      const statsRes = await axios.get('http://localhost:3000/api/dashboard/stats');
+      const statsRes = await axios.get(`${apiOrigin}/api/dashboard/stats`);
       let studentsLearning = 0;
       let studentsCompleted = 0;
       // Try to fetch lesson progress summary
       try {
-        const progressRes = await axios.get('http://localhost:3000/api/lessons/progress/summary');
+        const progressRes = await axios.get(`${apiOrigin}/api/lessons/progress/summary`);
         studentsLearning = progressRes.data.learningCount || 0;
         studentsCompleted = progressRes.data.completedCount || 0;
       } catch {
@@ -71,7 +72,7 @@ const LessonsManagement = () => {
       await Promise.all(
         lessonsData.map(async (lesson) => {
           try {
-            const topicsRes = await axios.get(`http://localhost:3000/api/lessons/${lesson.id}/topics`);
+            const topicsRes = await axios.get(`${apiOrigin}/api/lessons/${lesson.id}/topics`);
             topicCounts[lesson.id] = topicsRes.data.length;
           } catch {
             topicCounts[lesson.id] = 0;
@@ -85,7 +86,7 @@ const LessonsManagement = () => {
       await Promise.all(
         lessonsData.map(async (lesson) => {
           try {
-            const topicsRes = await axios.get(`http://localhost:3000/api/lessons/${lesson.id}/topics`);
+            const topicsRes = await axios.get(`${apiOrigin}/api/lessons/${lesson.id}/topics`);
             topicCounts[lesson.id] = topicsRes.data.length;
             // For each topic, fetch assignments and sum
             let totalAssignments = 0;
@@ -93,7 +94,7 @@ const LessonsManagement = () => {
             await Promise.all(
               (topicsRes.data || []).map(async (topic) => {
                 try {
-                  const assignmentsRes = await axios.get(`http://localhost:3000/api/lessons/topics/${topic.id}/assignments`);
+                  const assignmentsRes = await axios.get(`${apiOrigin}/api/lessons/topics/${topic.id}/assignments`);
                   totalAssignments += assignmentsRes.data.length;
                   totalMarks += assignmentsRes.data.reduce((sum, a) => sum + (parseInt(a.mark) || 0), 0);
                 } catch {}
@@ -141,7 +142,7 @@ const LessonsManagement = () => {
         setSubmitting(false);
         return;
       }
-      await axios.post('http://localhost:3000/api/lessons', {
+      await axios.post(`${apiOrigin}/api/lessons`, {
         title: form.title,
         description: form.description,
       });
@@ -178,7 +179,7 @@ const LessonsManagement = () => {
         setSubmitting(false);
         return;
       }
-      await axios.put(`http://localhost:3000/api/lessons/${editForm.id}`, {
+      await axios.put(`${apiOrigin}/api/lessons/${editForm.id}`, {
         title: editForm.title,
         description: editForm.description,
       });
@@ -204,7 +205,7 @@ const LessonsManagement = () => {
     if (!deletingLesson) return;
     setSubmitting(true);
     try {
-      await axios.delete(`http://localhost:3000/api/lessons/${deletingLesson.id}`);
+      await axios.delete(`${apiOrigin}/api/lessons/${deletingLesson.id}`);
       setShowDeleteModal(false);
       setDeletingLesson(null);
       fetchAllData(); // Re-fetch all data to update stats
@@ -218,7 +219,7 @@ const LessonsManagement = () => {
   // Fetch topics for a lesson
   const fetchTopics = async (lessonId) => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/lessons/${lessonId}/topics`);
+      const res = await axios.get(`${apiOrigin}/api/lessons/${lessonId}/topics`);
       setTopics(res.data);
     } catch (err) {
       setTopics([]);
@@ -250,7 +251,7 @@ const LessonsManagement = () => {
       const formData = new FormData();
       formData.append('title', topicForm.title);
       formData.append('document', topicForm.document);
-      await axios.post(`http://localhost:3000/api/lessons/${detailsLesson.id}/topics`, formData, {
+      await axios.post(`${apiOrigin}/api/lessons/${detailsLesson.id}/topics`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setTopicForm({ title: '', assignment: '', document: null });
@@ -277,7 +278,7 @@ const LessonsManagement = () => {
       formData.append('title', topicForm.title);
       formData.append('assignment', topicForm.assignment);
       if (topicForm.document) formData.append('document', topicForm.document);
-      await axios.put(`http://localhost:3000/api/lessons/topics/${editingTopic}`, formData, {
+      await axios.put(`${apiOrigin}/api/lessons/topics/${editingTopic}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setEditingTopic(null);
@@ -289,7 +290,7 @@ const LessonsManagement = () => {
   };
   const handleDeleteTopic = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/api/lessons/topics/${id}`);
+      await axios.delete(`${apiOrigin}/api/lessons/topics/${id}`);
       fetchTopics(detailsLesson.id);
     } catch (err) {
       setTopicError('Failed to delete topic');
@@ -299,7 +300,7 @@ const LessonsManagement = () => {
   // Fetch assignments for a topic
   const fetchAssignments = async (topicId) => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/lessons/topics/${topicId}/assignments`);
+      const res = await axios.get(`${apiOrigin}/api/lessons/topics/${topicId}/assignments`);
       setAssignmentsByTopic((prev) => ({ ...prev, [topicId]: res.data }));
     } catch (err) {
       setAssignmentsByTopic((prev) => ({ ...prev, [topicId]: [] }));
@@ -381,9 +382,9 @@ const LessonsManagement = () => {
         data.correctOption = assignmentForm.correctOption;
       }
       if (editingAssignment) {
-        await axios.put(`http://localhost:3000/api/lessons/assignments/${editingAssignment}`, data);
+        await axios.put(`${apiOrigin}/api/lessons/assignments/${editingAssignment}`, data);
       } else {
-        await axios.post(`http://localhost:3000/api/lessons/topics/${topicId}/assignments`, data);
+        await axios.post(`${apiOrigin}/api/lessons/topics/${topicId}/assignments`, data);
       }
       fetchAssignments(topicId);
       setShowAssignmentForm((prev) => ({ ...prev, [topicId]: false }));
@@ -406,7 +407,7 @@ const LessonsManagement = () => {
   };
   const handleDeleteAssignment = async (assignmentId, topicId) => {
     try {
-      await axios.delete(`http://localhost:3000/api/lessons/assignments/${assignmentId}`);
+      await axios.delete(`${apiOrigin}/api/lessons/assignments/${assignmentId}`);
       fetchAssignments(topicId);
     } catch (err) {
       setAssignmentError('Failed to delete assignment');

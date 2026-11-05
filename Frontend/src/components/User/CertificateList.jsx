@@ -4,6 +4,7 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useAuth } from '../../assets/context/AuthContext';
 import { buildCertificateHtml } from '../certificate/certificateMarkup';
+import { apiOrigin } from '../../apiOrigin';
 
 const CertificateList = ({ userId, certificates: propCertificates, loading: propLoading }) => {
   const [certificates, setCertificates] = useState(propCertificates || []);
@@ -22,7 +23,7 @@ const CertificateList = ({ userId, certificates: propCertificates, loading: prop
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `http://localhost:3000/api/certificates?userId=${userId}`,
+          `${apiOrigin}/api/certificates?userId=${userId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setCertificates(response.data.certificates || []);

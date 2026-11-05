@@ -1,3 +1,4 @@
+import { apiOrigin } from '../apiOrigin';
 // Carrier.jsx
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -35,7 +36,7 @@ const Carrier = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.get('http://localhost:3000/api/careers');
+        const response = await axios.get(`${apiOrigin}/api/careers`);
         if (response.data && Array.isArray(response.data.careers)) {
         setJobOpenings(response.data.careers);
         } else {
@@ -80,7 +81,7 @@ const Carrier = () => {
                     <CareerCard
                       key={job.id}
                       career={job}
-                      BACKEND_URL={'http://localhost:3000'} // You might want to use an env variable here
+                      BACKEND_URL={`${apiOrigin}`} // You might want to use an env variable here
                       actions={
                         <button
                           onClick={() => handleApply(job.id)}

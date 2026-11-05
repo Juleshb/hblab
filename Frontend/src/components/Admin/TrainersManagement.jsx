@@ -3,6 +3,7 @@ import { Icon } from '@iconify/react';
 import axios from 'axios';
 import AddTrainerModal from './AddTrainerModal';
 import AddStudentModal from './AddStudentModal';
+import { apiOrigin } from '../../apiOrigin';
 
 const TrainersManagement = () => {
   // State for data
@@ -25,7 +26,7 @@ const TrainersManagement = () => {
   const loadTrainers = async (page = 1, search = '') => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:3000/api/admin/users/trainers?page=${page}&limit=10&search=${search}`, {
+      const response = await axios.get(`${apiOrigin}/api/admin/users/trainers?page=${page}&limit=10&search=${search}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTrainers(response.data.trainers);
@@ -38,7 +39,7 @@ const TrainersManagement = () => {
   const loadStudents = async (page = 1, search = '') => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:3000/api/admin/users/students?page=${page}&limit=10&search=${search}`, {
+      const response = await axios.get(`${apiOrigin}/api/admin/users/students?page=${page}&limit=10&search=${search}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStudents(response.data.students);
@@ -89,7 +90,7 @@ const TrainersManagement = () => {
   const handleAddTrainer = async (newTrainer) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:3000/api/admin/users', {
+      await axios.post(`${apiOrigin}/api/admin/users`, {
         ...newTrainer,
         role: 'ADMIN' // Trainers are stored as ADMIN role
       }, {
@@ -105,7 +106,7 @@ const TrainersManagement = () => {
   const handleAddStudent = async (newStudent) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:3000/api/admin/users', {
+      await axios.post(`${apiOrigin}/api/admin/users`, {
         ...newStudent,
         role: 'STUDENT'
       }, {

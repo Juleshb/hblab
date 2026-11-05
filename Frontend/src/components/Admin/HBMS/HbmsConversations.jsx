@@ -3,6 +3,7 @@ import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
 import hbmsApi, { apiError, formatWhen } from './api';
 import { Field, FormModal, PrimaryButton, WorkerAvatar, inputClass } from './ui';
+import { apiOrigin } from '../../../apiOrigin';
 
 function initials(name) {
   return String(name || '?').split(' ').slice(0, 2).map((part) => part[0]).join('').toUpperCase();
@@ -220,7 +221,7 @@ const HbmsConversations = ({ startWorkerId = '' }) => {
                       {message.asDepartment ? ` · via ${message.author}` : ''}
                     </p>
                     {message.audio?.url ? (
-                      <audio controls preload="none" src={`http://localhost:3000${message.audio.url}`} className="mt-1 h-9 max-w-full" />
+                      <audio controls preload="none" src={`${apiOrigin}${message.audio.url}`} className="mt-1 h-9 max-w-full" />
                     ) : null}
                     {message.body === 'Voice message expired' && !message.audio ? (
                       <p className={`mt-0.5 text-sm italic ${message.mine && !message.asDepartment ? 'text-emerald-100' : 'text-gray-500'}`}>Voice message expired</p>

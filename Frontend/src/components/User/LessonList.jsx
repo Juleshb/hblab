@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { apiOrigin } from '../../apiOrigin';
 
 const LessonList = ({ userId }) => {
   const [lessons, setLessons] = useState([]);
@@ -11,7 +12,7 @@ const LessonList = ({ userId }) => {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `http://localhost:3000/api/lessons?userId=${userId}`,
+          `${apiOrigin}/api/lessons?userId=${userId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setLessons(response.data.lessons || []);

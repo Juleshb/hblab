@@ -11,6 +11,7 @@ import axios from 'axios';
 import { StudentLayout } from './index';
 import EditProfileModal from './EditProfileModal';
 import toast from 'react-hot-toast';
+import { apiOrigin } from '../../apiOrigin';
 
 const StatCard = ({ icon, title, value, color }) => (
   <div className="bg-white rounded-lg shadow p-6 flex items-center border border-gray-200">
@@ -74,7 +75,7 @@ const StudentDashboard = () => {
 
   const handleProfileSave = async (updatedProfile) => {
     try {
-      await axios.put(`http://localhost:3000/api/users/${user.id}`, updatedProfile);
+      await axios.put(`${apiOrigin}/api/users/${user.id}`, updatedProfile);
       setEditModalOpen(false);
       toast.success('Profile updated successfully!', { icon: '🎉' });
     } catch (error) {
@@ -94,7 +95,7 @@ const StudentDashboard = () => {
       setCertLoading(true);
       try {
         if (user?.email) {
-          const res = await fetch(`http://localhost:3000/api/certificates/email/${user.email}`);
+          const res = await fetch(`${apiOrigin}/api/certificates/email/${user.email}`);
           const data = await res.json();
           setCertificates(data);
         }
@@ -115,7 +116,7 @@ const StudentDashboard = () => {
         if (user?.id) {
           const token = localStorage.getItem('token');
           const response = await axios.get(
-            `http://localhost:3000/api/lessons?userId=${user.id}`,
+            `${apiOrigin}/api/lessons?userId=${user.id}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setLessons(response.data.lessons || []);
@@ -137,7 +138,7 @@ const StudentDashboard = () => {
         if (user?.id) {
           const token = localStorage.getItem('token');
           const response = await axios.get(
-            `http://localhost:3000/api/applications/by-user/${user.id}`,
+            `${apiOrigin}/api/applications/by-user/${user.id}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setApplications(response.data.applications || []);

@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import ClientModal from '../ClientModal';
 import toast from 'react-hot-toast';
 import CareerCard from '../CareerCard'; // Import the new component
+import { apiOrigin } from '../../apiOrigin';
 
 const CareerApplications = () => {
   const { user } = useAuth();
@@ -47,7 +48,7 @@ const CareerApplications = () => {
     'Review & Submit',
   ];
 
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+  const BACKEND_URL = apiOrigin;
 
   // Fetch all careers
   useEffect(() => {
@@ -55,7 +56,7 @@ const CareerApplications = () => {
       setCareersLoading(true);
       setCareersError(null);
       try {
-        const res = await fetch('http://localhost:3000/api/careers');
+        const res = await fetch(`${apiOrigin}/api/careers`);
         if (!res.ok) throw new Error('Failed to fetch careers');
         const data = await res.json();
         setCareers(data.careers || []);
@@ -80,7 +81,7 @@ const CareerApplications = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetchWithTimeout(`http://localhost:3000/api/applications/by-user/${user.id}`);
+      const res = await fetchWithTimeout(`${apiOrigin}/api/applications/by-user/${user.id}`);
       if (!res.ok) throw new Error('Failed to fetch applications');
       const data = await res.json();
       setApplications(data.applications || []);
@@ -142,7 +143,7 @@ const CareerApplications = () => {
         resumeUrl = uploadData.url;
       }
       const token = localStorage.getItem('token');
-      await fetch('http://localhost:3000/api/applications', {
+      await fetch(`${apiOrigin}/api/applications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,3 +1,4 @@
+import { apiOrigin } from '../../apiOrigin';
 // components/AddTrainerModal.jsx
 import { useState } from 'react';
 import { Icon } from '@iconify/react';
@@ -59,7 +60,7 @@ const AddTrainerModal = ({ isOpen, onClose, onAddTrainer }) => {
     try {
       const token = localStorage.getItem('token');
       console.log('Token being sent (AddTrainerModal):', token);
-      const response = await axios.post('http://localhost:3000/api/admin/users', {
+      const response = await axios.post(`${apiOrigin}/api/admin/users`, {
         ...formData,
         role: 'ADMIN'
       }, {

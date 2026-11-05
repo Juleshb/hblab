@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
 import hbmsApi, { apiError, formatDate, formatMoney, moneyPartyFields, moneyPartyLabel, moneyPartyOptions, optionLabel, projectCategoryOptions, projectStatusOptions, taskStatusOptions } from './api';
 import { Field, FormModal, Notice, Panel, PrimaryButton, Segmented, StatusBadge, WorkerAvatar, inputClass } from './ui';
+import { apiOrigin } from '../../../apiOrigin';
 
 const taskParts = [
   { key: 'TODO', label: 'To do', color: '#64748b' },
@@ -1020,7 +1021,7 @@ const HbmsProjectDetail = () => {
                         <ul className="space-y-1">
                           {item.files.map((file) => (
                             <li key={file.id}>
-                              <a className="text-green-800 hover:underline" href={`http://localhost:3000${file.fileUrl}`} target="_blank" rel="noreferrer">{file.title}</a>
+                              <a className="text-green-800 hover:underline" href={`${apiOrigin}${file.fileUrl}`} target="_blank" rel="noreferrer">{file.title}</a>
                             </li>
                           ))}
                         </ul>
@@ -1058,7 +1059,7 @@ const HbmsProjectDetail = () => {
               {project.tasks.flatMap((item) => (item.files || []).map((file) => (
                 <li key={file.id} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7faf8] px-3 py-2">
                   <span>{file.title}<span className="ml-2 text-xs text-gray-500">{item.title}</span></span>
-                  <a className="text-xs font-medium text-emerald-700" href={`http://localhost:3000${file.fileUrl}`} target="_blank" rel="noreferrer">Download</a>
+                  <a className="text-xs font-medium text-emerald-700" href={`${apiOrigin}${file.fileUrl}`} target="_blank" rel="noreferrer">Download</a>
                 </li>
               )))}
             </ul>

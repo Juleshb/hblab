@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
 import hbmsApi, {
+import { apiOrigin } from '../../../apiOrigin';
   apiError,
   formatDate,
   formatWhen,
@@ -977,7 +978,7 @@ const HbmsTasks = () => {
                   <ul className="space-y-1">
                     {detail.files.map((file) => (
                       <li key={file.id}>
-                        <a className="text-green-800 hover:underline" href={`http://localhost:3000${file.fileUrl}`} target="_blank" rel="noreferrer">{file.title}</a>
+                        <a className="text-green-800 hover:underline" href={`${apiOrigin}${file.fileUrl}`} target="_blank" rel="noreferrer">{file.title}</a>
                       </li>
                     ))}
                   </ul>

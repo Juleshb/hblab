@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import hbmsApi, {
+import { apiOrigin } from '../../../apiOrigin';
   apiError,
   formatDate,
   optionLabel,
@@ -408,7 +409,7 @@ const HbmsProgramDetail = () => {
             <ul className="mb-3 space-y-1 text-sm">
               {program.materials.map((file) => (
                 <li key={file.id}>
-                  <a className="text-green-800 hover:underline" href={`http://localhost:3000${file.fileUrl}`} target="_blank" rel="noreferrer">{file.title}</a>
+                  <a className="text-green-800 hover:underline" href={`${apiOrigin}${file.fileUrl}`} target="_blank" rel="noreferrer">{file.title}</a>
                 </li>
               ))}
             </ul>

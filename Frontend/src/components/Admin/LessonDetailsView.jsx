@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import axios from 'axios';
+import { apiOrigin } from '../../apiOrigin';
 
 const LessonDetailsView = () => {
   const { id } = useParams();
@@ -26,7 +27,7 @@ const LessonDetailsView = () => {
 
   const fetchLesson = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/lessons/${id}/details`);
+      const res = await axios.get(`${apiOrigin}/api/lessons/${id}/details`);
       setLesson(res.data);
     } catch (err) {
       setLesson(null);
@@ -34,7 +35,7 @@ const LessonDetailsView = () => {
   };
   const fetchTopics = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/lessons/${id}/topics`);
+      const res = await axios.get(`${apiOrigin}/api/lessons/${id}/topics`);
       setTopics(res.data);
       // Fetch assignments for all topics
       res.data.forEach(topic => fetchAssignments(topic.id));
@@ -44,7 +45,7 @@ const LessonDetailsView = () => {
   };
   const fetchAssignments = async (topicId) => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/lessons/topics/${topicId}/assignments`);
+      const res = await axios.get(`${apiOrigin}/api/lessons/topics/${topicId}/assignments`);
       setAssignmentsByTopic((prev) => ({ ...prev, [topicId]: res.data }));
     } catch (err) {
       setAssignmentsByTopic((prev) => ({ ...prev, [topicId]: [] }));
@@ -72,7 +73,7 @@ const LessonDetailsView = () => {
       const formData = new FormData();
       formData.append('title', topicForm.title);
       formData.append('document', topicForm.document);
-      await axios.post(`http://localhost:3000/api/lessons/${id}/topics`, formData, {
+      await axios.post(`${apiOrigin}/api/lessons/${id}/topics`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setTopicForm({ title: '', document: null });
@@ -85,7 +86,7 @@ const LessonDetailsView = () => {
   };
   const handleDeleteTopic = async (topicId) => {
     try {
-      await axios.delete(`http://localhost:3000/api/lessons/topics/${topicId}`);
+      await axios.delete(`${apiOrigin}/api/lessons/topics/${topicId}`);
       fetchTopics();
     } catch (err) {
       setTopicError('Failed to delete topic');
@@ -162,9 +163,9 @@ const LessonDetailsView = () => {
         data.correctOption = assignmentForm.correctOption;
       }
       if (editingAssignment) {
-        await axios.put(`http://localhost:3000/api/lessons/assignments/${editingAssignment}`, data);
+        await axios.put(`${apiOrigin}/api/lessons/assignments/${editingAssignment}`, data);
       } else {
-        await axios.post(`http://localhost:3000/api/lessons/topics/${topicId}/assignments`, data);
+        await axios.post(`${apiOrigin}/api/lessons/topics/${topicId}/assignments`, data);
       }
       fetchAssignments(topicId);
       setShowAssignmentForm((prev) => ({ ...prev, [topicId]: false }));
@@ -187,7 +188,7 @@ const LessonDetailsView = () => {
   };
   const handleDeleteAssignment = async (assignmentId, topicId) => {
     try {
-      await axios.delete(`http://localhost:3000/api/lessons/assignments/${assignmentId}`);
+      await axios.delete(`${apiOrigin}/api/lessons/assignments/${assignmentId}`);
       fetchAssignments(topicId);
     } catch (err) {
       setAssignmentError('Failed to delete assignment');
@@ -266,7 +267,7 @@ const LessonDetailsView = () => {
                       <div className="font-bold text-green-900 text-lg">{topic.title}</div>
                       {topic.document && (
                         <a
-                          href={`http://localhost:3000/uploads/${topic.document}`}
+                          href={`${apiOrigin}/uploads/${topic.document}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="ml-2 inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 text-xs font-semibold"

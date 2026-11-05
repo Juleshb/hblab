@@ -6,6 +6,7 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import StudentHeader from './StudentHeader';
 import { buildCertificateHtml } from '../certificate/certificateMarkup';
+import { apiOrigin } from '../../apiOrigin';
 
 const EMPTY_ILLUSTRATION = 'https://undraw.co/api/illustrations/empty?color=teal';
 
@@ -22,7 +23,7 @@ const StudentCertificates = () => {
       setLoading(true);
       try {
         if (user?.email) {
-          const res = await fetch(`http://localhost:3000/api/certificates/email/${user.email}`);
+          const res = await fetch(`${apiOrigin}/api/certificates/email/${user.email}`);
           const data = await res.json();
           setCertificates(data);
         }

@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import hbmsApi, { accessRoleLabel, apiError, employmentLabel, formatDate } from './api';
 import { Field, FormModal, Notice, Panel, PrimaryButton, StatusBadge, WorkerAvatar, inputClass } from './ui';
+import { apiOrigin } from '../../../apiOrigin';
 
 const emptyExperience = { title: '', organization: '', startDate: '', endDate: '', description: '' };
 const emptyLeave = { startDate: '', endDate: '', reason: '' };
@@ -451,7 +452,7 @@ const HbmsWorkerProfile = () => {
             <ul className="space-y-2 text-sm">
               {documents.map((document) => (
                 <li key={document.id} className="flex items-center justify-between gap-3">
-                  <a href={`http://localhost:3000${document.fileUrl}`} target="_blank" rel="noreferrer" className="font-medium text-green-800 hover:underline">
+                  <a href={`${apiOrigin}${document.fileUrl}`} target="_blank" rel="noreferrer" className="font-medium text-green-800 hover:underline">
                     {document.title}
                   </a>
                   <span className="text-xs text-gray-500">{document.kind} · {formatDate(document.createdAt)}</span>

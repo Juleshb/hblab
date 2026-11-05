@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react';
 import { useAuth } from '../../assets/context/AuthContext';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { apiOrigin } from '../../apiOrigin';
 
 const StudentLessons = () => {
   const { user } = useAuth();
@@ -19,7 +20,7 @@ const StudentLessons = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`http://localhost:3000/api/lessons?userId=${user.id}`);
+        const res = await fetch(`${apiOrigin}/api/lessons?userId=${user.id}`);
         if (!res.ok) throw new Error('Failed to fetch lessons');
         const data = await res.json();
         setLessons(data.lessons || []);

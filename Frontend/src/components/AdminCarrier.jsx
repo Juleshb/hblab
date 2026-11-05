@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react';
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import axios from 'axios';
+import { apiOrigin } from '../apiOrigin';
 
 const AdminCarrier = () => {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ const AdminCarrier = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/careers');
+        const response = await axios.get(`${apiOrigin}/api/careers`);
         console.log('Fetched careers:', response.data);
         setJobOpenings(response.data.careers);
         setLoading(false);

@@ -5,6 +5,7 @@ import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Icon } from '@iconify/react';
+import { apiOrigin } from '../../apiOrigin';
 // import HBLCertificate from '../HBLCertificate'; // If needed for row rendering
 
 const CertificatesManagement = () => {
@@ -37,7 +38,7 @@ const CertificatesManagement = () => {
     const fetchCertificates = async () => {
       setLoading(true);
       try {
-        const res = await axios.get('http://localhost:3000/api/certificates');
+        const res = await axios.get(`${apiOrigin}/api/certificates`);
         setCertificates(res.data);
       } catch (err) {
         console.error('Error fetching certificates:', err);
@@ -80,7 +81,7 @@ const CertificatesManagement = () => {
     if (!deletingCertificate) return;
     
     try {
-      await axios.delete(`http://localhost:3000/api/certificates/${deletingCertificate.id}`);
+      await axios.delete(`${apiOrigin}/api/certificates/${deletingCertificate.id}`);
       setCertificates(certificates.filter(cert => cert.id !== deletingCertificate.id));
       setShowDeleteModal(false);
       setDeletingCertificate(null);
@@ -98,7 +99,7 @@ const CertificatesManagement = () => {
       console.log('Updating certificate:', editingCertificate.id);
       console.log('Update data:', editFormData);
       
-      const response = await axios.put(`http://localhost:3000/api/certificates/${editingCertificate.id}`, editFormData);
+      const response = await axios.put(`${apiOrigin}/api/certificates/${editingCertificate.id}`, editFormData);
       console.log('Update response:', response.data);
       
       setCertificates(certificates.map(cert => 
