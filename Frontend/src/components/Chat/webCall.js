@@ -1,30 +1,69 @@
 const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 const listeners = new Set();
 const callListeners = new Set();
+const desk = globalThis.__hbmsDesk || (globalThis.__hbmsDesk = {});
+export const deskEpoch = Date.now();
 
-let socket = null;
-let deskToken = '';
+let socket = desk.socket || null;
+let deskToken = desk.deskToken || '';
 let deskRetry = null;
-let call = null;
-let pc = null;
-let localStream = null;
+let call = desk.call || null;
+let pc = desk.pc || null;
+let localStream = desk.localStream || null;
 let remoteAudio = null;
 let remoteStream = null;
 let remoteLive = false;
 const mediaListeners = new Set();
-let pendingOffer = null;
-let pendingIce = [];
+let pendingOffer = desk.pendingOffer || null;
+let pendingIce = desk.pendingIce || [];
 let localIce = [];
 let signalOpen = false;
 let makingOffer = false;
 let screenTrack = null;
 let heldCamera = null;
+let sourceCamera = null;
+let effectName = 'none';
+let effectFrame = 0;
+let effectVideo = null;
+let effectCanvas = null;
+let effectStream = null;
+let effectTrack = null;
+
+export const VIDEO_EFFECTS = [
+  { id: 'none', label: 'None' },
+  { id: 'clean', label: 'Clean' },
+  { id: 'soft', label: 'Soft' },
+  { id: 'vivid', label: 'Vivid' },
+  { id: 'warm', label: 'Warm' },
+  { id: 'cool', label: 'Cool' },
+  { id: 'mono', label: 'Mono' },
+];
+
+const EFFECT_FILTER = {
+  soft: 'blur(1.6px) brightness(1.08) saturate(1.08)',
+  vivid: 'contrast(1.16) saturate(1.5) brightness(1.04)',
+  warm: 'sepia(0.3) saturate(1.25) brightness(1.05)',
+  cool: 'saturate(0.9) hue-rotate(16deg) contrast(1.06) brightness(1.03)',
+  mono: 'grayscale(1) contrast(1.12)',
+};
 let ringTimer = null;
 let ringAudio = null;
 let ringLoop = null;
 let ringNodes = [];
 
+function keep() {
+  desk.socket = socket;
+  desk.deskToken = deskToken;
+  desk.call = call;
+  desk.pc = pc;
+  desk.localStream = localStream;
+  desk.pendingOffer = pendingOffer;
+  desk.pendingIce = pendingIce;
+  desk.signalOpen = signalOpen;
+}
+
 function emitCall() {
+  keep();
   callListeners.forEach((listener) => listener(call));
 }
 
@@ -121,7 +160,10 @@ let ringSilenced = false;
 export function primeRing() {
   if (ringPrimed) return;
   ringPrimed = true;
-  window.addEventListener('pointerdown', () => unlockRing(), { once: true });
+  window.addEventListener('pointerdown', () => {
+    unlockRing();
+    if (deskToken) connectDesk(deskToken);
+  }, { once: true });
 }
 
 export function hushRing(quiet) {
@@ -136,7 +178,8 @@ export function hushRing(quiet) {
   if (call?.phase === 'ringing') startRing(call.direction);
 }
 
-let socketOpenedAt = 0;
+let socketOpenedAt = socket ? Date.now() : 0;
+let lastRx = Date.now();
 
 function socketFresh() {
   if (!socket) return false;
@@ -144,10 +187,34 @@ function socketFresh() {
   return socket.readyState === 0 && Date.now() - socketOpenedAt < 8000;
 }
 
+function bindSocket(next) {
+  next.onmessage = (message) => {
+    lastRx = Date.now();
+    try {
+      const event = JSON.parse(message.data);
+      if (event?.type === 'pong') return;
+      if (event?.type === 'call') onCall(event);
+      listeners.forEach((listener) => listener(event));
+    } catch {
+      /* ignore a malformed live event */
+    }
+  };
+  next.onclose = () => {
+    if (socket === next) socket = null;
+    keep();
+    if (deskToken) deskRetry = setTimeout(() => connectDesk(deskToken), 1500);
+  };
+  next.onerror = () => next.close();
+}
+
 export function connectDesk(token) {
   if (token) deskToken = token;
   if (!deskToken) return;
-  if (socketFresh()) return;
+  if (socketFresh()) {
+    bindSocket(socket);
+    keep();
+    return;
+  }
   clearTimeout(deskRetry);
   if (socket) {
     const stale = socket;
@@ -159,20 +226,9 @@ export function connectDesk(token) {
   const next = new WebSocket(`ws://localhost:3000/api/hbms/live?token=${encodeURIComponent(deskToken)}`);
   socket = next;
   socketOpenedAt = Date.now();
-  next.onmessage = (message) => {
-    try {
-      const event = JSON.parse(message.data);
-      if (event?.type === 'call') onCall(event);
-      listeners.forEach((listener) => listener(event));
-    } catch {
-      /* ignore a malformed live event */
-    }
-  };
-  next.onclose = () => {
-    if (socket === next) socket = null;
-    if (deskToken) deskRetry = setTimeout(() => connectDesk(deskToken), 1500);
-  };
-  next.onerror = () => next.close();
+  lastRx = Date.now();
+  bindSocket(next);
+  keep();
 }
 
 function waitForSocket() {
@@ -192,11 +248,34 @@ function waitForSocket() {
   });
 }
 
-if (typeof document !== 'undefined') {
+desk.tick = () => {
+  if (!deskToken) return;
+  const live = call?.phase === 'active' || call?.phase === 'connecting';
+  if (!socket || socket.readyState !== 1) {
+    connectDesk(deskToken);
+    return;
+  }
+  if (!live && Date.now() - lastRx > 25000) {
+    const stale = socket;
+    socket = null;
+    if (stale) {
+      stale.onclose = null;
+      stale.onerror = null;
+      stale.close();
+    }
+    connectDesk(deskToken);
+    return;
+  }
+  send({ type: 'ping' });
+};
+if (typeof document !== 'undefined' && !desk.watching) {
+  desk.watching = true;
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && deskToken) connectDesk(deskToken);
+    if (document.visibilityState === 'visible') desk.tick?.();
   });
+  setInterval(() => desk.tick?.(), 10000);
 }
+if (typeof document !== 'undefined' && socket) bindSocket(socket);
 
 function unlockRing() {
   const Context = window.AudioContext || window.webkitAudioContext;
@@ -264,6 +343,8 @@ function stopMedia() {
     heldCamera.stop();
     heldCamera = null;
   }
+  releaseEffect(true);
+  effectName = 'none';
   localStream?.getTracks().forEach((track) => track.stop());
   localStream = null;
   remoteStream = null;
@@ -416,36 +497,83 @@ export async function startCall(peer, options = {}) {
   }, 45000);
 }
 
-export async function acceptCall() {
-  if (!call || call.direction !== 'in' || call.phase !== 'ringing') return;
-  let stream;
-  try {
-    stream = await capture(Boolean(call.video));
-  } catch {
-    send({ type: 'call', action: 'reject', callId: call.id });
-    dismiss('Allow the microphone to answer');
-    return;
-  }
-  const id = call.id;
-  const video = stream.getVideoTracks().length > 0;
-  localStream = stream;
-  emitMedia();
+async function answerCall(stream, id) {
+  const open = await waitForSocket();
+  if (!open || call?.id !== id) return false;
   signalOpen = true;
-  clearTimeout(ringTimer);
-  show({ ...call, phase: 'connecting', video: Boolean(call.video) || video, cameraOff: !video });
   pc = makePeer(id);
   stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-  if (pendingOffer) {
-    await pc.setRemoteDescription(pendingOffer);
-    pendingOffer = null;
-  }
+  const offer = pendingOffer;
+  if (!offer) return false;
+  await pc.setRemoteDescription(offer);
   const answer = await pc.createAnswer();
   await pc.setLocalDescription(answer);
-  send({ type: 'call', action: 'answer', callId: id, sdp: pc.localDescription });
+  const sent = send({ type: 'call', action: 'answer', callId: id, sdp: pc.localDescription });
+  if (!sent) return false;
+  pendingOffer = null;
   for (const candidate of pendingIce) {
     await pc.addIceCandidate(candidate).catch(() => {});
   }
   pendingIce = [];
+  keep();
+  return true;
+}
+
+function closePeer() {
+  try { pc?.close(); } catch { /* the peer was already closed */ }
+  pc = null;
+  signalOpen = false;
+}
+
+export async function acceptCall() {
+  if ((!call || call.direction !== 'in') && desk.call?.direction === 'in' && desk.call?.phase === 'ringing') {
+    call = desk.call;
+    pendingOffer = desk.pendingOffer || pendingOffer;
+    pendingIce = desk.pendingIce || pendingIce;
+  }
+  if (!call || call.direction !== 'in' || call.phase !== 'ringing') return;
+  const current = call;
+  unlockRing();
+  let stream;
+  try {
+    stream = await capture(Boolean(current.video));
+  } catch {
+    if (call?.id === current.id) show({ ...call, phase: 'ringing', notice: 'Allow the microphone, then tap Accept' });
+    return;
+  }
+  if (!call || call.id !== current.id || call.phase !== 'ringing') {
+    stream.getTracks().forEach((track) => track.stop());
+    return;
+  }
+  const id = current.id;
+  const video = stream.getVideoTracks().length > 0;
+  localStream = stream;
+  emitMedia();
+  clearTimeout(ringTimer);
+  show({ ...call, phase: 'connecting', video: Boolean(call.video) || video, cameraOff: !video, notice: '' });
+  let answered = false;
+  try {
+    answered = await answerCall(stream, id);
+    if (!answered && call?.id === id) {
+      closePeer();
+      const stale = socket;
+      socket = null;
+      if (stale) {
+        stale.onclose = null;
+        stale.onerror = null;
+        stale.close();
+      }
+      answered = await answerCall(stream, id);
+    }
+  } catch {
+    answered = false;
+  }
+  if (answered || call?.id !== id) return;
+  closePeer();
+  stream.getTracks().forEach((track) => track.stop());
+  if (localStream === stream) localStream = null;
+  emitMedia();
+  show({ ...current, phase: 'ringing', notice: 'Tap Accept again' });
 }
 
 export function rejectCall() {
@@ -510,6 +638,95 @@ export async function switchToVideo() {
   } finally {
     makingOffer = false;
   }
+}
+
+function releaseEffect(stopCamera) {
+  cancelAnimationFrame(effectFrame);
+  effectFrame = 0;
+  effectTrack?.stop();
+  effectTrack = null;
+  effectStream = null;
+  if (effectVideo) {
+    effectVideo.srcObject = null;
+    effectVideo = null;
+  }
+  effectCanvas = null;
+  if (stopCamera && sourceCamera) {
+    sourceCamera.stop();
+    sourceCamera = null;
+  }
+}
+
+function paintEffect(now) {
+  effectFrame = requestAnimationFrame(paintEffect);
+  if (!effectVideo || !effectCanvas || effectVideo.readyState < 2) return;
+  if (now - (paintEffect.stamp || 0) < 42) return;
+  paintEffect.stamp = now;
+  const ctx = effectCanvas.getContext('2d', { alpha: false });
+  const width = effectCanvas.width;
+  const height = effectCanvas.height;
+  ctx.globalAlpha = 1;
+  if (effectName === 'clean') {
+    ctx.filter = 'blur(1.4px) brightness(1.06) saturate(1.05)';
+    ctx.drawImage(effectVideo, 0, 0, width, height);
+    ctx.globalAlpha = 0.72;
+    ctx.filter = 'contrast(1.1) saturate(1.14) brightness(1.05)';
+    ctx.drawImage(effectVideo, 0, 0, width, height);
+    ctx.globalAlpha = 1;
+    ctx.filter = 'none';
+    return;
+  }
+  ctx.filter = EFFECT_FILTER[effectName] || 'none';
+  ctx.drawImage(effectVideo, 0, 0, width, height);
+  ctx.filter = 'none';
+}
+
+function ensureEffect(camera) {
+  const current = effectVideo?.srcObject?.getVideoTracks?.()[0];
+  if (effectTrack?.readyState === 'live' && current === camera) return effectTrack;
+  releaseEffect(false);
+  const video = document.createElement('video');
+  video.muted = true;
+  video.playsInline = true;
+  video.srcObject = new MediaStream([camera]);
+  video.play().catch(() => {});
+  const canvas = document.createElement('canvas');
+  canvas.width = 960;
+  canvas.height = 540;
+  effectVideo = video;
+  effectCanvas = canvas;
+  effectStream = canvas.captureStream(24);
+  effectTrack = effectStream.getVideoTracks()[0];
+  effectFrame = requestAnimationFrame(paintEffect);
+  return effectTrack;
+}
+
+export async function setVideoEffect(id) {
+  const name = VIDEO_EFFECTS.some((item) => item.id === id) ? id : 'none';
+  if (!call || call.phase !== 'active' || screenTrack) return;
+  if (name === 'none') {
+    effectName = 'none';
+    const camera = sourceCamera;
+    releaseEffect(false);
+    const sender = videoSender();
+    if (camera && camera.readyState === 'live' && sender) {
+      await sender.replaceTrack(camera);
+      useLocalVideo(camera);
+    }
+    emitMedia();
+    if (call) show({ ...call, effect: 'none' });
+    return;
+  }
+  const sender = videoSender();
+  const camera = sourceCamera?.readyState === 'live' ? sourceCamera : sender?.track;
+  if (!camera || camera === screenTrack || camera === effectTrack) return;
+  sourceCamera = camera;
+  effectName = name;
+  const track = ensureEffect(camera);
+  if (sender && sender.track !== track) await sender.replaceTrack(track);
+  if (localStream?.getVideoTracks?.()[0] !== track) useLocalVideo(track);
+  emitMedia();
+  show({ ...call, effect: name, video: true, cameraOff: !camera.enabled });
 }
 
 function videoSender() {
@@ -583,7 +800,9 @@ export async function toggleShare() {
   };
   const sender = videoSender();
   if (sender?.track && sender.track !== track) {
-    heldCamera = sender.track;
+    heldCamera = sourceCamera?.readyState === 'live' ? sourceCamera : sender.track;
+    releaseEffect(false);
+    sourceCamera = null;
     heldCamera.enabled = false;
     localStream?.removeTrack(heldCamera);
     try {
@@ -628,13 +847,16 @@ export async function toggleShare() {
 
 export function toggleCamera() {
   if (screenTrack) return;
-  const track = localStream?.getVideoTracks?.().find((item) => item.readyState === 'live');
+  const track = sourceCamera?.readyState === 'live'
+    ? sourceCamera
+    : localStream?.getVideoTracks?.().find((item) => item !== effectTrack && item.readyState === 'live');
   if (!call) return;
   if (!track) {
     switchToVideo();
     return;
   }
   track.enabled = !track.enabled;
+  if (effectTrack) effectTrack.enabled = track.enabled;
   show({ ...call, video: true, cameraOff: !track.enabled });
 }
 
@@ -654,7 +876,11 @@ async function onCall(event) {
     return;
   }
   if (event.action === 'invite') {
-    if (call?.id === event.callId) return;
+    if (call?.id === event.callId) {
+      if (event.sdp && call.phase === 'ringing') pendingOffer = event.sdp;
+      keep();
+      return;
+    }
     finishEnded();
     if (call && call.phase !== 'ended') {
       send({ type: 'call', action: 'busy', callId: event.callId });

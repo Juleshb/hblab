@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { acceptCall, currentCall, hangup, rejectCall, subscribeCall, subscribeMedia, switchToVideo, toggleCamera, toggleMute, toggleShare } from '../callSession';
+import { acceptCall, currentCall, hangup, rejectCall, setVideoEffect, subscribeCall, subscribeMedia, switchToVideo, toggleCamera, toggleMute, toggleShare, VIDEO_EFFECTS } from '../callSession';
 import { useAuth } from '../auth';
 import { colors } from '../theme';
 import { Avatar } from './ui';
@@ -130,6 +130,18 @@ export function CallOverlay() {
         {call.notice ? <Text style={styles.cameraOff}>{call.notice}</Text> : null}
         {call.video && !incoming && !remoteOn && !call.sharing ? <Text style={styles.cameraOff}>Camera is off</Text> : null}
         <Text style={styles.status}>{status}</Text>
+        {call.video && !incoming && !call.sharing && call.phase === 'active' ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.effects}>
+            {VIDEO_EFFECTS.map((item) => {
+              const selected = (call.effect || 'none') === item.id;
+              return (
+                <Pressable key={item.id} accessibilityRole="button" onPress={() => setVideoEffect(item.id)} style={[styles.effect, selected && styles.effectOn]}>
+                  <Text style={[styles.effectText, selected && styles.effectTextOn]}>{item.label}</Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        ) : null}
         {incoming ? (
           <View style={styles.row}>
             <RoundButton label="Decline" icon="call" danger onPress={rejectCall} turned />
@@ -249,6 +261,11 @@ const styles = StyleSheet.create({
   },
   name: { color: colors.onAccent, fontSize: 28, fontWeight: '800', textAlign: 'center' },
   status: { color: '#d5e4df', fontSize: 16, fontWeight: '600', marginBottom: 28 },
+  effects: { gap: 8, paddingVertical: 4, paddingHorizontal: 8 },
+  effect: { borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.16)', paddingHorizontal: 12, paddingVertical: 6 },
+  effectOn: { backgroundColor: '#ffffff' },
+  effectText: { color: '#d5e4df', fontSize: 13, fontWeight: '700' },
+  effectTextOn: { color: '#214d3e' },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'center', gap: 14, maxWidth: 360 },
   action: { alignItems: 'center', gap: 8, width: 76 },
   circle: {

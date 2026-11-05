@@ -8,15 +8,18 @@ import { rememberEmoji } from './emojis';
 import {
   acceptCall,
   connectDesk,
+  deskEpoch,
   hangup,
   rejectCall,
   startCall,
   subscribeDesk,
   subscribeMedia,
+  setVideoEffect,
   switchToVideo,
   toggleCamera,
   toggleMute,
   toggleShare,
+  VIDEO_EFFECTS,
 } from './webCall';
 
 const TABS = [
@@ -255,7 +258,7 @@ export default function ChatPage() {
       }
     });
     return () => stopLive();
-  }, [token]);
+  }, [token, deskEpoch]);
 
   const chats = useMemo(() => conversations.filter((item) => item.kind === 'DIRECT'), [conversations]);
   const teams = useMemo(() => conversations.filter((item) => item.kind === 'DEPARTMENT' || item.kind === 'PROJECT'), [conversations]);
@@ -1232,6 +1235,18 @@ export function CallCard({ call, minimized, onMinimize, onExpand }) {
         {call.notice ? <p className="mt-1 text-sm text-white/80">{call.notice}</p> : null}
         {videoStage && !remoteOn && !call.sharing ? <p className="mt-1 text-sm text-white/70">Camera is off</p> : null}
         <p className={`mt-2 text-[#d5e4df] drop-shadow ${active ? 'text-xl font-semibold tabular-nums tracking-wide' : ''}`} aria-label={active ? `Call time ${status}` : undefined}>{status}</p>
+        {active && call.video && !call.sharing ? (
+          <div className="mt-4 flex max-w-full flex-wrap justify-center gap-2 px-4">
+            {VIDEO_EFFECTS.map((item) => {
+              const selected = (call.effect || 'none') === item.id;
+              return (
+                <button key={item.id} type="button" onClick={() => setVideoEffect(item.id)} className={`rounded-full px-3 py-1.5 text-sm font-semibold ${selected ? 'bg-white text-[#214d3e]' : 'bg-white/15 text-white'}`}>
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
         {incoming ? (
           <div className="mt-8 flex justify-center gap-4">
             <button type="button" onClick={rejectCall} className="rounded-full bg-red-600 px-6 py-3 font-semibold">Decline</button>

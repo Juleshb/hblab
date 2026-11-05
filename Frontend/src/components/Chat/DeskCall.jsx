@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Icon } from '@iconify/react';
 import { useAuth } from '../../assets/context/AuthContext.jsx';
 import { CallCard, Face } from './ChatPage';
-import { acceptCall, connectDesk, deskCall, disconnectDesk, hushRing, primeRing, subscribeCall } from './webCall';
+import { acceptCall, connectDesk, deskCall, deskEpoch, disconnectDesk, hushRing, primeRing, subscribeCall } from './webCall';
 
 export default function DeskCall() {
   const { token, user } = useAuth();
@@ -21,7 +21,7 @@ export default function DeskCall() {
     connectDesk(token);
     setCall(deskCall());
     return subscribeCall(setCall);
-  }, [token, user]);
+  }, [token, user, deskEpoch]);
 
   useEffect(() => {
     const sync = () => setCall(deskCall());
@@ -66,7 +66,7 @@ export default function DeskCall() {
             </span>
           </span>
           <p className="text-[22px] font-bold text-[#111b21]">{call.name}</p>
-          <p className="mt-1 text-sm text-[#667781]">{call.video ? 'Incoming video call' : 'Incoming audio call'}</p>
+          <p className="mt-1 text-sm text-[#667781]">{call.notice || (call.video ? 'Incoming video call' : 'Incoming audio call')}</p>
           <div className="mt-8 flex items-start justify-center gap-10">
             <button type="button" onClick={() => { setHiddenId(call.id); hushRing(true); }} className="flex flex-col items-center gap-2">
               <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f0f2f5] text-[#111b21]">

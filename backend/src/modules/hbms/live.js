@@ -21,6 +21,18 @@ function attachLive(server) {
     publishAll({ type: 'presence', userId: Number(userId), online: true, lastSeenAt: null });
     require('./calls').onUserJoined(userId);
     socket.on('message', (raw) => {
+      const text = String(raw || '');
+      if (text.includes('"ping"')) {
+        try {
+          const event = JSON.parse(text);
+          if (event?.type === 'ping') {
+            if (socket.readyState === 1) socket.send(JSON.stringify({ type: 'pong' }));
+            return;
+          }
+        } catch {
+          /* a call message can continue below */
+        }
+      }
       require('./calls').onCallMessage(userId, raw, socket).catch(() => {});
     });
     socket.on('close', () => {

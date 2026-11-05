@@ -84,6 +84,10 @@ export function sendLive(event) {
   return true;
 }
 
+export function liveOpen() {
+  return socket?.readyState === 1;
+}
+
 export function subscribeLive(listener) {
   listeners.add(listener);
   return () => listeners.delete(listener);
