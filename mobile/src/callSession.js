@@ -3,6 +3,7 @@ import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import * as Notifications from 'expo-notifications';
 import { api } from './api';
 import { liveOpen, reconnectLive, sendLive, subscribeLive } from './live';
+import { nativeCallsReady, prepareCallAudio, releaseCallAudio } from './nativeCall';
 import { stopVoice } from './components/voice';
 
 const incomingRing = require('../assets/incoming-ring.wav');
@@ -134,7 +135,7 @@ function postLockNote(current) {
         conversationId: current.conversationId || '',
       },
     },
-    trigger: null,
+    trigger: Platform.OS === 'android' ? { channelId: 'calls' } : null,
   }).catch(() => {});
 }
 
@@ -284,11 +285,15 @@ export function currentCall() {
   return call;
 }
 
+const updateNeeded = 'Install the latest Hb-lab update to place calls on this phone.';
+
 function supportsCalls() {
-  return Platform.OS === 'web'
-    && typeof RTCPeerConnection !== 'undefined'
-    && typeof navigator !== 'undefined'
-    && Boolean(navigator.mediaDevices?.getUserMedia);
+  if (Platform.OS === 'web') {
+    return typeof RTCPeerConnection !== 'undefined'
+      && typeof navigator !== 'undefined'
+      && Boolean(navigator.mediaDevices?.getUserMedia);
+  }
+  return nativeCallsReady();
 }
 
 function ensureSpeaker() {
@@ -355,6 +360,7 @@ function stopMedia() {
   effectName = 'none';
   localStream?.getTracks().forEach((track) => track.stop());
   localStream = null;
+  releaseCallAudio();
   remoteStream = null;
   remoteLive = false;
   emitMedia();
@@ -436,8 +442,10 @@ async function flushIce() {
 export async function startCall(peer, options = {}) {
   if (call || !peer?.conversationId) return;
   unlockSpeaker();
+  prepareCallAudio();
   stopVoice();
   if (!supportsCalls()) {
+    releaseCallAudio();
     show({
       id: 'local',
       phase: 'ended',
@@ -446,7 +454,7 @@ export async function startCall(peer, options = {}) {
       employeeId: peer.employeeId,
       photoKey: peer.photoKey,
       video: Boolean(options.video),
-      reason: 'Video and audio calls work in the browser. This phone cannot place a call yet.',
+      reason: updateNeeded,
     });
     setTimeout(() => {
       if (call?.id === 'local') {
@@ -460,6 +468,7 @@ export async function startCall(peer, options = {}) {
   try {
     stream = await capture(Boolean(options.video));
   } catch {
+    releaseCallAudio();
     show({
       id: 'local',
       phase: 'ended',
@@ -527,16 +536,19 @@ export async function startCall(peer, options = {}) {
 export async function acceptCall() {
   if (!call || call.direction !== 'in' || call.phase !== 'ringing') return;
   if (!supportsCalls()) {
+    releaseCallAudio();
     sendLive({ type: 'call', action: 'reject', callId: call.id });
-    dismiss(call.video ? 'Video calls work in the browser. This phone cannot answer yet.' : 'Audio calls work in the browser. This phone cannot place a call yet.');
+    dismiss(updateNeeded);
     return;
   }
   unlockSpeaker();
+  prepareCallAudio();
   const current = call;
   let stream;
   try {
     stream = await capture(Boolean(current.video));
   } catch {
+    releaseCallAudio();
     if (call?.id === current.id) show({ ...call, phase: 'ringing', notice: 'Allow the microphone, then tap Accept' });
     return;
   }
@@ -567,6 +579,7 @@ export async function acceptCall() {
     stream.getTracks().forEach((track) => track.stop());
     if (localStream === stream) localStream = null;
     emitMedia();
+    releaseCallAudio();
     if (call?.id === id) show({ ...current, phase: 'ringing', notice: 'Tap Accept again' });
     return;
   }
@@ -588,6 +601,7 @@ export async function acceptCall() {
     stream.getTracks().forEach((track) => track.stop());
     if (localStream === stream) localStream = null;
     emitMedia();
+    releaseCallAudio();
     if (call?.id === id) show({ ...current, phase: 'ringing', notice: 'Tap Accept again' });
   }
 }
@@ -719,6 +733,7 @@ function ensureEffect(camera) {
 }
 
 export async function setVideoEffect(id) {
+  if (Platform.OS !== 'web') return;
   const name = VIDEO_EFFECTS.some((item) => item.id === id) ? id : 'none';
   if (!call || call.phase !== 'active' || screenTrack || !supportsCalls()) return;
   if (name === 'none') {
@@ -796,7 +811,7 @@ async function captureScreen() {
 export async function toggleShare() {
   if (!call || call.phase !== 'active') return;
   if (!pc || !supportsCalls()) {
-    show({ ...call, notice: 'Allow screen sharing in the browser to continue' });
+    show({ ...call, notice: Platform.OS === 'web' ? 'Allow screen sharing in the browser to continue' : 'Screen sharing is not available on this phone yet.' });
     return;
   }
   if (screenTrack) {
@@ -808,7 +823,7 @@ export async function toggleShare() {
     display = await captureScreen();
   } catch (error) {
     if (error?.name === 'NotAllowedError' || error?.name === 'AbortError') return;
-    if (call) show({ ...call, notice: 'Allow screen sharing in the browser to continue' });
+    if (call) show({ ...call, notice: Platform.OS === 'web' ? 'Allow screen sharing in the browser to continue' : 'Screen sharing is not available on this phone yet.' });
     return;
   }
   const track = display.getVideoTracks()[0];

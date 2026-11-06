@@ -10,6 +10,7 @@ let retry = null;
 let active = false;
 let queue = [];
 let flushTimer = null;
+let heardAt = 0;
 
 function emit(event) {
   if (event?.type === 'profile' && event.employeeId) forgetPhoto(event.employeeId);
@@ -33,9 +34,15 @@ function connect() {
   const origin = apiOrigin().replace(/^http/, 'ws');
   const next = new WebSocket(`${origin}/api/hbms/live?token=${encodeURIComponent(token)}`);
   socket = next;
+  next.onopen = () => {
+    heardAt = Date.now();
+    if (next.readyState === 1) next.send(JSON.stringify({ type: 'ping' }));
+  };
   next.onmessage = (message) => {
+    heardAt = Date.now();
     try {
       const event = JSON.parse(message.data);
+      if (event?.type === 'ping' || event?.type === 'pong') return;
       if (event?.type === 'call') emit(event);
       else schedule(event);
     } catch {
@@ -97,6 +104,23 @@ export function useLive(listener) {
   useEffect(() => subscribeLive(listener), [listener]);
 }
 
+setInterval(() => {
+  if (!active) return;
+  if (!socket || socket.readyState !== 1) {
+    connect();
+    return;
+  }
+  if (Date.now() - heardAt > 25000) {
+    reconnectLive();
+    return;
+  }
+  try {
+    socket.send(JSON.stringify({ type: 'ping' }));
+  } catch {
+    reconnectLive();
+  }
+}, 12000);
+
 AppState.addEventListener('change', (state) => {
-  if (state === 'active' && active) connect();
+  if (state === 'active' && active) reconnectLive();
 });

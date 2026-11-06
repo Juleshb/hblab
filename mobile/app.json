@@ -28,16 +28,41 @@
       [
         "expo-notifications",
         {
-          "color": "#2e6b57"
+          "color": "#2e6b57",
+          "defaultChannel": "default",
+          "enableBackgroundRemoteNotifications": true
         }
       ],
-      ["expo-audio", {
-        "microphonePermission": "Hb-lab uses the microphone so you can send voice messages."
-      }]
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Hb-lab uses the microphone so you can send voice messages."
+        }
+      ],
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Hb-lab uses the camera for video calls.",
+          "microphonePermission": "Hb-lab uses the microphone for calls and voice messages."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "-keep class org.webrtc.** { *; }\n-dontwarn org.webrtc.**"
+          }
+        }
+      ]
     ],
     "ios": {
+      "bundleIdentifier": "rw.hblab.hbms",
+      "buildNumber": "4",
       "supportsTablet": true,
+      "icon": "./assets/icon-ios.png",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Hb-lab uses the camera for video calls.",
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true,
           "NSAllowsArbitraryLoads": true
@@ -45,6 +70,8 @@
       }
     },
     "android": {
+      "package": "rw.hblab.hbms",
+      "versionCode": 5,
       "softwareKeyboardLayoutMode": "resize",
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
@@ -52,10 +79,29 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {
+        "root": "src/app",
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "def5f03b-4c57-4b17-a1aa-2b4001507215"
+      }
     }
   }
 }

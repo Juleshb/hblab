@@ -1,5 +1,14 @@
 const { prisma } = require('./utils');
 
+function pushData(data) {
+  const next = {};
+  Object.entries(data || {}).forEach(([key, value]) => {
+    if (value == null || value === '') return;
+    next[key] = String(value);
+  });
+  return next;
+}
+
 async function sendPush(userIds, { title, body, data, channelId, categoryId, priority, ttl, interruptionLevel }) {
   const ids = [...new Set((userIds || []).filter(Boolean))];
   if (!ids.length || !title) return false;
@@ -13,20 +22,30 @@ async function sendPush(userIds, { title, body, data, channelId, categoryId, pri
     title,
     body: body || '',
     sound: 'default',
-    data: data || {},
-    ...(channelId ? { channelId } : {}),
+    priority: priority || 'high',
+    channelId: channelId || 'default',
+    interruptionLevel: interruptionLevel || 'active',
+    data: pushData(data),
     ...(categoryId ? { categoryId } : {}),
-    ...(priority ? { priority } : {}),
     ...(ttl ? { ttl } : {}),
-    ...(interruptionLevel ? { interruptionLevel } : {}),
   }));
   try {
-    await fetch('https://exp.host/--/api/v2/push/send', {
+    const response = await fetch('https://exp.host/--/api/v2/push/send', {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify(messages),
     });
-    return true;
+    const payload = await response.json().catch(() => null);
+    const tickets = Array.isArray(payload?.data) ? payload.data : [];
+    const dead = tickets.flatMap((ticket, index) => (
+      ticket?.status === 'error' && ticket?.details?.error === 'DeviceNotRegistered'
+        ? [messages[index]?.to]
+        : []
+    )).filter(Boolean);
+    if (dead.length) {
+      await prisma.hbmsPushToken.deleteMany({ where: { token: { in: dead } } });
+    }
+    return response.ok;
   } catch (error) {
     console.error('Push notification failed:', error.message);
     return false;

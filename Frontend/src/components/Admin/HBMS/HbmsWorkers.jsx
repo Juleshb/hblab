@@ -149,9 +149,11 @@ const HbmsWorkers = () => {
     try {
       const response = await hbmsApi.post('/employees/accounts');
       const created = response.data.data || [];
+      const failed = response.data.errors || [];
       setIssued(created);
       await loadWorkers();
-      if (created.length === 0) toast.success('Every worker already has a login');
+      if (failed.length) toast.error(failed[0]);
+      else if (created.length === 0) toast.success('Every worker already has a login');
     } catch (err) {
       toast.error(apiError(err, 'Could not create logins'));
     } finally {

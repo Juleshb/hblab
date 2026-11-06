@@ -69,13 +69,33 @@ async function deliverTemporaryPassword(data) {
     });
     return { ...data, emailed };
   } catch (error) {
-    console.error('Login email failed:', error.message);
+    console.error('Login email failed:', error?.message || error);
     return { ...data, emailed: false };
   }
 }
 
 function temporaryPassword() {
-  return crypto.randomBytes(9).toString('base64url');
+  return crypto.randomBytes(9).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function cleanLoginEmail(value) {
+  const email = String(value || '').replace(/\0/g, '').trim().toLowerCase();
+  if (!email.includes('@') || /\s/.test(email)) return null;
+  return email;
+}
+
+function workerLabel(employee) {
+  const name = `${employee?.firstName || ''} ${employee?.lastName || ''}`.trim();
+  return employee?.staffCode ? `${name || 'Worker'} (${employee.staffCode})` : (name || 'Worker');
+}
+
+function loginFailure(error, employee) {
+  const who = workerLabel(employee);
+  console.error('Staff login failed', error);
+  if (error?.code === 'P2002') return `${who} already has an email used by another account`;
+  if (error?.code === 'P2003') return `${who} is missing a related record`;
+  if (error?.code === 'P2021' || error?.code === 'P2022') return `${who} could not be saved because the database is missing a required update`;
+  return `Could not create a login for ${who}`;
 }
 
 async function loginPlan(employeeId) {
@@ -94,29 +114,31 @@ async function loginPlan(employeeId) {
       managedDepartments: { select: { name: true } },
       managedProjects: { select: { code: true, name: true } },
       coordinatedPrograms: { select: { name: true } },
-      trainingRoles: { select: { role: true, program: { select: { name: true } } } },
+      trainingRoles: { select: { role: true, programId: true } },
       user: { select: { id: true, email: true, name: true, role: true, hbmsRoles: { select: { role: true } } } },
     },
   });
   if (!employee) return null;
+  const departments = employee.managedDepartments || [];
+  const projects = employee.managedProjects || [];
+  const programs = employee.coordinatedPrograms || [];
+  const trainingRoles = employee.trainingRoles || [];
+  const training = trainingRoles.filter((item) => item.role === 'TRAINER' || item.role === 'FACILITATOR');
+  const programIds = [...new Set(training.map((item) => item.programId).filter(Boolean))];
+  const programRows = programIds.length
+    ? await prisma.hbmsProgram.findMany({ where: { id: { in: programIds } }, select: { id: true, name: true } })
+    : [];
+  const programNames = new Map(programRows.map((item) => [item.id, item.name]));
   const reasons = [];
   const add = (role, because) => {
     if (!reasons.some((item) => item.role === role)) reasons.push({ role, because });
   };
-  if (employee.managedDepartments.length) {
-    add('DEPARTMENT_MANAGER', `Manages ${employee.managedDepartments.map((item) => item.name).join(', ')}`);
-  }
-  if (employee.managedProjects.length) {
-    add('PROJECT_MANAGER', `Manages ${employee.managedProjects.map((item) => item.code).join(', ')}`);
-  }
-  if (employee.coordinatedPrograms.length) {
-    add('PROGRAM_COORDINATOR', `Coordinates ${employee.coordinatedPrograms.map((item) => item.name).join(', ')}`);
-  }
-  const training = employee.trainingRoles.filter((item) => item.role === 'TRAINER' || item.role === 'FACILITATOR');
+  if (departments.length) add('DEPARTMENT_MANAGER', `Manages ${departments.map((item) => item.name).filter(Boolean).join(', ')}`);
+  if (projects.length) add('PROJECT_MANAGER', `Manages ${projects.map((item) => item.code || item.name).filter(Boolean).join(', ')}`);
+  if (programs.length) add('PROGRAM_COORDINATOR', `Coordinates ${programs.map((item) => item.name).filter(Boolean).join(', ')}`);
   if (employee.employmentType === 'TRAINER' || training.length) {
-    add('TRAINER', training.length
-      ? `Trains ${training.map((item) => item.program.name).join(', ')}`
-      : 'Recorded as a trainer');
+    const names = training.map((item) => programNames.get(item.programId)).filter(Boolean);
+    add('TRAINER', names.length ? `Trains ${names.join(', ')}` : 'Recorded as a trainer');
   }
   if (/\bhr\b|human resource/i.test(employee.position?.title || '')) {
     add('HR', `Position is ${employee.position.title}`);
@@ -134,68 +156,88 @@ async function loginPlan(employeeId) {
   };
 }
 
+async function assignLoginRoles(tx, user, roles) {
+  const current = await tx.hbmsUserRole.findMany({ where: { userId: user.id }, select: { role: true } });
+  const have = new Set(current.map((item) => item.role));
+  const next = user.role === 'ADMIN'
+    ? roles.filter((role) => !have.has(role))
+    : [...new Set([...roles, ...(have.has('CLIENT') ? ['CLIENT'] : [])])].filter((role) => !have.has(role));
+  if (user.role !== 'ADMIN') {
+    const keep = new Set([...roles, ...(have.has('CLIENT') ? ['CLIENT'] : [])]);
+    await tx.hbmsUserRole.deleteMany({ where: { userId: user.id, role: { notIn: [...keep] } } });
+  }
+  if (next.length) {
+    await tx.hbmsUserRole.createMany({
+      data: next.map((role) => ({ userId: user.id, role })),
+      skipDuplicates: true,
+    });
+  }
+}
+
 async function issueLogin(employeeId, { reset = false } = {}) {
   const plan = await loginPlan(employeeId);
   if (!plan) return { status: 404, error: 'Worker not found' };
-  let user = plan.employee.user;
-  let temporary = null;
+  const email = cleanLoginEmail(plan.employee.email);
+  const label = workerLabel(plan.employee);
+  if (!email) return { status: 400, error: `${label} needs a valid email before a login can be created` };
 
-  if (!user) {
-    const existing = await prisma.user.findUnique({
-      where: { email: plan.employee.email },
+  const matches = plan.employee.user
+    ? []
+    : await prisma.user.findMany({
+      where: { email: { equals: email, mode: 'insensitive' } },
       include: { employeeProfile: { select: { id: true } } },
     });
-    if (existing?.employeeProfile && existing.employeeProfile.id !== employeeId) {
-      return { status: 409, error: `${plan.employee.email} already belongs to another login` };
-    }
-    if (existing) {
-      user = existing;
-      await prisma.employee.update({ where: { id: employeeId }, data: { userId: existing.id } });
-    } else {
-      temporary = temporaryPassword();
-      user = await prisma.user.create({
-        data: {
-          email: plan.employee.email,
-          name: `${plan.employee.firstName} ${plan.employee.lastName}`,
-          password: await bcrypt.hash(temporary, 12),
-          role: 'STUDENT',
-          status: 'Active',
-          phone: plan.employee.phone,
-        },
-      });
-      await prisma.employee.update({ where: { id: employeeId }, data: { userId: user.id } });
-    }
-  } else if (reset) {
-    temporary = temporaryPassword();
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { password: await bcrypt.hash(temporary, 12) },
+  if (matches.length > 1) return { status: 409, error: `${email} matches more than one account` };
+  const existing = matches[0] || null;
+  if (existing?.employeeProfile && existing.employeeProfile.id !== employeeId) {
+    return { status: 409, error: `${email} already belongs to another login` };
+  }
+
+  const creating = !plan.employee.user && !existing;
+  const temporary = creating || reset ? temporaryPassword() : null;
+  const passwordHash = temporary ? await bcrypt.hash(temporary, 12) : null;
+  const phone = String(plan.employee.phone || '').replace(/\0/g, '').trim() || null;
+  const name = `${plan.employee.firstName} ${plan.employee.lastName}`.trim();
+
+  try {
+    const user = await prisma.$transaction(async (tx) => {
+      let account = plan.employee.user
+        ? await tx.user.findUnique({ where: { id: plan.employee.user.id } })
+        : existing;
+      if (!account) {
+        account = await tx.user.create({
+          data: {
+            email,
+            name,
+            password: passwordHash,
+            role: 'STUDENT',
+            status: 'Active',
+            phone,
+          },
+        });
+      } else if (passwordHash) {
+        await tx.user.update({ where: { id: account.id }, data: { password: passwordHash } });
+      }
+      if (plan.employee.userId !== account.id) {
+        await tx.employee.update({ where: { id: employeeId }, data: { userId: account.id } });
+      }
+      await assignLoginRoles(tx, account, plan.roles);
+      return account;
     });
+    return {
+      data: {
+        id: plan.employee.id,
+        name,
+        staffCode: plan.employee.staffCode,
+        email: user.email,
+        roles: plan.roles,
+        reasons: plan.reasons,
+        temporaryPassword: temporary,
+      },
+    };
+  } catch (error) {
+    return { status: error.code === 'P2002' || error.code === 'P2003' ? 409 : 500, error: loginFailure(error, plan.employee) };
   }
-
-  if (user.role === 'ADMIN') {
-    const current = await prisma.hbmsUserRole.findMany({ where: { userId: user.id }, select: { role: true } });
-    const have = new Set(current.map((item) => item.role));
-    const missing = plan.roles.filter((role) => !have.has(role));
-    if (missing.length) {
-      await prisma.hbmsUserRole.createMany({ data: missing.map((role) => ({ userId: user.id, role })) });
-    }
-  } else {
-    await prisma.hbmsUserRole.deleteMany({ where: { userId: user.id } });
-    await prisma.hbmsUserRole.createMany({ data: plan.roles.map((role) => ({ userId: user.id, role })) });
-  }
-
-  return {
-    data: {
-      id: plan.employee.id,
-      name: `${plan.employee.firstName} ${plan.employee.lastName}`,
-      staffCode: plan.employee.staffCode,
-      email: user.email,
-      roles: plan.roles,
-      reasons: plan.reasons,
-      temporaryPassword: temporary,
-    },
-  };
 }
 
 function imageType(key) {
@@ -528,16 +570,25 @@ router.post('/accounts', async (req, res) => {
     if (!canIssueLogin(req.access)) return res.status(403).json({ error: 'Only an administrator or the CEO can create staff logins' });
     const missing = await prisma.employee.findMany({
       where: { userId: null },
-      select: { id: true },
+      select: { id: true, firstName: true, lastName: true, staffCode: true },
       orderBy: { staffCode: 'asc' },
     });
     const created = [];
+    const failed = [];
     for (const worker of missing) {
-      const result = await issueLogin(worker.id, { reset: false });
-      if (result.error) return res.status(result.status).json({ error: result.error });
-      created.push(await deliverTemporaryPassword(result.data));
+      try {
+        const result = await issueLogin(worker.id, { reset: false });
+        if (result.error) {
+          failed.push(result.error);
+          continue;
+        }
+        created.push(await deliverTemporaryPassword(result.data));
+      } catch (error) {
+        failed.push(loginFailure(error, worker));
+      }
     }
-    res.json({ data: created });
+    if (!created.length && failed.length) return res.status(400).json({ error: failed[0], errors: failed });
+    res.json({ data: created, errors: failed });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to create staff logins');
   }

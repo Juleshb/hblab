@@ -11,7 +11,7 @@ import { subscribeLive } from './live';
 import { currentToken } from './session';
 
 let openConversationId = null;
-let pushReady = false;
+const recentAlerts = new Map();
 
 export function setOpenConversation(id) {
   openConversationId = id ? String(id) : null;
@@ -29,6 +29,21 @@ function signedInUserId() {
   } catch {
     return null;
   }
+}
+
+function alertKey(data) {
+  if (!data) return '';
+  return String(data.conversationId || data.entityId || data.callId || '');
+}
+
+function justAlerted(key) {
+  const at = recentAlerts.get(key);
+  return Boolean(key && at && Date.now() - at < 4000);
+}
+
+function markAlerted(key) {
+  if (!key) return;
+  recentAlerts.set(key, Date.now());
 }
 
 function noticePath(data) {
@@ -55,7 +70,8 @@ function shouldAlert(event) {
 try {
   Notifications.setNotificationHandler({
     handleNotification: async (notification) => {
-      const data = notification.request.content.data;
+      const data = notification.request.content.data || {};
+      const key = alertKey(data);
       if (data?.type === 'call') {
         const quiet = AppState.currentState === 'active';
         return {
@@ -68,6 +84,15 @@ try {
       }
       const conversationId = data?.conversationId;
       const hidden = conversationId && String(conversationId) === openConversationId;
+      if (data.source === 'live') markAlerted(key);
+      else if (justAlerted(key)) {
+        return {
+          shouldShowBanner: false,
+          shouldShowList: false,
+          shouldPlaySound: false,
+          shouldSetBadge: false,
+        };
+      }
       return {
         shouldShowBanner: !hidden,
         shouldShowList: !hidden,
@@ -81,21 +106,26 @@ try {
 }
 
 async function present(event) {
-  if (!shouldAlert(event) || pushReady) return;
+  if (!shouldAlert(event)) return;
   const path = event.type === 'message'
     ? `/thread/${event.conversationId}`
     : noticePath(event);
+  const data = {
+    source: 'live',
+    path,
+    conversationId: event.conversationId || null,
+    entityType: event.entityType || null,
+    entityId: event.entityId || null,
+  };
+  markAlerted(alertKey(data));
   await Notifications.scheduleNotificationAsync({
     content: {
       title: event.title,
       body: event.body || '',
       sound: 'default',
-      data: {
-        path,
-        conversationId: event.conversationId || null,
-      },
+      data,
     },
-    trigger: null,
+    trigger: Platform.OS === 'android' ? { channelId: 'default' } : null,
   });
 }
 
@@ -104,10 +134,10 @@ async function registerPushToken() {
   const permission = await Notifications.getPermissionsAsync();
   if (permission.status !== 'granted') return;
   const projectId = Constants.expoConfig?.extra?.eas?.projectId || Constants.easConfig?.projectId;
-  const token = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
+  if (!projectId) return;
+  const token = await Notifications.getExpoPushTokenAsync({ projectId });
   if (!token?.data) return;
   await api.post('/hbms/devices', { token: token.data, platform: Platform.OS });
-  pushReady = true;
 }
 
 export function enableAlerts(openPath) {
@@ -154,7 +184,9 @@ export function enableAlerts(openPath) {
         options: { opensAppToForeground: false, isDestructive: true },
       },
     ]);
-    const permission = await Notifications.requestPermissionsAsync();
+    const permission = await Notifications.requestPermissionsAsync({
+      ios: { allowAlert: true, allowBadge: true, allowSound: true },
+    });
     if (cancelled || permission.status !== 'granted') return;
     await registerPushToken().catch(() => {});
   })().catch(() => {});
@@ -170,10 +202,16 @@ export function Alerts() {
   const { token } = useAuth();
   useEffect(() => {
     if (!token) {
-      pushReady = false;
       return undefined;
     }
-    return enableAlerts((path) => router.push(path));
+    const stop = enableAlerts((path) => router.push(path));
+    const resume = AppState.addEventListener('change', (state) => {
+      if (state === 'active') registerPushToken().catch(() => {});
+    });
+    return () => {
+      resume.remove();
+      stop();
+    };
   }, [token, router]);
   return null;
 }

@@ -1,36 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { CallVideo } from './CallVideo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { acceptCall, currentCall, hangup, rejectCall, setVideoEffect, subscribeCall, subscribeMedia, switchToVideo, toggleCamera, toggleMute, toggleShare, VIDEO_EFFECTS } from '../callSession';
 import { useAuth } from '../auth';
 import { colors } from '../theme';
 import { Avatar } from './ui';
-
-function WebVideo({ stream, muted, mirror, style }) {
-  const host = useRef(null);
-  useEffect(() => {
-    const parent = host.current;
-    if (!parent || Platform.OS !== 'web' || typeof document === 'undefined') return undefined;
-    const video = document.createElement('video');
-    video.autoplay = true;
-    video.playsInline = true;
-    video.muted = Boolean(muted);
-    video.style.width = '100%';
-    video.style.height = '100%';
-    video.style.objectFit = 'cover';
-    if (mirror) video.style.transform = 'scaleX(-1)';
-    parent.appendChild(video);
-    video.srcObject = stream || null;
-    if (stream) video.play().catch(() => {});
-    return () => {
-      video.srcObject = null;
-      video.remove();
-    };
-  }, [stream, muted, mirror]);
-  if (Platform.OS !== 'web') return null;
-  return <View ref={host} style={style} />;
-}
 
 function clock(startedAt) {
   const total = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
@@ -107,7 +83,7 @@ export function CallOverlay() {
   return (
     <Modal visible animationType="fade" presentationStyle="fullScreen" onRequestClose={incoming ? rejectCall : hangup}>
       <View style={[styles.screen, call.video && styles.videoScreen]}>
-        {remoteOn ? <WebVideo stream={media.remote} muted style={styles.remoteVideo} /> : null}
+        {remoteOn ? <CallVideo stream={media.remote} muted style={styles.remoteVideo} /> : null}
         {incoming || call.phase === 'ended' ? null : (
           <Pressable accessibilityRole="button" accessibilityLabel="Minimize" onPress={() => setMiniId(call.id)} style={styles.minimize}>
             <Ionicons name="chevron-down" size={22} color={colors.onAccent} />
@@ -130,7 +106,7 @@ export function CallOverlay() {
         {call.notice ? <Text style={styles.cameraOff}>{call.notice}</Text> : null}
         {call.video && !incoming && !remoteOn && !call.sharing ? <Text style={styles.cameraOff}>Camera is off</Text> : null}
         <Text style={styles.status}>{status}</Text>
-        {call.video && !incoming && !call.sharing && call.phase === 'active' ? (
+        {Platform.OS === 'web' && call.video && !incoming && !call.sharing && call.phase === 'active' ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.effects}>
             {VIDEO_EFFECTS.map((item) => {
               const selected = (call.effect || 'none') === item.id;
@@ -176,7 +152,7 @@ export function CallOverlay() {
             <RoundButton label="End" icon="call" danger onPress={hangup} turned />
           </View>
         )}
-        {localOn ? <WebVideo stream={media.local} muted mirror={!call.sharing} style={call.sharing ? styles.shareVideo : styles.localVideo} /> : null}
+        {localOn ? <CallVideo stream={media.local} muted mirror={!call.sharing} zOrder={1} style={call.sharing ? styles.shareVideo : styles.localVideo} /> : null}
         {call.video && !incoming && !localOn ? (
           <View style={styles.localPhoto}>
             <Avatar name={selfName} employeeId={employee?.id} photoKey={employee?.photoKey} size={96} />
