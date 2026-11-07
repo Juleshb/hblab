@@ -89,13 +89,39 @@ function workerLabel(employee) {
   return employee?.staffCode ? `${name || 'Worker'} (${employee.staffCode})` : (name || 'Worker');
 }
 
+function safeDbReason(error) {
+  const code = error?.code || error?.cause?.code;
+  const text = String(error?.message || error?.cause?.message || '');
+  const patterns = [
+    /invalid input value for enum [^\n]+/i,
+    /Unique constraint failed[^\n]*/i,
+    /Null constraint failed[^\n]*/i,
+    /Foreign key constraint failed[^\n]*/i,
+    /column "[^"]+"[^\n]+/i,
+    /relation "[^"]+" does not exist/i,
+    /null value in column "[^"]+"[^\n]*/i,
+    /Transaction API error:[^\n]+/i,
+    /prepared statement "[^"]+" (?:already exists|does not exist)/i,
+    /value too long[^\n]*/i,
+  ];
+  for (const pattern of patterns) {
+    const found = text.match(pattern);
+    if (found) return found[0].replace(/\s+/g, ' ').slice(0, 180);
+  }
+  if (error?.name === 'TypeError') return String(error.message || '').slice(0, 120);
+  if (code) return `database error ${code}`;
+  return '';
+}
+
 function loginFailure(error, employee) {
   const who = workerLabel(employee);
-  console.error('Staff login failed', error);
-  if (error?.code === 'P2002') return `${who} already has an email used by another account`;
-  if (error?.code === 'P2003') return `${who} is missing a related record`;
-  if (error?.code === 'P2021' || error?.code === 'P2022') return `${who} could not be saved because the database is missing a required update`;
-  return `Could not create a login for ${who}`;
+  const code = error?.code || error?.cause?.code;
+  console.error('Staff login failed', code || error?.name, error?.message);
+  if (code === 'P2002') return `${who} already has an email used by another account`;
+  if (code === 'P2003') return `${who} is missing a related record`;
+  if (code === 'P2021' || code === 'P2022') return `${who} could not be saved because the database is missing a required update`;
+  const reason = safeDbReason(error);
+  return reason ? `${who}: ${reason}` : `Could not create a login for ${who}`;
 }
 
 async function loginPlan(employeeId) {
@@ -156,87 +182,105 @@ async function loginPlan(employeeId) {
   };
 }
 
-async function assignLoginRoles(tx, user, roles) {
-  const current = await tx.hbmsUserRole.findMany({ where: { userId: user.id }, select: { role: true } });
+let accessRolesReady = false;
+
+async function ensureAccessRoles() {
+  if (accessRolesReady) return;
+  const roles = ['SUPER_ADMIN', 'CEO', 'DEPARTMENT_MANAGER', 'PROJECT_MANAGER', 'HR', 'PROGRAM_COORDINATOR', 'TRAINER', 'WORKER', 'INTERN', 'CLIENT'];
+  for (const role of roles) {
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TYPE "HbmsAccessRole" ADD VALUE IF NOT EXISTS '${role}'`);
+    } catch (error) {
+      console.error('Could not confirm access role', role, error?.message);
+    }
+  }
+  accessRolesReady = true;
+}
+
+async function assignLoginRoles(user, roles) {
+  const current = await prisma.hbmsUserRole.findMany({ where: { userId: user.id }, select: { role: true } });
   const have = new Set(current.map((item) => item.role));
-  const next = user.role === 'ADMIN'
-    ? roles.filter((role) => !have.has(role))
-    : [...new Set([...roles, ...(have.has('CLIENT') ? ['CLIENT'] : [])])].filter((role) => !have.has(role));
-  if (user.role !== 'ADMIN') {
-    const keep = new Set([...roles, ...(have.has('CLIENT') ? ['CLIENT'] : [])]);
-    await tx.hbmsUserRole.deleteMany({ where: { userId: user.id, role: { notIn: [...keep] } } });
+  if (user.role === 'ADMIN') {
+    const missing = roles.filter((role) => !have.has(role));
+    if (missing.length) await prisma.hbmsUserRole.createMany({ data: missing.map((role) => ({ userId: user.id, role })) });
+    return;
   }
-  if (next.length) {
-    await tx.hbmsUserRole.createMany({
-      data: next.map((role) => ({ userId: user.id, role })),
-      skipDuplicates: true,
-    });
-  }
+  const next = [...new Set([...roles, ...(have.has('CLIENT') ? ['CLIENT'] : [])])];
+  await prisma.hbmsUserRole.deleteMany({ where: { userId: user.id } });
+  if (next.length) await prisma.hbmsUserRole.createMany({ data: next.map((role) => ({ userId: user.id, role })) });
 }
 
 async function issueLogin(employeeId, { reset = false } = {}) {
-  const plan = await loginPlan(employeeId);
-  if (!plan) return { status: 404, error: 'Worker not found' };
-  const email = cleanLoginEmail(plan.employee.email);
-  const label = workerLabel(plan.employee);
-  if (!email) return { status: 400, error: `${label} needs a valid email before a login can be created` };
-
-  const matches = plan.employee.user
-    ? []
-    : await prisma.user.findMany({
-      where: { email: { equals: email, mode: 'insensitive' } },
-      include: { employeeProfile: { select: { id: true } } },
-    });
-  if (matches.length > 1) return { status: 409, error: `${email} matches more than one account` };
-  const existing = matches[0] || null;
-  if (existing?.employeeProfile && existing.employeeProfile.id !== employeeId) {
-    return { status: 409, error: `${email} already belongs to another login` };
-  }
-
-  const creating = !plan.employee.user && !existing;
-  const temporary = creating || reset ? temporaryPassword() : null;
-  const passwordHash = temporary ? await bcrypt.hash(temporary, 12) : null;
-  const phone = String(plan.employee.phone || '').replace(/\0/g, '').trim() || null;
-  const name = `${plan.employee.firstName} ${plan.employee.lastName}`.trim();
-
+  let subject = null;
   try {
-    const user = await prisma.$transaction(async (tx) => {
-      let account = plan.employee.user
-        ? await tx.user.findUnique({ where: { id: plan.employee.user.id } })
-        : existing;
-      if (!account) {
-        account = await tx.user.create({
-          data: {
-            email,
-            name,
-            password: passwordHash,
-            role: 'STUDENT',
-            status: 'Active',
-            phone,
-          },
-        });
-      } else if (passwordHash) {
-        await tx.user.update({ where: { id: account.id }, data: { password: passwordHash } });
-      }
-      if (plan.employee.userId !== account.id) {
-        await tx.employee.update({ where: { id: employeeId }, data: { userId: account.id } });
-      }
-      await assignLoginRoles(tx, account, plan.roles);
-      return account;
-    });
+    await ensureAccessRoles();
+    const plan = await loginPlan(employeeId);
+    if (!plan) return { status: 404, error: 'Worker not found' };
+    subject = plan.employee;
+    const email = cleanLoginEmail(plan.employee.email);
+    const label = workerLabel(plan.employee);
+    if (!email) return { status: 400, error: `${label} needs a valid email before a login can be created` };
+
+    const matches = plan.employee.user
+      ? []
+      : await prisma.user.findMany({
+        where: { email: { equals: email, mode: 'insensitive' } },
+        select: { id: true, email: true, role: true, employeeProfile: { select: { id: true } } },
+      });
+    if (matches.length > 1) return { status: 409, error: `${email} matches more than one account` };
+    const existing = matches[0] || null;
+    if (existing?.employeeProfile && existing.employeeProfile.id !== employeeId) {
+      return { status: 409, error: `${email} already belongs to another login` };
+    }
+
+    const accountId = plan.employee.user?.id || existing?.id || null;
+    const creating = !accountId;
+    const temporary = creating || reset ? temporaryPassword() : null;
+    const passwordHash = temporary ? await bcrypt.hash(temporary, 12) : null;
+    const phone = String(plan.employee.phone || '').replace(/\0/g, '').trim() || null;
+    const name = `${plan.employee.firstName} ${plan.employee.lastName}`.trim();
+
+    let account;
+    if (!accountId) {
+      account = await prisma.user.create({
+        data: {
+          email,
+          name,
+          password: passwordHash,
+          role: 'STUDENT',
+          status: 'Active',
+          phone,
+        },
+        select: { id: true, email: true, role: true },
+      });
+    } else {
+      account = passwordHash
+        ? await prisma.user.update({
+          where: { id: accountId },
+          data: { password: passwordHash },
+          select: { id: true, email: true, role: true },
+        })
+        : await prisma.user.findUnique({ where: { id: accountId }, select: { id: true, email: true, role: true } });
+    }
+    if (!account) return { status: 404, error: `${label} login could not be found` };
+    if (plan.employee.userId !== account.id) {
+      await prisma.employee.update({ where: { id: employeeId }, data: { userId: account.id } });
+    }
+    await assignLoginRoles(account, plan.roles);
     return {
       data: {
         id: plan.employee.id,
         name,
         staffCode: plan.employee.staffCode,
-        email: user.email,
+        email: account.email,
         roles: plan.roles,
         reasons: plan.reasons,
         temporaryPassword: temporary,
       },
     };
   } catch (error) {
-    return { status: error.code === 'P2002' || error.code === 'P2003' ? 409 : 500, error: loginFailure(error, plan.employee) };
+    const code = error?.code || error?.cause?.code;
+    return { status: code === 'P2002' || code === 'P2003' ? 409 : 500, error: loginFailure(error, subject) };
   }
 }
 
