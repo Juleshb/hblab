@@ -1,4 +1,6 @@
-import { Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, useLocation } from 'react-router-dom'
+import { applyBrand, brandForLocation, isStudioHost } from './site'
 import ProtectedRoute from './components/ProtectedRoute'
 import ContainerPage from './components/ContainerPage'
 import Draft from './components/Footer'
@@ -62,6 +64,12 @@ import ChatButton from './components/Chat/ChatButton';
 import DeskCall from './components/Chat/DeskCall';
 
 const App = () => {
+  const location = useLocation();
+  const studioHost = isStudioHost();
+
+  useEffect(() => {
+    applyBrand(brandForLocation(location.pathname));
+  }, [location.pathname]);
 
   return (
     <div className="font-Poppins bg-Solitude text-sm">
@@ -70,7 +78,7 @@ const App = () => {
       <DeskCall />
       <Routes>
         {/* Public routes */}
-        <Route path='/' element={<ContainerPage/>}/>
+        <Route path='/' element={studioHost ? <StudioHero /> : <ContainerPage />}/>
         <Route path='/landing' element={<ContainerPage/>}/>
         <Route path='/draft' element={<Draft/>}/>
         <Route path='/leadership' element={<LeadershipTeam/>}/>

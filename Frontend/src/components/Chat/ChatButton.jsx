@@ -72,7 +72,7 @@ export default function ChatButton() {
   }, [user]);
 
   useEffect(() => {
-    const base = String(document.title || BASE_TITLE).replace(/^\(\d+\+?\)\s*/, '') || BASE_TITLE;
+    const base = document.documentElement.dataset.siteTitle || BASE_TITLE;
     document.title = unread > 0 ? `(${badgeLabel(unread)}) ${base}` : base;
   }, [unread]);
 

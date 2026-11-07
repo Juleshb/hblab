@@ -6,6 +6,7 @@ import logoicon from "../assets/logo-icon.png";
 import { FaSearch } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
 import { Icon } from "@iconify/react";
+import { studioSiteHref } from "../site";
 
 const Navbar = () => {
   const [isToggleOpen, setIsToggleOpen] = useState(false);
@@ -178,6 +179,18 @@ const Navbar = () => {
               >
                 Carrier
               </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsToggleOpen(false);
+                  const href = studioSiteHref();
+                  if (href.startsWith('http')) window.location.assign(href);
+                  else navigate(href);
+                }}
+                className="lg:px-2 lg:py-1 lg:mr-2 mr-1 font-semibold hover:text-green-600 transition-colors duration-200 whitespace-nowrap"
+              >
+                HB Studio
+              </button>
             </div>
 
             {/* Search Bar and Login Button Container */}

@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { labHomeHref, studioHomePath } from "../../site";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/HB-STUDIO-FULL-1-WHITE.png";
 import logoIcon from "../../assets/HB-STUDIO-WHITE.png";
@@ -10,7 +11,11 @@ const StudioFooter = () => {
 
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    navigate(`${studioHomePath()}#${id}`);
   };
 
   return (
@@ -177,10 +182,14 @@ const StudioFooter = () => {
               </li>
               <li>
                 <button
-                  onClick={() => navigate("/")}
+                  onClick={() => {
+                    const home = labHomeHref();
+                    if (home.startsWith('http')) window.location.assign(home);
+                    else navigate(home);
+                  }}
                   className="transition hover:text-[#f6c343]"
                 >
-                  HB Lab Home
+                  HB Lab
                 </button>
               </li>
             </ul>

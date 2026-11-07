@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import StudioNavbar from "./StudioNavbar";
@@ -14,6 +14,15 @@ const badges = ["Videography", "Photography", "Podcast", "Live Streaming"];
 
 const StudioHero = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const id = window.location.hash.replace('#', '');
+    if (!id) return undefined;
+    const timer = setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="bg-black text-white">

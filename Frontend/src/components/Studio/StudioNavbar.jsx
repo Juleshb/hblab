@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { studioHomePath } from "../../site";
 import logo from "../../assets/HB-STUDIO-FULL-1.png";
 import logoIcon from "../../assets/HB-STUDIO-FULL.png";
 import { HiMenu, HiX } from "react-icons/hi";
@@ -28,15 +29,21 @@ const StudioNavbar = () => {
 
   const handleLinkClick = (link) => {
     setIsOpen(false);
+    if (link.label === "Home") {
+      navigate(studioHomePath());
+      return;
+    }
     if (link.route) {
       navigate(link.route);
       return;
     }
     if (link.target) {
-      setTimeout(() => {
-        const el = document.getElementById(link.target);
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
+      const el = document.getElementById(link.target);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      navigate(`${studioHomePath()}#${link.target}`);
     }
   };
 
