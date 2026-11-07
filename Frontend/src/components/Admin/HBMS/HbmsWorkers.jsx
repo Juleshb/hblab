@@ -35,6 +35,8 @@ const HbmsWorkers = () => {
   const [loading, setLoading] = useState(true);
   const [issued, setIssued] = useState([]);
   const [issuing, setIssuing] = useState(false);
+  const [busyId, setBusyId] = useState(null);
+  const [makeLogin, setMakeLogin] = useState(false);
   const [canManageSystem, setCanManageSystem] = useState(false);
 
   const loadOptions = async () => {
@@ -115,9 +117,18 @@ const HbmsWorkers = () => {
         body.append('file', photoFile);
         await hbmsApi.post(`/employees/${savedId}/photo`, body);
       }
+      if (!editingId && makeLogin && savedId) {
+        try {
+          const loginResponse = await hbmsApi.post(`/employees/${savedId}/account`);
+          setIssued([loginResponse.data.data]);
+        } catch (err) {
+          toast.error(apiError(err, 'Worker was saved, but the login was not created'));
+        }
+      }
       toast.success(editingId ? 'Profile updated' : 'Worker registered');
       setEditingId(null);
       setPhotoFile(null);
+      setMakeLogin(false);
       setShowForm(false);
       setForm({ ...emptyForm, businessUnitId: form.businessUnitId });
       await loadOptions();
@@ -142,6 +153,36 @@ const HbmsWorkers = () => {
       reportsToId: worker.reportsToId || '',
       skills: (worker.skills || []).join(', '),
     });
+  };
+
+  const createLogin = async (worker) => {
+    setBusyId(worker.id);
+    try {
+      const response = await hbmsApi.post(`/employees/${worker.id}/account`);
+      setIssued([response.data.data]);
+      await loadWorkers();
+    } catch (err) {
+      toast.error(apiError(err, 'Could not create the login'));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const removeLogin = async (worker) => {
+    const email = worker.user?.email || 'this login';
+    if (!window.confirm(`Delete the login for ${worker.firstName} ${worker.lastName} (${email})? They will not be able to sign in with it.`)) return;
+    setBusyId(worker.id);
+    try {
+      const response = await hbmsApi.delete(`/employees/${worker.id}/account`);
+      toast.success(response.data.data.deleted
+        ? 'Login deleted'
+        : 'Login removed from this worker. The account is still used for courses.');
+      await loadWorkers();
+    } catch (err) {
+      toast.error(apiError(err, 'Could not delete the login'));
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const createMissingLogins = async () => {
@@ -205,7 +246,7 @@ const HbmsWorkers = () => {
               <button type="button" className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-emerald-800 disabled:opacity-60" disabled={issuing} onClick={createMissingLogins}>
                 {issuing ? 'Creating logins…' : 'Create missing logins'}
               </button>
-              <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => { setEditingId(null); setPhotoFile(null); setForm({ ...emptyForm, businessUnitId: units[0]?.id || '' }); setShowForm(true); }}>
+              <button type="button" className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white" onClick={() => { setEditingId(null); setPhotoFile(null); setMakeLogin(true); setForm({ ...emptyForm, businessUnitId: units[0]?.id || '' }); setShowForm(true); }}>
                 Add worker
               </button>
             </>
@@ -255,7 +296,17 @@ const HbmsWorkers = () => {
                     <td className="py-3 text-right">
                       <Link to={`/admin/hbms/workers/${worker.id}`} className="text-xs font-medium text-emerald-700">View</Link>
                       {worker.userId ? <Link to={`/admin/hbms/messages?worker=${worker.id}`} className="ml-3 text-xs font-medium text-emerald-700">Message</Link> : null}
-                      {canManageSystem ? <button type="button" className="ml-3 text-xs font-medium text-gray-500" onClick={() => { startEdit(worker); setPhotoFile(null); setShowForm(true); }}>Edit</button> : null}
+                      {canManageSystem && !worker.userId ? (
+                        <button type="button" className="ml-3 text-xs font-medium text-emerald-700 disabled:opacity-60" disabled={busyId === worker.id} onClick={() => createLogin(worker)}>
+                          {busyId === worker.id ? 'Creating…' : 'Create login'}
+                        </button>
+                      ) : null}
+                      {canManageSystem && worker.userId ? (
+                        <button type="button" className="ml-3 text-xs font-medium text-red-600 disabled:opacity-60" disabled={busyId === worker.id} onClick={() => removeLogin(worker)}>
+                          Delete login
+                        </button>
+                      ) : null}
+                      {canManageSystem ? <button type="button" className="ml-3 text-xs font-medium text-gray-500" onClick={() => { startEdit(worker); setPhotoFile(null); setMakeLogin(false); setShowForm(true); }}>Edit</button> : null}
                     </td>
                   </tr>
                 ))}
@@ -334,6 +385,12 @@ const HbmsWorkers = () => {
             <Field label="Skills">
               <input className={inputClass} placeholder="React, Node.js, PostgreSQL" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} />
             </Field>
+            {!editingId ? (
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input type="checkbox" checked={makeLogin} onChange={(event) => setMakeLogin(event.target.checked)} />
+                Create a login for this worker
+              </label>
+            ) : null}
             <div className="flex justify-end border-t border-gray-100 pt-3">
               <PrimaryButton type="submit">{editingId ? 'Update profile' : 'Register worker'}</PrimaryButton>
             </div>

@@ -638,6 +638,72 @@ router.post('/accounts', async (req, res) => {
   }
 });
 
+router.delete('/:id/account', async (req, res) => {
+  try {
+    if (!canIssueLogin(req.access)) return res.status(403).json({ error: 'Only an administrator or the CEO can delete staff logins' });
+    const employee = await prisma.employee.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            _count: {
+              select: {
+                lessons: true,
+                applications: true,
+                lessonProgress: true,
+                enrolledCourses: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!employee) return res.status(404).json({ error: 'Worker not found' });
+    if (!employee.user) return res.status(400).json({ error: 'This worker has no login' });
+    if (employee.user.role === 'ADMIN' || employee.user.id === req.userId) {
+      return res.status(400).json({ error: 'This login cannot be deleted' });
+    }
+
+    const counts = employee.user._count;
+    const usedElsewhere = counts.lessons + counts.applications + counts.lessonProgress + counts.enrolledCourses > 0;
+    await prisma.employee.update({ where: { id: employee.id }, data: { userId: null } });
+    if (usedElsewhere) {
+      await prisma.hbmsUserRole.deleteMany({ where: { userId: employee.user.id, role: { not: 'CLIENT' } } });
+      await writeAudit(req.userId, 'employee.login-delete', 'Employee', employee.id, {
+        email: employee.user.email,
+        deleted: false,
+      });
+      return res.json({ data: { deleted: false, unlinked: true, email: employee.user.email } });
+    }
+
+    try {
+      await prisma.user.delete({ where: { id: employee.user.id } });
+    } catch (error) {
+      if (error.code !== 'P2003') throw error;
+      await prisma.hbmsUserRole.deleteMany({ where: { userId: employee.user.id, role: { not: 'CLIENT' } } });
+      await writeAudit(req.userId, 'employee.login-delete', 'Employee', employee.id, {
+        email: employee.user.email,
+        deleted: false,
+      });
+      return res.json({ data: { deleted: false, unlinked: true, email: employee.user.email } });
+    }
+    await writeAudit(req.userId, 'employee.login-delete', 'Employee', employee.id, {
+      email: employee.user.email,
+      deleted: true,
+    });
+    res.json({ data: { deleted: true, email: employee.user.email } });
+  } catch (error) {
+    handlePrismaError(res, error, 'Failed to delete the staff login');
+  }
+});
+
 router.post('/:id/account', async (req, res) => {
   try {
     if (!canIssueLogin(req.access)) return res.status(403).json({ error: 'Only an administrator or the CEO can create staff logins' });

@@ -97,6 +97,21 @@ const HbmsWorkerProfile = () => {
     }
   };
 
+  const removeLogin = async () => {
+    const email = worker.login?.email || worker.email;
+    if (!window.confirm(`Delete the login for ${worker.firstName} ${worker.lastName} (${email})? They will not be able to sign in with it.`)) return;
+    try {
+      const response = await hbmsApi.delete(`/employees/${id}/account`);
+      setIssuedPassword('');
+      toast.success(response.data.data.deleted
+        ? 'Login deleted'
+        : 'Login removed from this worker. The account is still used for courses.');
+      await load();
+    } catch (err) {
+      toast.error(apiError(err, 'Could not delete the login'));
+    }
+  };
+
   const saveLogin = async (reset) => {
     try {
       const response = await hbmsApi.post(`/employees/${id}/account`, { reset });
@@ -330,6 +345,7 @@ const HbmsWorkerProfile = () => {
                     <button type="button" className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700" onClick={openLogin}>Edit login</button>
                     <button type="button" className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700" onClick={() => saveLogin(false)}>Update access</button>
                     <PrimaryButton type="button" onClick={() => saveLogin(true)}>Reset password</PrimaryButton>
+                    <button type="button" className="rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-700" onClick={removeLogin}>Delete login</button>
                   </>
                 ) : null}
               </>
