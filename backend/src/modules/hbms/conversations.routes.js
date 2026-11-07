@@ -654,6 +654,36 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/unread', async (req, res) => {
+  try {
+    const employeeId = req.access.employeeId || null;
+    const memberships = await prisma.hbmsConversationMember.findMany({
+      where: { OR: [{ userId: req.userId }, ...(employeeId ? [{ employeeId }] : [])] },
+      select: { conversationId: true, lastReadAt: true },
+    });
+    const readAt = new Map();
+    for (const row of memberships) {
+      const next = row.lastReadAt ? row.lastReadAt.getTime() : null;
+      if (!readAt.has(row.conversationId)) {
+        readAt.set(row.conversationId, next);
+        continue;
+      }
+      const current = readAt.get(row.conversationId);
+      if (current == null || (next != null && next > current)) readAt.set(row.conversationId, next);
+    }
+    const mine = [{ authorUserId: req.userId }, ...(employeeId ? [{ authorId: employeeId }] : [])];
+    const filters = [...readAt.entries()].map(([conversationId, at]) => ({
+      conversationId,
+      NOT: { OR: mine },
+      ...(at ? { createdAt: { gt: new Date(at) } } : {}),
+    }));
+    const unread = filters.length ? await prisma.hbmsConversationMessage.count({ where: { OR: filters } }) : 0;
+    res.json({ data: { unread } });
+  } catch (error) {
+    handlePrismaError(res, error, 'Could not count unread messages');
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const conversation = await loadConversation(req.params.id);
