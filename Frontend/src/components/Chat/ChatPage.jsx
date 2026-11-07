@@ -13,6 +13,7 @@ import {
   hangup,
   rejectCall,
   startCall,
+  setOpenConversation,
   subscribeDesk,
   subscribeMedia,
   setVideoEffect,
@@ -176,6 +177,10 @@ export default function ChatPage() {
 
   useEffect(() => { setReply(null); setTyping([]); typingSent.current = 0; }, [activeId]);
   activeRef.current = activeId;
+  useEffect(() => {
+    setOpenConversation(activeId);
+    return () => setOpenConversation('');
+  }, [activeId]);
 
   useEffect(() => {
     let active = true;

@@ -80,7 +80,10 @@ async function ensureProjectMember(tx, projectId, employeeId) {
 router.get('/notifications', async (req, res) => {
   try {
     const where = {};
-    if (!req.access.orgWide) {
+    if (req.query.mine === '1') {
+      if (!req.access.employeeId) return res.json({ data: [] });
+      where.employeeId = req.access.employeeId;
+    } else if (!req.access.orgWide) {
       if (!req.access.employeeId) return res.json({ data: [] });
       where.employeeId = req.access.employeeId;
     } else if (req.query.employeeId) where.employeeId = req.query.employeeId;

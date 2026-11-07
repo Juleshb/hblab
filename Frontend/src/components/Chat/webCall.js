@@ -79,6 +79,40 @@ export function subscribeDesk(listener) {
   return () => listeners.delete(listener);
 }
 
+let openConversationId = '';
+let noticeAt = 0;
+
+export function setOpenConversation(id) {
+  openConversationId = id || '';
+}
+
+export function currentOpenConversation() {
+  return openConversationId;
+}
+
+export function playNotice() {
+  const now = Date.now();
+  if (now - noticeAt < 1200) return;
+  if (call?.phase === 'ringing' || call?.phase === 'active') return;
+  noticeAt = now;
+  const ctx = unlockRing();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  [740, 988].forEach((frequency, index) => {
+    const when = start + index * 0.14;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.setValueAtTime(frequency, when);
+    gain.gain.setValueAtTime(0, when);
+    gain.gain.linearRampToValueAtTime(0.08, when + 0.02);
+    gain.gain.linearRampToValueAtTime(0, when + 0.16);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(when);
+    osc.stop(when + 0.2);
+  });
+}
+
 function emitMedia() {
   const snap = { local: localStream, remote: remoteStream, remoteLive };
   mediaListeners.forEach((listener) => listener(snap));

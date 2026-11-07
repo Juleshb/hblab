@@ -3,13 +3,27 @@ import { Link, useLocation } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { useAuth } from '../../assets/context/AuthContext.jsx';
 import hbmsApi from '../Admin/HBMS/api';
-import { subscribeDesk } from './webCall';
+import { currentOpenConversation, playNotice, subscribeDesk } from './webCall';
 
 const BASE_TITLE = 'HB-Lab';
 
 function badgeLabel(count) {
   if (count > 99) return '99+';
   return String(count);
+}
+
+function isMine(event, userId) {
+  return event?.authorUserId && Number(event.authorUserId) === Number(userId);
+}
+
+function shouldChime(event, userId) {
+  if (event?.type === 'message') {
+    if (isMine(event, userId)) return false;
+    const looking = document.visibilityState === 'visible' && currentOpenConversation() === event.conversationId;
+    return !looking;
+  }
+  if (event?.type === 'inbox') return event.kind !== 'CONVERSATION';
+  return false;
 }
 
 export default function ChatButton() {
@@ -25,16 +39,25 @@ export default function ChatButton() {
     }
     let active = true;
     const load = () => {
-      hbmsApi.get('/conversations/unread')
-        .then((response) => {
-          if (active) setUnread(Number(response.data.data?.unread) || 0);
-        })
-        .catch(() => {});
+      Promise.all([
+        hbmsApi.get('/conversations/unread').catch(() => ({ data: { data: { unread: 0 } } })),
+        hbmsApi.get('/notifications', { params: { unread: '1', mine: '1' } }).catch(() => ({ data: { data: [] } })),
+      ]).then(([messages, notices]) => {
+        if (!active) return;
+        const chats = Number(messages.data.data?.unread) || 0;
+        const updates = (notices.data.data || []).filter((notice) => notice.kind !== 'CONVERSATION' && !notice.readAt).length;
+        setUnread(chats + updates);
+      });
     };
     load();
     const timer = setInterval(load, 20000);
     const stop = subscribeDesk((event) => {
-      if (['message', 'conversations', 'inbox', 'read', 'delivered'].includes(event?.type)) load();
+      if (!event?.type) return;
+      if (shouldChime(event, user.id)) {
+        playNotice();
+        setUnread((count) => count + 1);
+      }
+      if (['message', 'conversations', 'inbox', 'read', 'delivered', 'meetings', 'tasks'].includes(event.type)) load();
     });
     const onFocus = () => load();
     window.addEventListener('focus', onFocus);
