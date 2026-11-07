@@ -4,9 +4,25 @@ import tailwindcss from '@tailwindcss/vite'
 
 const apiOrigin = 'https://api.hblab.rw'
 
+function studioDocument() {
+  return {
+    name: 'studio-document',
+    transformIndexHtml(html) {
+      if (String(process.env.VITE_SITE || '').toLowerCase() !== 'studio') return html
+      return html
+        .replaceAll('HB-Lab', 'HB Studio')
+        .replaceAll(
+          'Empowering the Next Generation of Tech Professionals with HB Lab.',
+          'Film, photography, podcasts, and live coverage from HB Studio, a product of HBLab.'
+        )
+        .replaceAll('https://hblab.rw/', 'https://studio.hblab.rw/')
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), studioDocument()],
   define: {
     'import.meta.env.VITE_BACKEND_URL': JSON.stringify(apiOrigin),
   },

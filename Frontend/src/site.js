@@ -30,10 +30,11 @@ export function labHomeHref() {
   return isStudioHost() ? 'https://hblab.rw' : '/';
 }
 
+const STUDIO_ORIGIN = 'https://studio.hblab.rw';
+
 export function studioSiteHref() {
-  const configured = String(import.meta.env.VITE_STUDIO_URL || '').replace(/\/$/, '');
-  if (configured && !isStudioHost()) return configured;
-  return studioHomePath();
+  if (isStudioHost()) return studioHomePath();
+  return String(import.meta.env.VITE_STUDIO_URL || STUDIO_ORIGIN).replace(/\/$/, '') || STUDIO_ORIGIN;
 }
 
 export function applyBrand(brand) {

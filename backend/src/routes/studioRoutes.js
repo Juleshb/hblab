@@ -7,17 +7,93 @@ function clean(value, max = 2000) {
   return String(value || '').replace(/\0/g, '').trim().slice(0, max);
 }
 
-function studioTransport() {
-  const user = process.env.STUDIO_SMTP_USER || 'studio@hblab.rw';
-  const pass = process.env.STUDIO_SMTP_PASSWORD;
-  if (!pass) return null;
-  const port = Number(process.env.STUDIO_SMTP_PORT || 465);
+function env(name) {
+  return String(process.env[name] || '').trim().replace(/^['"]|['"]$/g, '');
+}
+
+function mailbox(value) {
+  const match = String(value || '').match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  return match ? match[0].toLowerCase() : '';
+}
+
+function makeTransport({ host, port, user, pass }) {
+  const chosen = Number(port) || 465;
   return nodemailer.createTransport({
-    host: process.env.STUDIO_SMTP_HOST || 'smtp.zoho.com',
-    port,
-    secure: port === 465,
+    host: host || 'smtp.zoho.com',
+    port: chosen,
+    secure: chosen === 465,
     auth: { user, pass },
+    connectionTimeout: 12000,
+    greetingTimeout: 12000,
+    socketTimeout: 20000,
   });
+}
+
+function connectionFailure(error) {
+  const code = String(error?.code || '');
+  return ['ECONNREFUSED', 'ETIMEDOUT', 'ESOCKET', 'ECONNECTION', 'ENETUNREACH', 'EHOSTUNREACH', 'EDNS'].includes(code);
+}
+
+function mailAttempts() {
+  const attempts = [];
+  const studioUser = mailbox(env('STUDIO_SMTP_USER')) || 'studio@hblab.rw';
+  const studioPass = env('STUDIO_SMTP_PASSWORD');
+  const studioHost = env('STUDIO_SMTP_HOST') || 'smtp.zoho.com';
+  if (studioPass) {
+    const port = Number(env('STUDIO_SMTP_PORT') || 465);
+    attempts.push({
+      user: studioUser,
+      from: `HB Studio <${studioUser}>`,
+      mailer: makeTransport({ host: studioHost, port, user: studioUser, pass: studioPass }),
+    });
+    if (port === 465) {
+      attempts.push({
+        user: studioUser,
+        from: `HB Studio <${studioUser}>`,
+        mailer: makeTransport({ host: studioHost, port: 587, user: studioUser, pass: studioPass }),
+        backupPort: true,
+      });
+    }
+  }
+  const legacyUser = mailbox(env('SMTP_USER'));
+  const legacyPass = env('SMTP_PASSWORD');
+  if (legacyUser && legacyPass && legacyUser !== studioUser) {
+    const from = env('SMTP_FROM');
+    attempts.push({
+      user: legacyUser,
+      from: from.includes(legacyUser) ? from : `HBLab <${legacyUser}>`,
+      mailer: makeTransport({
+        host: env('SMTP_HOST') || 'smtp.zoho.com',
+        port: env('SMTP_PORT') || 465,
+        user: legacyUser,
+        pass: legacyPass,
+      }),
+    });
+  }
+  return attempts;
+}
+
+function mailError(error) {
+  const response = String(error?.response || error?.message || 'Mail server rejected the message')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 180);
+  return response;
+}
+
+async function sendWithAttempts(message, attempts) {
+  let lastError;
+  for (const attempt of attempts) {
+    if (attempt.backupPort && lastError && !connectionFailure(lastError)) continue;
+    try {
+      await attempt.mailer.sendMail({ ...message, from: attempt.from });
+      return attempt.user;
+    } catch (error) {
+      lastError = error;
+      console.error('Studio email attempt failed:', attempt.user, mailError(error));
+    }
+  }
+  throw lastError || new Error('Studio email is not configured');
 }
 
 function linesOf(fields) {
@@ -39,8 +115,8 @@ router.post('/inquiries', async (req, res) => {
     if (source !== 'studio-contact' && source !== 'studio-booking') {
       return res.status(400).json({ success: false, message: 'This form cannot be sent.' });
     }
-    const mailer = studioTransport();
-    if (!mailer) return res.status(503).json({ success: false, message: 'Studio email is not configured yet.' });
+    const attempts = mailAttempts();
+    if (!attempts.length) return res.status(503).json({ success: false, message: 'Studio email is not configured yet.' });
 
     const booking = source === 'studio-booking';
     const details = booking
@@ -63,27 +139,29 @@ router.post('/inquiries', async (req, res) => {
           { label: 'Message', value: clean(req.body.message, 4000) },
         ];
     const text = linesOf(details);
-    const from = process.env.STUDIO_SMTP_FROM || 'HB Studio <studio@hblab.rw>';
-    const inbox = process.env.STUDIO_INBOX || 'studio@hblab.rw';
-    await mailer.sendMail({
-      from,
+    const inbox = mailbox(env('STUDIO_INBOX')) || 'studio@hblab.rw';
+    await sendWithAttempts({
       to: inbox,
       replyTo: email,
       subject: booking ? `Shoot booking from ${name}` : `Studio message from ${name}`,
       text,
-    });
-    await mailer.sendMail({
-      from,
-      to: email,
-      subject: booking ? 'We received your shoot request' : 'We received your message',
-      text: booking
-        ? `Hello ${name},\n\nHB Studio received your booking request. We will reply from studio@hblab.rw within one day.\n\n${text}`
-        : `Hello ${name},\n\nHB Studio received your message. We will reply from studio@hblab.rw within one day.\n\n${text}`,
-    });
+    }, attempts);
+    try {
+      await sendWithAttempts({
+        to: email,
+        subject: booking ? 'We received your shoot request' : 'We received your message',
+        text: booking
+          ? `Hello ${name},\n\nHB Studio received your booking request. We will reply from studio@hblab.rw within one day.\n\n${text}`
+          : `Hello ${name},\n\nHB Studio received your message. We will reply from studio@hblab.rw within one day.\n\n${text}`,
+      }, attempts);
+    } catch (error) {
+      console.error('Studio acknowledgement failed:', mailError(error));
+    }
     res.json({ success: true });
   } catch (error) {
-    console.error('Studio email failed:', error?.message || error);
-    res.status(502).json({ success: false, message: 'The message could not be sent. Please try again.' });
+    const detail = mailError(error);
+    console.error('Studio email failed:', detail);
+    res.status(502).json({ success: false, message: `The message could not be sent. ${detail}` });
   }
 });
 

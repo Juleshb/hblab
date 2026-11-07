@@ -5,6 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <title>HB-Lab</title>
+    <script>
+      (function () {
+        var host = location.hostname.toLowerCase();
+        if (host.indexOf("studio") === -1) return;
+        var title = "HB Studio";
+        var description = "Film, photography, podcasts, and live coverage from HB Studio, a product of HBLab.";
+        document.title = title;
+        document.documentElement.dataset.siteTitle = title;
+        var tags = {
+          "meta[property='og:title']": title,
+          "meta[name='twitter:title']": title,
+          "meta[property='og:description']": description,
+          "meta[name='twitter:description']": description,
+          "meta[property='og:url']": "https://studio.hblab.rw/"
+        };
+        Object.keys(tags).forEach(function (selector) {
+          var node = document.querySelector(selector);
+          if (node) node.setAttribute("content", tags[selector]);
+        });
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="./src/assets/logo-icon.png" />
 
     <!-- Open Graph Meta Tags for social media sharing -->
