@@ -1233,4 +1233,23 @@ model HbmsClientAccess {
   @@id([userId, projectId])
   @@index([projectId])
 }
+
+model StudioWork {
+  id          Int      @id @default(autoincrement())
+  title       String
+  client      String
+  category    String
+  youtubeUrl  String
+  description String   @default("")
+  year        String   @default("")
+  location    String   @default("")
+  published   Boolean  @default(true)
+  featured    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([published, sortOrder])
+  @@index([category])
+}
  

@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import StudioNavbar from "./StudioNavbar";
 import StudioFooter from "./StudioFooter";
 import { Icon } from "@iconify/react";
+import { apiOrigin } from "../../apiOrigin";
+import { youtubeEmbed, youtubeThumb } from "../../youtube";
 import weddingImg from "../../assets/19670a1bd1113d6879b33b93d9e13b5b.jpg";
 import indoorImg from "../../assets/1607004a63deefac49c5f3bd.jpg";
 import corporateImg from "../../assets/camera-operator-shooting-on-professional-camera-1024x682.webp";
@@ -113,16 +116,57 @@ const portfolioItems = [
   },
 ];
 
-const categories = ["All", "Videography", "Photography", "Podcast", "Live Streaming"];
+const sampleCategories = ["All", "Videography", "Photography", "Podcast", "Live Streaming"];
+
+function filmCard(work) {
+  return {
+    id: work.id,
+    title: work.title,
+    category: work.category,
+    tags: [work.client, work.year].filter(Boolean),
+    image: youtubeThumb(work.youtubeUrl),
+    description: work.description,
+    client: work.client,
+    year: work.year,
+    location: work.location,
+    embedUrl: youtubeEmbed(work.youtubeUrl),
+    youtubeUrl: work.youtubeUrl,
+  };
+}
 
 const StudioPortfolio = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedItem, setSelectedItem] = useState(null);
+  const [films, setFilms] = useState([]);
+  const [searchParams] = useSearchParams();
+  const published = films.length > 0;
+  const portfolioItemsShown = published ? films.map(filmCard) : portfolioItems;
+  const categories = published ? ["All", ...new Set(films.map((film) => film.category))] : sampleCategories;
+
+  useEffect(() => {
+    let gone = false;
+    fetch(`${apiOrigin}/api/studio/works`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (!gone && Array.isArray(data.works)) setFilms(data.works);
+      })
+      .catch(() => {});
+    return () => {
+      gone = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const requested = Number(searchParams.get("film"));
+    if (!requested || !films.length) return;
+    const match = films.map(filmCard).find((item) => item.id === requested);
+    if (match) setSelectedItem(match);
+  }, [films, searchParams]);
 
   const filteredItems =
     activeCategory === "All"
-      ? portfolioItems
-      : portfolioItems.filter((item) => item.category === activeCategory);
+      ? portfolioItemsShown
+      : portfolioItemsShown.filter((item) => item.category === activeCategory);
 
   return (
     <div className="min-h-screen bg-[#090b0a] text-white">
@@ -159,7 +203,9 @@ const StudioPortfolio = () => {
               transition={{ duration: 0.7, delay: 0.2 }}
               className="mt-5 max-w-xl text-base leading-7 text-white/65"
             >
-              Films, photographs, podcasts, and live productions made by HB Studio.
+              {published
+                ? "Choir songs, livestreams, and other films HB Studio made for clients."
+                : "Films, photographs, podcasts, and live productions made by HB Studio."}
             </motion.p>
           </motion.div>
         </div>
@@ -286,13 +332,22 @@ const StudioPortfolio = () => {
                 <Icon icon="mdi:close" className="h-6 w-6" />
               </button>
 
-              <div className="relative aspect-video overflow-hidden">
-                <img
-                  src={selectedItem.image}
-                  alt={selectedItem.title}
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#010604] via-transparent to-transparent"></div>
+              <div className="relative aspect-video overflow-hidden bg-black">
+                {selectedItem.embedUrl ? (
+                  <iframe
+                    src={selectedItem.embedUrl}
+                    title={selectedItem.title}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <img
+                    src={selectedItem.image}
+                    alt={selectedItem.title}
+                    className="h-full w-full object-cover"
+                  />
+                )}
               </div>
 
               <div className="p-8">
@@ -305,6 +360,11 @@ const StudioPortfolio = () => {
 
                 <h2 className="mb-4 text-3xl font-black text-white">{selectedItem.title}</h2>
                 <p className="mb-6 text-lg text-white/80">{selectedItem.description}</p>
+                {selectedItem.youtubeUrl && (
+                  <a href={selectedItem.youtubeUrl} target="_blank" rel="noreferrer" className="mb-6 inline-flex text-sm font-semibold text-[#e7c15a]">
+                    Watch on YouTube
+                  </a>
+                )}
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div>

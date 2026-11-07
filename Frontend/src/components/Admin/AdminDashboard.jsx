@@ -18,7 +18,7 @@ const AdminDashboard = () => {
     projects: 'HBMS projects',
     tasks: 'HBMS tasks',
   };
-  const activeTab = section === 'hbms' ? (hbmsLabels[segments[2]] || 'HBMS') : section;
+  const activeTab = section === 'hbms' ? (hbmsLabels[segments[2]] || 'HBMS') : section === 'studio' ? 'Studio films' : section;
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const toggleMobileSidebar = () => setMobileSidebarOpen(!mobileSidebarOpen);

@@ -31,6 +31,7 @@ import CertificatesManagement from './components/Admin/CertificatesManagement'
 import ApplicationsManagement from './components/Admin/ApplicationsManagement'
 import ProjectsManagement from './components/Admin/ProjectsManagement'
 import SettingsManagement from './components/Admin/SettingsManagement'
+import StudioWorks from './components/Admin/StudioWorks'
 import ModalDemo from './components/ModalDemo'
 import { UserDashboard } from './components/User'
 import { StudentDashboard, CareerApplications } from './components/Student';
@@ -106,6 +107,7 @@ const App = () => {
           <Route path="certificates" element={<CertificatesManagement />} />
           <Route path="applications" element={<ApplicationsManagement />} />
           <Route path="projects" element={<ProjectsManagement />} />
+          <Route path="studio" element={<StudioWorks />} />
           <Route path="hbms" element={<HbmsLayout />}>
             <Route index element={<HbmsOverview />} />
             <Route path="organization" element={<HbmsOrganization />} />

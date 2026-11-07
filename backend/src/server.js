@@ -18,6 +18,7 @@ const app = express();
 const uploadRoutes = require('./routes/uploadRoutes');
 const hbmsRoutes = require('./modules/hbms');
 const studioRoutes = require('./routes/studioRoutes');
+const studioWorks = require('./routes/studioWorks');
 const { ensureHbmsSeed } = require('./modules/hbms/seed');
 const { startDeadlineReminders } = require('./modules/hbms/reminders');
 const { startVoiceExpiry } = require('./modules/hbms/voiceExpiry');
@@ -43,6 +44,7 @@ app.use('/api/careers', careersRoutes);
 app.use('/api/lessons', lessonsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/hbms', hbmsRoutes);
+app.use('/api/studio', studioWorks);
 app.use('/api/studio', studioRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
