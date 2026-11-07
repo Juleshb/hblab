@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FormModal, SuccessModal, ErrorModal } from "../ClientModal";
 import LoadingSpinner from "../LoadingSpinner";
+import { apiOrigin } from "../../apiOrigin";
 
 const StudioContactUs = () => {
   const [formData, setFormData] = useState({
@@ -27,18 +28,17 @@ const StudioContactUs = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("https://hblab-be.onrender.com/contact", {
+      const response = await fetch(`${apiOrigin}/api/studio/inquiries`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           source: "studio-contact",
-          subject: `HB Studio Contact: ${formData.service || "General Inquiry"}`,
         }),
       });
 
       const data = await response.json();
-      if (data.success) {
+      if (response.ok && data.success) {
         setModalType("success");
         setModalTitle("Message Sent Successfully!");
         setModalMessage("Thank you for contacting HB Studio. We'll get back to you within 24 hours.");
@@ -69,21 +69,15 @@ const StudioContactUs = () => {
   }
 
   return (
-    <section id="studio-contact" className="relative bg-gradient-to-b from-white to-gray-50 px-6 py-20 text-green-900 sm:px-10">
+    <section id="studio-contact" className="bg-[#090b0a] px-6 py-20 text-white sm:px-10">
       <div className="mx-auto max-w-6xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mb-12 text-center"
-        >
-          <p className="text-xs uppercase tracking-[0.45em] text-green-700">Get in Touch</p>
-          <h2 className="mt-4 text-4xl font-black sm:text-5xl">Contact HB Studio</h2>
-          <p className="mt-4 text-lg text-green-800/80">
-            Have a project in mind? Let's discuss how we can bring your vision to life.
+        <div className="mb-10 max-w-xl">
+          <p className="text-[11px] uppercase tracking-[0.38em] text-[#e7c15a]">Contact</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">Talk to the studio.</h2>
+          <p className="mt-4 text-sm leading-6 text-white/60">
+            HB Studio is a product of HBLab. Send the brief and the same team will answer.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Contact Information */}
@@ -92,8 +86,7 @@ const StudioContactUs = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="rounded-3xl p-8 text-white shadow-2xl"
-            style={{ background: "linear-gradient(135deg, #2e6b57 0%, #1a3d31 100%)" }}
+            className="rounded-[28px] border border-white/10 bg-white/[0.04] p-8 text-white"
           >
             <h3 className="mb-6 text-2xl font-bold">Studio Information</h3>
             <div className="space-y-6">
@@ -130,7 +123,7 @@ const StudioContactUs = () => {
                 </div>
                 <div>
                   <h4 className="text-lg font-semibold">Email</h4>
-                  <p className="text-green-100">info@hblab.rw</p>
+                  <p className="text-green-100">studio@hblab.rw</p>
                 </div>
               </div>
             </div>
@@ -151,11 +144,11 @@ const StudioContactUs = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="rounded-3xl border border-green-900/10 bg-white p-8 shadow-xl"
+            className="rounded-[28px] bg-white p-8 text-[#121614]"
           >
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="name" className="mb-2 block text-sm font-semibold text-gray-700">
+                <label htmlFor="name" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                   Full Name
                 </label>
                 <input
@@ -164,14 +157,14 @@ const StudioContactUs = () => {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
+                  className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15"
                   placeholder="Your full name"
                 />
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="email" className="mb-2 block text-sm font-semibold text-gray-700">
+                  <label htmlFor="email" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                     Email Address
                   </label>
                   <input
@@ -180,12 +173,12 @@ const StudioContactUs = () => {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
+                    className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15"
                     placeholder="your@email.com"
                   />
                 </div>
                 <div>
-                  <label htmlFor="phone" className="mb-2 block text-sm font-semibold text-gray-700">
+                  <label htmlFor="phone" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                     Phone Number
                   </label>
                   <input
@@ -194,14 +187,14 @@ const StudioContactUs = () => {
                     required
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
+                    className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15"
                     placeholder="+250 788 123 456"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="service" className="mb-2 block text-sm font-semibold text-gray-700">
+                <label htmlFor="service" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                   Service Interest
                 </label>
                 <select
@@ -209,7 +202,7 @@ const StudioContactUs = () => {
                   required
                   value={formData.service}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
+                  className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15"
                 >
                   <option value="">Select a service</option>
                   <option value="videography">Videography</option>
@@ -222,7 +215,7 @@ const StudioContactUs = () => {
               </div>
 
               <div>
-                <label htmlFor="message" className="mb-2 block text-sm font-semibold text-gray-700">
+                <label htmlFor="message" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                   Message
                 </label>
                 <textarea
@@ -231,7 +224,7 @@ const StudioContactUs = () => {
                   rows="5"
                   value={formData.message}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all resize-none"
+                  className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15 resize-none"
                   placeholder="Tell us about your project..."
                 />
               </div>
@@ -240,9 +233,9 @@ const StudioContactUs = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                className="w-full rounded-xl bg-[#2e6b57] px-8 py-4 text-sm font-semibold uppercase tracking-wider text-white shadow-lg transition hover:bg-[#1a3d31]"
+                className="w-full rounded-full bg-[#121614] px-8 py-4 text-sm font-semibold text-white"
               >
-                Send Message →
+                Send message
               </motion.button>
             </form>
           </motion.div>

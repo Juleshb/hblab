@@ -125,51 +125,41 @@ const StudioPortfolio = () => {
       : portfolioItems.filter((item) => item.category === activeCategory);
 
   return (
-    <div className="bg-black text-white min-h-screen">
+    <div className="min-h-screen bg-[#090b0a] text-white">
       <StudioNavbar />
       
-      {/* Hero Section */}
-      <section className="relative isolate overflow-hidden pt-32 pb-16">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-900 via-[#2e6b57cc] to-[#310979bb]"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#01060499] to-[#010604]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(246,195,67,0.18),transparent_55%)] mix-blend-screen"></div>
-        </div>
-
-        <div className="relative z-10 mx-auto max-w-6xl px-6 sm:px-10">
+      <section className="relative isolate overflow-hidden px-6 pb-16 pt-36 sm:px-10">
+        <div className="relative z-10 mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
-            className="text-center"
           >
             <motion.p
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2 text-[11px] uppercase tracking-[0.4em]"
+              className="text-[11px] uppercase tracking-[0.38em] text-[#e7c15a]"
             >
-              Portfolio
-              <span className="h-1 w-1 rounded-full bg-[#f6c343]"></span>
-              HB Studio
+              Portfolio · a product of HBLab
             </motion.p>
 
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1 }}
-              className="mt-6 text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl"
+              className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight sm:text-6xl"
             >
-              Our Creative Work
+              Work from the HBLab studio.
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="mt-6 text-lg text-white/80 max-w-2xl mx-auto"
+              className="mt-5 max-w-xl text-base leading-7 text-white/65"
             >
-              Explore our collection of videography, photography, podcast, and live streaming projects that showcase Rwanda's stories with cinematic precision.
+              Films, photographs, podcasts, and live productions made by HB Studio.
             </motion.p>
           </motion.div>
         </div>

@@ -24,12 +24,10 @@ const StudioFooter = () => {
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.8 }}
-      className="relative w-full text-white overflow-hidden"
+      className="relative w-full overflow-hidden border-t border-white/10 bg-[#090b0a] text-white"
     >
-      {/* Background matching hero section */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-r from-green-900 via-[#2e6b57cc] to-[#310979bb]"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#01060499] to-[#010604]"></div>
+        <div className="absolute inset-0 bg-[#090b0a]"></div>
       </div>
       <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:px-10">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -47,7 +45,7 @@ const StudioFooter = () => {
               
             </div>
             <p className="text-sm text-white/70 mb-4">
-              Capturing Rwanda's stories through cinematic videography, editorial photography, and premium podcast production.
+              HB Studio is the creative production product of HBLab. Film, photography, podcasts, and live coverage from Rubavu.
             </p>
             <div className="flex gap-3">
               <a
@@ -217,8 +215,8 @@ const StudioFooter = () => {
               </li>
               <li className="flex items-start gap-3">
                 <Icon icon="mdi:email" className="mt-0.5 h-5 w-5 text-[#f6c343] flex-shrink-0" />
-                <a href="mailto:info@hblab.rw" className="transition hover:text-[#f6c343]">
-                  info@hblab.rw
+                <a href="mailto:studio@hblab.rw" className="transition hover:text-[#f6c343]">
+                  studio@hblab.rw
                 </a>
               </li>
               <li className="flex items-start gap-3">

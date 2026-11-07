@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { studioHomePath } from "../../site";
-import logo from "../../assets/HB-STUDIO-FULL-1.png";
-import logoIcon from "../../assets/HB-STUDIO-FULL.png";
+import { studioHomePath, labHomeHref } from "../../site";
+import logo from "../../assets/HB-STUDIO-FULL-1-WHITE.png";
 import { HiMenu, HiX } from "react-icons/hi";
 
 const studioLinks = [
-  { label: "Home", target: "studio-home" },
+  { label: "Work", target: "studio-showreel" },
   { label: "Services", target: "studio-services" },
-  { label: "Pricing", target: "studio-pricing" },
-  { label: "Booking", target: "studio-booking" },
+  { label: "Weddings", target: "studio-pricing" },
+  { label: "Book", target: "studio-booking" },
   { label: "Contact", target: "studio-contact" },
   { label: "Portfolio", route: "/portfolio" },
 ];
@@ -20,133 +19,106 @@ const StudioNavbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 12);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const openLab = () => {
+    const home = labHomeHref();
+    if (home.startsWith("http")) window.location.assign(home);
+    else navigate(home);
+  };
+
   const handleLinkClick = (link) => {
     setIsOpen(false);
-    if (link.label === "Home") {
-      navigate(studioHomePath());
-      return;
-    }
     if (link.route) {
       navigate(link.route);
       return;
     }
-    if (link.target) {
-      const el = document.getElementById(link.target);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
-      }
-      navigate(`${studioHomePath()}#${link.target}`);
+    const el = link.target ? document.getElementById(link.target) : null;
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
     }
+    navigate(`${studioHomePath()}#${link.target || "studio-home"}`);
   };
 
   return (
-    <div className="w-full fixed z-[100] top-0 left-0">
-      <div
-        className={`bg-gray-50 flex items-center px-6 py-4 sm:px-10 ${
+    <div className="fixed inset-x-0 top-0 z-[100] px-3 pt-3 sm:px-6">
+      <nav
+        className={`mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border px-3 py-2 transition ${
           isScrolled
-            ? "bg-white text-green-900 shadow-md"
-            : "text-white lg:inset-0 bg-gradient-to-l from-green-900 to-transparent"
+            ? "border-white/10 bg-[#0c0f0e]/90 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+            : "border-white/15 bg-black/35 backdrop-blur-md"
         }`}
       >
-       
-        <nav className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="HB Studio" className="hidden h-20 sm:block object-contain" />
-            <img src={logoIcon} alt="HB Studio" className="h-14 sm:hidden object-contain" />
-            <div className="hidden md:block">
-              <p className={`text-xs uppercase tracking-[0.5em] ${isScrolled ? "text-green-700" : "text-white/70"}`}>
-                HB Studio
-              </p>
-              <p className={`text-sm font-semibold ${isScrolled ? "text-green-900" : "text-white"}`}>
-                Video · Photo · Live Streaming
-              </p>
-            </div>
-          </div>
+        <button type="button" onClick={() => handleLinkClick({ target: "studio-home" })} className="flex items-center gap-3 pl-1">
+          <img src={logo} alt="HB Studio" className="h-10 w-auto object-contain sm:h-11" />
+          <span className="hidden border-l border-white/15 pl-3 text-left sm:block">
+            <span className="block text-[10px] uppercase tracking-[0.28em] text-white/45">A product of</span>
+            <span className="block text-xs font-semibold text-white">HBLab</span>
+          </span>
+        </button>
 
-          <div className={`hidden items-center gap-6 text-sm font-medium lg:flex ${
-            isScrolled ? "text-green-900" : "text-white"
-          }`}>
-            {studioLinks.map((link) => (
-              <button
-                key={link.label}
-                onClick={() => handleLinkClick(link)}
-                className={`uppercase tracking-wide transition ${
-                  isScrolled ? "hover:text-green-600" : "hover:text-[#f6c343]"
-                }`}
-              >
-                {link.label}
-              </button>
-            ))}
+        <div className="hidden items-center gap-1 lg:flex">
+          {studioLinks.map((link) => (
             <button
-              onClick={() => {
-                const el = document.getElementById("studio-booking");
-                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              className={`rounded-full border px-5 py-2 text-xs uppercase tracking-[0.3em] ${
-                isScrolled
-                  ? "border-green-900 text-green-900 hover:bg-green-900 hover:text-white"
-                  : "border-white/40 text-white hover:bg-white/10"
-              }`}
+              key={link.label}
+              type="button"
+              onClick={() => handleLinkClick(link)}
+              className="rounded-full px-3 py-2 text-xs font-medium text-white/75 transition hover:bg-white/10 hover:text-white"
             >
-              Book a Shoot
+              {link.label}
             </button>
-          </div>
+          ))}
+        </div>
 
+        <div className="flex items-center gap-2">
           <button
-            className={`lg:hidden ${isScrolled ? "text-green-900" : "text-white"}`}
+            type="button"
+            onClick={openLab}
+            className="hidden rounded-full px-3 py-2 text-xs font-medium text-white/60 transition hover:text-white md:inline"
+          >
+            HBLab
+          </button>
+          <button
+            type="button"
+            onClick={() => handleLinkClick({ target: "studio-booking" })}
+            className="rounded-full bg-[#e7c15a] px-4 py-2 text-xs font-semibold text-[#1a1406] transition hover:bg-[#f3d48a]"
+          >
+            Book a shoot
+          </button>
+          <button
+            type="button"
+            className="rounded-full p-2 text-white lg:hidden"
+            aria-label={isOpen ? "Close menu" : "Open menu"}
             onClick={() => setIsOpen((prev) => !prev)}
           >
-            {isOpen ? <HiX size={28} /> : <HiMenu size={28} />}
+            {isOpen ? <HiX size={22} /> : <HiMenu size={22} />}
           </button>
-        </nav>
+        </div>
+      </nav>
 
-        {isOpen && (
-          <div
-            className={`mt-4 space-y-3 rounded-2xl border p-4 backdrop-blur lg:hidden ${
-              isScrolled
-                ? "border-green-900/20 bg-white/95 text-green-900"
-                : "border-white/10 bg-white/5 text-white"
-            }`}
-          >
-            {studioLinks.map((link) => (
-              <button
-                key={link.label}
-                onClick={() => handleLinkClick(link)}
-                className={`block w-full rounded-lg px-3 py-2 text-left uppercase tracking-wide transition ${
-                  isScrolled ? "hover:bg-green-50" : "hover:bg-white/10"
-                }`}
-              >
-                {link.label}
-              </button>
-            ))}
+      {isOpen && (
+        <div className="mx-auto mt-2 max-w-6xl rounded-3xl border border-white/10 bg-[#0c0f0e]/95 p-3 text-white shadow-2xl backdrop-blur-xl lg:hidden">
+          {studioLinks.map((link) => (
             <button
-              onClick={() => {
-                setIsOpen(false);
-                const el = document.getElementById("studio-booking");
-                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              className={`w-full rounded-lg border px-3 py-2 uppercase tracking-[0.3em] ${
-                isScrolled
-                  ? "border-green-900 text-green-900 hover:bg-green-900 hover:text-white"
-                  : "border-white/40 text-white hover:bg-white/10"
-              }`}
+              key={link.label}
+              type="button"
+              onClick={() => handleLinkClick(link)}
+              className="block w-full rounded-2xl px-4 py-3 text-left text-sm text-white/80 hover:bg-white/10"
             >
-              Book a Shoot
+              {link.label}
             </button>
-          </div>
-        )}
-      </div>
+          ))}
+          <button type="button" onClick={openLab} className="block w-full rounded-2xl px-4 py-3 text-left text-sm text-white/60 hover:bg-white/10">
+            Visit HBLab
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
 export default StudioNavbar;
-

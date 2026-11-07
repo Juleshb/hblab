@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import StudioNavbar from "./StudioNavbar";
 import StudioShowreel from "./StudioShowreel";
@@ -8,15 +7,19 @@ import StudioPricing from "./StudioPricing";
 import StudioBooking from "./StudioBooking";
 import StudioContactUs from "./StudioContactUs";
 import StudioFooter from "./StudioFooter";
-import studioBg from "../../assets/bg3.jpg";
+import studioBg from "../../assets/camera-operator-shooting-on-professional-camera-1024x682.webp";
 
-const badges = ["Videography", "Photography", "Podcast", "Live Streaming"];
+const facts = [
+  { value: "Rubavu", label: "Studio floor" },
+  { value: "Film", label: "Photo · Podcast · Live" },
+  { value: "HBLab", label: "Parent company" },
+];
 
 const StudioHero = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const id = window.location.hash.replace('#', '');
+    const id = window.location.hash.replace("#", "");
     if (!id) return undefined;
     const timer = setTimeout(() => {
       document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -24,125 +27,65 @@ const StudioHero = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const scrollTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
-    <div className="bg-black text-white">
+    <div className="bg-[#090b0a] text-white">
       <div id="studio-home">
         <StudioNavbar />
       </div>
-      <section className="relative isolate overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src={studioBg}
-            alt="HB Studio background"
-            className="h-full w-full object-cover contrast-75"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-green-900 via-[#2e6b57cc] to-[#310979bb]"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#01060499] to-[#010604]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(246,195,67,0.18),transparent_55%)] mix-blend-screen"></div>
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%20viewBox=%220%200%20160%20160%22%3E%3Cpath%20d=%22M0%2080%20L80%200%20L160%2080%20L80%20160%20Z%22%20fill=%22none%22%20stroke=%22rgba(255,255,255,0.05)%22%20stroke-width=%222%22/%3E%3C/svg%3E')] opacity-60 mix-blend-overlay"></div>
-        </div>
+      <section className="relative isolate min-h-[100svh] overflow-hidden">
+        <img src={studioBg} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,11,10,0.92)_0%,rgba(9,11,10,0.72)_46%,rgba(9,11,10,0.28)_100%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#090b0a] via-transparent to-black/30" />
 
-        <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 pb-24 pt-32 sm:px-10 lg:grid-cols-12">
-          <div className="lg:col-span-6">
-            <motion.p
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2 text-[11px] uppercase tracking-[0.4em]"
+        <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-6 pb-16 pt-36 sm:px-10">
+          <p className="text-[11px] uppercase tracking-[0.42em] text-[#e7c15a]">HB Studio</p>
+          <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+            The creative studio inside HBLab.
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-7 text-white/75 sm:text-lg">
+            Weddings, brands, podcasts, and live broadcasts, filmed in Rubavu and finished with the same care HBLab brings to every product.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => scrollTo("studio-booking")}
+              className="rounded-full bg-[#e7c15a] px-6 py-3 text-sm font-semibold text-[#1a1406]"
             >
-              HB Studio
-              <span className="h-1 w-1 rounded-full bg-[#f6c343]"></span>
-              Rubavu · 
-            </motion.p>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1 }}
-              className="mt-4 text-3xl font-black leading-tight tracking-tight sm:text-4xl lg:text-[2.9rem]"
+              Book a shoot
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/portfolio")}
+              className="rounded-full border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur"
             >
-              Rwandan stories filmed, photographed, and streamed with cinematic precision.
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="mt-6 text-base text-white/80 sm:text-lg"
-            >
-              HB Studio delivers videography, photography, live streaming, and podcast production that amplifies
-              Rwanda’s creative ecosystem to audiences across the continent and diaspora.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
-              className="mt-8 flex flex-wrap gap-3"
-            >
-              {badges.map((badge) => (
-                <motion.span
-                  key={badge}
-                  whileHover={{ y: -3 }}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#f6c343] shadow-[0_0_8px_rgba(246,195,67,0.8)]" />
-                  {badge}
-                </motion.span>
-              ))}
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.4 }}
-              className="mt-10 flex flex-wrap gap-4"
-            >
-              <motion.button
-                whileHover={{ y: -4, boxShadow: "0px 15px 30px rgba(22,108,68,0.35)" }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => {
-                  const el = document.getElementById("studio-booking");
-                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-                className="rounded-full bg-[#2e6b57] px-8 py-3 text-sm font-semibold uppercase tracking-wider text-white"
-              >
-                Book a Shoot
-              </motion.button>
-              <motion.button
-                whileHover={{ y: -4 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => navigate("/portfolio")}
-                className="rounded-full border border-white/40 px-8 py-3 text-sm font-semibold uppercase tracking-wider text-white backdrop-blur"
-              >
-                View Portfolio
-              </motion.button>
-            </motion.div>
+              See the work
+            </button>
           </div>
-
-        <div className="lg:col-span-6" id="studio-showreel">
-            <StudioShowreel />
-          </div>
+          <dl className="mt-12 grid max-w-2xl grid-cols-3 gap-4 border-t border-white/15 pt-6">
+            {facts.map((fact) => (
+              <div key={fact.label}>
+                <dt className="text-sm font-semibold text-white">{fact.value}</dt>
+                <dd className="mt-1 text-xs text-white/55">{fact.label}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
-
-        <div className="pointer-events-none absolute -left-16 top-20 h-32 w-32 rounded-full border border-white/30"></div>
-        <div className="pointer-events-none absolute -right-12 bottom-28 h-40 w-40 border border-white/20"></div>
       </section>
 
+      <StudioShowreel />
       <div id="studio-services">
         <StudioCoreServices />
       </div>
-
       <StudioPricing />
-
       <StudioBooking />
-
       <StudioContactUs />
-
       <StudioFooter />
     </div>
   );
 };
 
 export default StudioHero;
-

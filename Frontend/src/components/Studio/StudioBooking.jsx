@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FormModal, SuccessModal, ErrorModal } from "../ClientModal";
 import LoadingSpinner from "../LoadingSpinner";
+import { apiOrigin } from "../../apiOrigin";
 
 const StudioBooking = () => {
   const [formData, setFormData] = useState({
@@ -31,19 +32,18 @@ const StudioBooking = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("https://hblab-be.onrender.com/contact", {
+      const response = await fetch(`${apiOrigin}/api/studio/inquiries`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           type: "booking",
           source: "studio-booking",
-          subject: `HB Studio Booking: ${formData.eventType || "Event"} - ${formData.package || "Package"}`,
         }),
       });
 
       const data = await response.json();
-      if (data.success) {
+      if (response.ok && data.success) {
         setModalType("success");
         setModalTitle("Booking Request Received!");
         setModalMessage("We've received your booking request. Our team will contact you within 24 hours to confirm details.");
@@ -84,33 +84,21 @@ const StudioBooking = () => {
   }
 
   return (
-    <section id="studio-booking" className="relative bg-gradient-to-b from-gray-50 to-white px-6 py-20 text-green-900 sm:px-10">
-      <div className="mx-auto max-w-4xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mb-12 text-center"
-        >
-          <p className="text-xs uppercase tracking-[0.45em] text-green-700">Book Your Event</p>
-          <h2 className="mt-4 text-4xl font-black sm:text-5xl">Reserve Your Date</h2>
-          <p className="mt-4 text-lg text-green-800/80">
-            Fill out the form below and we'll get back to you to confirm your booking.
+    <section id="studio-booking" className="bg-[#f4f6f3] px-6 py-20 text-[#121614] sm:px-10">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-10">
+          <p className="text-[11px] uppercase tracking-[0.38em] text-[#1f6b4a]">Booking</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">Reserve the date.</h2>
+          <p className="mt-4 max-w-lg text-sm leading-6 text-[#5c675f]">
+            Tell the studio what you are planning. HBLab will reply within a day to confirm the crew and package.
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="rounded-3xl border border-green-900/10 bg-white p-8 shadow-xl"
-        >
+        <div className="rounded-[28px] bg-white p-6 shadow-[0_20px_50px_rgba(18,22,20,0.06)] sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <label htmlFor="name" className="mb-2 block text-sm font-semibold text-gray-700">
+                <label htmlFor="name" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                   Full Name *
                 </label>
                 <input
@@ -119,12 +107,12 @@ const StudioBooking = () => {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
+                  className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15"
                   placeholder="Your full name"
                 />
               </div>
               <div>
-                <label htmlFor="email" className="mb-2 block text-sm font-semibold text-gray-700">
+                <label htmlFor="email" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                   Email Address *
                 </label>
                 <input
@@ -133,7 +121,7 @@ const StudioBooking = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
+                  className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15"
                   placeholder="your@email.com"
                 />
               </div>
@@ -141,7 +129,7 @@ const StudioBooking = () => {
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <label htmlFor="phone" className="mb-2 block text-sm font-semibold text-gray-700">
+                <label htmlFor="phone" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                   Phone Number *
                 </label>
                 <input
@@ -150,12 +138,12 @@ const StudioBooking = () => {
                   required
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
+                  className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15"
                   placeholder="+250 788 123 456"
                 />
               </div>
               <div>
-                <label htmlFor="eventType" className="mb-2 block text-sm font-semibold text-gray-700">
+                <label htmlFor="eventType" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                   Event Type *
                 </label>
                 <select
@@ -163,7 +151,7 @@ const StudioBooking = () => {
                   required
                   value={formData.eventType}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
+                  className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15"
                 >
                   <option value="">Select event type</option>
                   <option value="wedding">Wedding</option>
@@ -179,14 +167,14 @@ const StudioBooking = () => {
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <label htmlFor="package" className="mb-2 block text-sm font-semibold text-gray-700">
+                <label htmlFor="package" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                   Package (if applicable)
                 </label>
                 <select
                   id="package"
                   value={formData.package}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
+                  className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15"
                 >
                   <option value="">Select a package</option>
                   <option value="s-basic">S-Basic (400,000 RWF)</option>
@@ -199,7 +187,7 @@ const StudioBooking = () => {
                 </select>
               </div>
               <div>
-                <label htmlFor="eventDate" className="mb-2 block text-sm font-semibold text-gray-700">
+                <label htmlFor="eventDate" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                   Event Date *
                 </label>
                 <input
@@ -208,14 +196,14 @@ const StudioBooking = () => {
                   required
                   value={formData.eventDate}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
+                  className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15"
                 />
               </div>
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <label htmlFor="eventLocation" className="mb-2 block text-sm font-semibold text-gray-700">
+                <label htmlFor="eventLocation" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                   Event Location *
                 </label>
                 <input
@@ -224,12 +212,12 @@ const StudioBooking = () => {
                   required
                   value={formData.eventLocation}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
+                  className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15"
                   placeholder="City, Venue name"
                 />
               </div>
               <div>
-                <label htmlFor="guestCount" className="mb-2 block text-sm font-semibold text-gray-700">
+                <label htmlFor="guestCount" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                   Expected Guest Count
                 </label>
                 <input
@@ -238,14 +226,14 @@ const StudioBooking = () => {
                   min="1"
                   value={formData.guestCount}
                   onChange={handleChange}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all"
+                  className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15"
                   placeholder="Number of guests"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="specialRequests" className="mb-2 block text-sm font-semibold text-gray-700">
+              <label htmlFor="specialRequests" className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[#5c675f]">
                 Special Requests or Additional Information
               </label>
               <textarea
@@ -253,7 +241,7 @@ const StudioBooking = () => {
                 rows="4"
                 value={formData.specialRequests}
                 onChange={handleChange}
-                className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-[#2e6b57] focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 transition-all resize-none"
+                className="w-full rounded-2xl border border-black/10 bg-[#f6f7f5] px-4 py-3 text-sm text-[#121614] outline-none transition focus:border-[#1f6b4a] focus:bg-white focus:ring-4 focus:ring-[#1f6b4a]/15 resize-none"
                 placeholder="Any special requirements, timeline details, or questions..."
               />
             </div>
@@ -262,12 +250,12 @@ const StudioBooking = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              className="w-full rounded-xl bg-gradient-to-r from-[#2e6b57] to-[#2e6b57] px-8 py-4 text-sm font-semibold uppercase tracking-wider text-white shadow-lg transition hover:from-[#1a3d31] hover:to-[#2e6b57]"
+              className="w-full rounded-full bg-[#121614] px-8 py-4 text-sm font-semibold text-white"
             >
-              Submit Booking Request →
+              Send booking request
             </motion.button>
           </form>
-        </motion.div>
+        </div>
       </div>
 
       {showModal && modalType === "success" && (
