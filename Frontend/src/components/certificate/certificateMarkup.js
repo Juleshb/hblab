@@ -18,11 +18,21 @@ export const formatCertificateDate = (value) => {
 
 export const certificateQrUrl = (certificateId) => {
   const target = `https://www.hblab.rw/verfiy/${certificateId || ''}`;
-  return `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=0&data=${encodeURIComponent(target)}`;
+  const params = new URLSearchParams({
+    size: '560x560',
+    margin: '40',
+    ecc: 'H',
+    format: 'png',
+    color: '111111',
+    bgcolor: 'ffffff',
+    data: target,
+  });
+  return `https://api.qrserver.com/v1/create-qr-code/?${params.toString()}`;
 };
 
 export const buildCertificateHtml = (data = {}, qrCodeUrl) => {
-  const name = escapeHtml(data.recipientName || 'Recipient');
+  const rawName = String(data.recipientName || 'Recipient');
+  const name = escapeHtml(rawName);
   const course = escapeHtml(data.courseName || 'HB-Lab Training');
   const duration = escapeHtml(data.duration || '');
   const dateRange = escapeHtml(data.dateRange || '');
@@ -30,85 +40,113 @@ export const buildCertificateHtml = (data = {}, qrCodeUrl) => {
   const certificateId = escapeHtml(data.certificateId || '—');
   const skills = Array.isArray(data.skills) ? data.skills.filter(Boolean) : [];
   const qr = qrCodeUrl || certificateQrUrl(data.certificateId);
+  const namePx = rawName.length > 34 ? 36 : rawName.length > 24 ? 44 : 52;
 
-  const detailParts = [
-    duration ? `${duration}` : '',
-    dateRange ? dateRange : '',
+  const facts = [
+    duration ? { label: 'Duration', value: duration } : null,
+    dateRange ? { label: 'Period', value: dateRange } : null,
+    completion ? { label: 'Completed', value: completion } : null,
   ].filter(Boolean);
 
+  const factsHtml = facts.length
+    ? `<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;">
+        ${facts
+          .map(
+            (fact) => `<div style="padding:8px 14px;border-radius:12px;background:#ffffff;border:1px solid #d5e4de;">
+              <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#2e6b57;font-weight:600;">${fact.label}</div>
+              <div style="margin-top:3px;font-size:13px;font-weight:600;color:#1a3d31;">${fact.value}</div>
+            </div>`
+          )
+          .join('')}
+      </div>`
+    : '';
+
   const skillsHtml = skills.length
-    ? `<div style="margin-top:18px;text-align:center;">
-        <div style="font-family:system-ui,sans-serif;font-size:11px;letter-spacing:2.4px;text-transform:uppercase;color:#8a6a32;">Skills covered</div>
-        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px;max-width:920px;margin-left:auto;margin-right:auto;">
+    ? `<div style="margin-top:18px;">
+        <div style="font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#2e6b57;font-weight:600;">Skills covered</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;max-width:680px;">
           ${skills
             .map(
               (skill) =>
-                `<span style="display:inline-block;padding:5px 12px;border:1px solid #d9c69a;border-radius:999px;background:#fffdf8;font-family:system-ui,sans-serif;font-size:13px;color:#0e4d2c;line-height:1.2;">${escapeHtml(skill)}</span>`
+                `<span style="display:inline-block;padding:6px 12px;border-radius:999px;background:#ffffff;border:1px solid #d5e4de;font-size:13px;font-weight:500;color:#1a3d31;line-height:1.2;">${escapeHtml(skill)}</span>`
             )
             .join('')}
         </div>
       </div>`
     : '';
 
-  return `<div style="width:1200px;height:848px;box-sizing:border-box;background:#f4f0e6;padding:18px;color:#163126;">
-    <div style="height:100%;box-sizing:border-box;border:8px solid #0d4a2b;padding:8px;">
-      <div style="height:100%;box-sizing:border-box;border:1px solid #c6a15b;padding:28px 42px 20px;display:flex;flex-direction:column;background:
-        radial-gradient(circle at 0 0, rgba(198,161,91,0.18), transparent 26%),
-        radial-gradient(circle at 100% 100%, rgba(13,74,43,0.08), transparent 28%),
-        #fbf8f2;">
+  const signature = (src, person, role) => `<div style="width:230px;">
+    <img src="${src}" alt="" style="height:52px;object-fit:contain;object-position:left center;display:block;margin-bottom:2px;" />
+    <div style="border-top:1.5px solid #1a3d31;padding-top:6px;">
+      <div style="font-size:14px;font-weight:600;color:#132d24;">${person}</div>
+      <div style="margin-top:1px;font-size:12px;color:#5d6f68;">${role}</div>
+    </div>
+  </div>`;
+
+  const corner = (style) =>
+    `<div style="position:absolute;width:54px;height:54px;z-index:1;${style}"></div>`;
+
+  return `<div style="width:1200px;height:848px;box-sizing:border-box;padding:14px;font-family:'Poppins',system-ui,sans-serif;color:#1a3d31;background:#2e6b57;">
+    <div style="position:relative;height:100%;box-sizing:border-box;overflow:hidden;background-color:#ffffff;background-image:
+      radial-gradient(circle at 18% 48%, rgba(46,107,87,0.06), transparent 34%),
+      repeating-linear-gradient(118deg, rgba(46,107,87,0.045) 0 1px, transparent 1px 16px);">
+      <div style="position:absolute;left:-90px;top:160px;width:440px;height:440px;border-radius:50%;border:1px solid rgba(46,107,87,0.16);z-index:0;"></div>
+      <div style="position:absolute;left:-48px;top:202px;width:356px;height:356px;border-radius:50%;border:1px solid rgba(46,107,87,0.1);z-index:0;"></div>
+      <div style="position:absolute;right:-80px;bottom:-90px;width:260px;height:260px;border-radius:50%;border:1px solid rgba(46,107,87,0.12);z-index:0;"></div>
+      <div style="position:absolute;left:86px;top:188px;font-family:'Cormorant Garamond',Georgia,serif;font-size:250px;line-height:0.8;font-weight:600;color:rgba(46,107,87,0.06);letter-spacing:-10px;z-index:0;">HB</div>
+      <div style="position:absolute;top:12px;right:12px;bottom:12px;left:12px;border:1.5px solid #2e6b57;z-index:1;"></div>
+      <div style="position:absolute;top:18px;right:18px;bottom:18px;left:18px;border:1px solid rgba(46,107,87,0.22);z-index:1;"></div>
+      ${corner('top:22px;left:22px;width:34px;height:34px;border-top:3px solid #2e6b57;border-left:3px solid #2e6b57;')}
+      ${corner('top:22px;right:22px;width:34px;height:34px;border-top:3px solid #2e6b57;border-right:3px solid #2e6b57;')}
+      ${corner('bottom:22px;left:22px;width:34px;height:34px;border-bottom:3px solid #2e6b57;border-left:3px solid #2e6b57;')}
+      ${corner('bottom:22px;right:22px;width:34px;height:34px;border-bottom:3px solid #2e6b57;border-right:3px solid #2e6b57;')}
+      <div style="position:relative;z-index:2;height:100%;box-sizing:border-box;padding:40px 48px 26px 56px;display:flex;flex-direction:column;">
         <div style="display:flex;align-items:center;justify-content:space-between;">
           <div style="display:flex;align-items:center;gap:14px;">
-            <img src="/images/hb-lab-logo.png" alt="HB-Lab" style="width:62px;height:62px;object-fit:contain;" />
+            <img src="/images/hb-lab-logo.png" alt="HB-Lab" style="width:58px;height:58px;object-fit:contain;" />
             <div>
-              <div style="font-family:Georgia,'Times New Roman',serif;font-size:30px;letter-spacing:4px;font-weight:700;color:#0d4a2b;line-height:1;">HB-LAB</div>
-              <div style="margin-top:6px;font-family:system-ui,sans-serif;font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:#8a6a32;">Empowering Digital Dreams</div>
+              <div style="font-size:26px;letter-spacing:3.5px;font-weight:700;color:#132d24;line-height:1;">HB-LAB</div>
+              <div style="margin-top:5px;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#2e6b57;">Empowering Digital Dreams</div>
             </div>
           </div>
-          <div style="text-align:right;font-family:system-ui,sans-serif;">
-            <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6a32;">Kigali · Rwanda</div>
-            <div style="margin-top:6px;font-size:13px;color:#0d4a2b;">Official training credential</div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;letter-spacing:2.2px;text-transform:uppercase;color:#2e6b57;font-weight:600;">Granted credential</div>
+            <div style="margin-top:4px;font-size:13px;font-weight:300;color:#7a8d85;">Official training record</div>
           </div>
         </div>
 
-        <div style="text-align:center;margin-top:26px;">
-          <div style="font-family:system-ui,sans-serif;font-size:13px;letter-spacing:6px;text-transform:uppercase;color:#8a6a32;">Certificate of Completion</div>
-          <div style="width:160px;height:1px;background:#c6a15b;margin:14px auto 0;"></div>
-          <p style="margin:18px 0 0;font-family:system-ui,sans-serif;font-size:16px;color:#4d6258;">This certificate is proudly presented to</p>
-          <h1 style="margin:6px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:52px;font-weight:normal;font-style:italic;color:#0d4a2b;line-height:1.15;">${name}</h1>
-          <p style="margin:16px auto 0;max-width:860px;font-family:system-ui,sans-serif;font-size:17px;line-height:1.55;color:#24382e;">
-            for successfully completing <strong style="color:#0d4a2b;">${course}</strong>${detailParts.length ? ` <span style="color:#8a6a32;">·</span> ${detailParts.join(' <span style="color:#8a6a32;">·</span> ')}` : ''}
-          </p>
-          ${completion ? `<p style="margin:8px 0 0;font-family:system-ui,sans-serif;font-size:14px;color:#5c6f64;">Completed on ${completion}</p>` : ''}
-        </div>
-
-        ${skillsHtml}
-
-        <div style="margin-top:auto;padding-top:22px;display:flex;align-items:flex-end;justify-content:space-between;">
-          <div style="width:250px;text-align:center;">
-            <img src="/signatures/jules-signature.png" alt="" style="height:58px;object-fit:contain;margin-bottom:4px;" />
-            <div style="border-top:1px solid #0d4a2b;padding-top:6px;font-family:system-ui,sans-serif;">
-              <div style="font-size:14px;font-weight:700;color:#0d4a2b;">Jules Habarurema</div>
-              <div style="font-size:12px;color:#5c6f64;">Chief Executive Officer</div>
+        <div style="margin-top:26px;display:flex;gap:28px;flex:1;min-height:0;align-items:flex-start;">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;align-self:stretch;">
+            <div style="font-size:12px;letter-spacing:3.6px;text-transform:uppercase;color:#2e6b57;font-weight:600;">Certificate of completion</div>
+            <div style="margin-top:18px;font-size:14px;font-weight:300;color:#8b9c94;">This certificate is presented to</div>
+            <h1 style="margin:2px 0 0;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif;font-size:${namePx + 10}px;line-height:1;font-weight:500;font-style:italic;color:#132d24;">${name}</h1>
+            <div style="width:76px;height:3px;margin-top:12px;border-radius:99px;background:#2e6b57;"></div>
+            <p style="margin:14px 0 0;max-width:640px;font-size:16px;font-weight:300;line-height:1.55;color:#6d8078;">
+              for successfully completing <strong style="color:#1a3d31;font-weight:500;">${course}</strong>
+            </p>
+            <p style="margin:10px 0 0;max-width:640px;font-size:13px;font-weight:300;line-height:1.6;color:#8b9c94;">
+              HB-Lab grants this credential for completed training. Copy and share it with employers, on a portfolio, or with a school. The code lets them confirm it is genuine.
+            </p>
+            ${factsHtml}
+            ${skillsHtml}
+            <div style="margin-top:auto;padding-top:22px;display:flex;justify-content:space-between;gap:16px;">
+              ${signature('/signatures/jules-signature.png', 'Jules Habarurema', 'Chief Executive Officer')}
+              ${signature('/signatures/ferdinard-signature.png', 'Ferdinand Kwizera', 'Training Coordinator')}
             </div>
           </div>
-          <div style="text-align:center;">
-            <div style="background:#fff;border:1px solid #e6d7b4;padding:6px;display:inline-block;">
-              <img src="${qr}" alt="Verification QR code" style="width:84px;height:84px;display:block;" />
-            </div>
-            <div style="margin-top:6px;font-family:system-ui,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a6a32;">Scan to verify</div>
-          </div>
-          <div style="width:250px;text-align:center;">
-            <img src="/signatures/ferdinard-signature.png" alt="" style="height:58px;object-fit:contain;margin-bottom:4px;" />
-            <div style="border-top:1px solid #0d4a2b;padding-top:6px;font-family:system-ui,sans-serif;">
-              <div style="font-size:14px;font-weight:700;color:#0d4a2b;">Ferdinand Kwizera</div>
-              <div style="font-size:12px;color:#5c6f64;">Training Coordinator</div>
-            </div>
-          </div>
-        </div>
 
-        <div style="margin-top:14px;border-top:1px solid #e4d7b8;padding-top:8px;display:flex;justify-content:space-between;font-family:system-ui,sans-serif;font-size:12px;color:#6d7f75;">
-          <span>Certificate ID · ${certificateId}</span>
-          <span>HB-Lab · Kigali, Rwanda</span>
+          <div style="width:276px;box-sizing:border-box;background:#ffffff;border:1.5px solid #2e6b57;border-radius:18px;padding:18px 16px 16px;display:flex;flex-direction:column;align-items:center;color:#1a3d31;flex-shrink:0;">
+            <div style="font-size:11px;letter-spacing:2.4px;text-transform:uppercase;color:#2e6b57;font-weight:600;">Verification</div>
+            <div style="margin-top:14px;background:#ffffff;border:1px solid #d5e4de;border-radius:14px;padding:10px;line-height:0;">
+              <img src="${qr}" alt="Verification QR code" crossorigin="anonymous" width="210" height="210" style="width:210px;height:210px;display:block;image-rendering:auto;" />
+            </div>
+            <div style="margin-top:14px;font-size:15px;font-weight:600;letter-spacing:0.2px;color:#1a3d31;">Scan to verify</div>
+            <div style="margin-top:4px;font-size:12px;line-height:1.45;text-align:center;color:#6d827a;">Point a camera at this code to confirm the record.</div>
+            <div style="margin-top:auto;padding-top:16px;width:100%;border-top:1px solid #d5e4de;text-align:center;">
+              <div style="font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#2e6b57;font-weight:600;">Certificate ID</div>
+              <div style="margin-top:5px;font-size:13px;font-weight:600;line-height:1.35;word-break:break-word;color:#1a3d31;">${certificateId}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

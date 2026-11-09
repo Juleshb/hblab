@@ -6,6 +6,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import CertificatePDF from "./CertificatePDF";
+import { apiOrigin } from "../apiOrigin";
 
 const Certificates = () => {
   const [certificates, setCertificates] = useState([]);
@@ -25,7 +26,7 @@ const Certificates = () => {
     const fetchCertificates = async () => {
       try {
         console.log("[DEBUG] Attempting to fetch certificates...");
-        const response = await axios.get("https://umuhuza.store/api/certificates", {
+        const response = await axios.get(`${apiOrigin}/api/certificates`, {
           timeout: 5000 // 5 second timeout
         });
         

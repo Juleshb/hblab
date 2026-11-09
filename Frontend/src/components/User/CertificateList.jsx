@@ -51,11 +51,7 @@ const CertificateList = ({ userId, certificates: propCertificates, loading: prop
       certificateContainer.style.background = 'white';
       certificateContainer.style.fontFamily = "'Poppins', sans-serif";
 
-      const qrData = `https://www.hblab.rw/verfiy/${cert.certificateId}`;
-      const encodedData = encodeURIComponent(qrData);
-      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodedData}`;
-
-      certificateContainer.innerHTML = buildCertificateHtml(cert, qrCodeUrl);
+      certificateContainer.innerHTML = buildCertificateHtml(cert);
 
       document.body.appendChild(certificateContainer);
       await new Promise(resolve => setTimeout(resolve, 1000));

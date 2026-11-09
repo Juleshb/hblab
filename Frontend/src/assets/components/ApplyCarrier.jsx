@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import axios from 'axios';
+import { apiOrigin } from '../../apiOrigin';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const ApplyCarrier = () => {
@@ -28,7 +29,7 @@ const ApplyCarrier = () => {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const response = await axios.get(`https://umuhuza.store/jobs/${id}`);
+        const response = await axios.get(`${apiOrigin}/jobs/${id}`);
         setJob(response.data);
         setFormData(response.data);
         setLoading(false);
@@ -72,7 +73,7 @@ const ApplyCarrier = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`https://umuhuza.store/jobs/${id}`, formData);
+      await axios.put(`${apiOrigin}/jobs/${id}`, formData);
       setJob(formData);
       setIsEditing(false);
     } catch (err) {
@@ -84,7 +85,7 @@ const ApplyCarrier = () => {
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this job posting?')) {
       try {
-        await axios.delete(`https://umuhuza.store/jobs/${id}`);
+        await axios.delete(`${apiOrigin}/jobs/${id}`);
         navigate('/careers');
       } catch (err) {
         setError('Failed to delete job');

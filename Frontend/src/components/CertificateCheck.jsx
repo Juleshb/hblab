@@ -5,6 +5,7 @@ import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { buildCertificateHtml } from './certificate/certificateMarkup';
+import { apiOrigin } from '../apiOrigin';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
@@ -29,7 +30,7 @@ const CertificateRetrieval = () => {
     setCertificateFound(false);
 
     try {
-      const response = await axios.post('https://umuhuza.store/api/certificates/check', { email });
+      const response = await axios.post(`${apiOrigin}/api/certificates/check`, { email });
       
       if (response.data.exists) {
         setCertificateData(response.data.certificate);
@@ -61,11 +62,7 @@ const generatePDF = async (data) => {
     certificateContainer.style.background = 'white';
     certificateContainer.style.fontFamily = "'Poppins', sans-serif";
 
-const qrData = `https://www.hblab.rw/verfiy/${data.certificateId}`;
-const encodedData = encodeURIComponent(qrData);
-const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodedData}`;
-
-    certificateContainer.innerHTML = buildCertificateHtml(data, qrCodeUrl);
+    certificateContainer.innerHTML = buildCertificateHtml(data);
 
     document.body.appendChild(certificateContainer);
     await new Promise(resolve => setTimeout(resolve, 1000));

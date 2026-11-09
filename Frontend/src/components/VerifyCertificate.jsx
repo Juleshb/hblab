@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import { apiOrigin } from '../apiOrigin';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -22,7 +23,7 @@ const CertificateVerification = () => {
 
     try {
       const response = await axios.get(
-        `https://umuhuza.store/api/certificates/verify/${certificateId}`
+        `${apiOrigin}/api/certificates/verify/${certificateId}`
       );
       
       // Since the API returns the certificate data directly (not wrapped in isValid)

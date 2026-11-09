@@ -52,5 +52,5 @@
     "globals": "^15.14.0",
     "vite": "^6.3.5"
   },
-  "proxy": "http://localhost:3000"
+  "proxy": "https://api.hblab.rw"
 }
