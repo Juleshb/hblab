@@ -98,12 +98,30 @@ model CareerApplication {
   status          ApplicationStatus @default(pending)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  userId          Int
-  user            User     @relation(fields: [userId], references: [id])
+  userId          Int?
+  user            User?    @relation(fields: [userId], references: [id])
+  internshipPayment InternshipPayment?
 
   @@index([email])
   @@index([status])
   @@index([userId])
+}
+
+model InternshipPayment {
+  id            Int                @id @default(autoincrement())
+  depositId     String             @unique
+  amount        Int                @default(5000)
+  currency      String             @default("RWF")
+  provider      String
+  payerPhone    String
+  status        String             @default("ACCEPTED")
+  failureReason String?
+  payload       Json
+  applicationId Int?               @unique
+  application   CareerApplication? @relation(fields: [applicationId], references: [id])
+  paidAt        DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 }
 
 model Project {

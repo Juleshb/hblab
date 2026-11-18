@@ -30,15 +30,27 @@ const HeroSection = () => {
         >
           Gain hands-on experience in Software Development, Multimedia, Networking, and Computer Systems with HBLab.
         </motion.p>
-        <motion.button
+        <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          onClick={() => navigate("/get-started")} 
-          className="mt-4 py-3 px-5 bg-transparent border-2 rounded border-white text-gray-50 text-sm hover:bg-white hover:text-green-900 hover:font-semibold"
+          className="mt-4 flex flex-wrap gap-3"
         >
-          Get Started Now &rarr;
-        </motion.button>
+          <button
+            type="button"
+            onClick={() => navigate("/get-started")}
+            className="py-3 px-5 bg-transparent border-2 rounded border-white text-gray-50 text-sm hover:bg-white hover:text-green-900 hover:font-semibold"
+          >
+            Get Started Now &rarr;
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/internship")}
+            className="py-3 px-5 bg-white rounded text-green-900 text-sm font-semibold hover:bg-green-50"
+          >
+            Register for internship
+          </button>
+        </motion.div>
 
         {/* Statistics Section with Count Animation */}
         <div className="grid lg:grid-cols-3 grid-cols-1 my-auto w-full h-fit lg:mt-10 lg:pt-10 text-white">

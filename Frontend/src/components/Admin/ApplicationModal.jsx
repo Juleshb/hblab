@@ -122,7 +122,9 @@ const ApplicationModal = ({ application, isOpen, onClose, onStatusUpdate }) => {
                     <p className="text-lg font-semibold text-gray-900 mt-1">{application.careerTitle}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Department</label>
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      {application.careerTitle === 'Internship' ? 'Track' : 'Department'}
+                    </label>
                     <p className="text-lg font-semibold text-gray-900 mt-1">{application.careerDepartment}</p>
                   </div>
                   <div>
@@ -148,7 +150,9 @@ const ApplicationModal = ({ application, isOpen, onClose, onStatusUpdate }) => {
                     <p className="text-lg font-semibold text-gray-900 mt-1">{formatDate(application.createdAt)}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Experience Level</label>
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      {application.careerTitle === 'Internship' ? 'Field of study' : 'Experience Level'}
+                    </label>
                     <p className="text-lg font-semibold text-gray-900 mt-1">{application.experienceLevel || 'Not specified'}</p>
                   </div>
                   <div>
@@ -162,7 +166,7 @@ const ApplicationModal = ({ application, isOpen, onClose, onStatusUpdate }) => {
                 <div>
                   <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                     <Icon icon="carbon:document-text" className="h-5 w-5 mr-2 text-orange-500" />
-                    Cover Letter
+                    {application.careerTitle === 'Internship' ? 'Motivation' : 'Cover Letter'}
                   </h4>
                   
                   <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200">

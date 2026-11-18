@@ -12,6 +12,7 @@ import TermsAndConditions from './components/Terms&Conditions'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import Carrier from './components/Carrier'
 import ApplyCarrier from './components/ApplyCarrier'
+import InternshipRegister from './components/InternshipRegister'
 import AddCarrier from './components/AddCarrier'
 import AdminCarrier from './components/AdminCarrier'
 import LoginForm from './components/LoginForm'
@@ -89,6 +90,7 @@ const App = () => {
         <Route path="/terms-of-use" element={<TermsAndConditions />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/carrier" element={<Carrier />} />
+        <Route path="/internship" element={<InternshipRegister />} />
         <Route path="/apply/:id" element={<ApplyCarrier />} />
         <Route path="/LoginForm" element={<LoginForm />} />
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />

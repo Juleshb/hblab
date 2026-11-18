@@ -138,9 +138,9 @@ const ApplicationsManagement = () => {
           {/* Applications Table */}
           <div className="bg-white shadow-sm rounded-lg border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Career Applications</h3>
+              <h3 className="text-lg font-medium text-gray-900">Applications</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Review and manage all submitted career applications
+                Review career applications and public internship registrations
               </p>
             </div>
             <ApplicationsTable 

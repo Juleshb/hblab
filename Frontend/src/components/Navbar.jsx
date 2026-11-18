@@ -165,6 +165,13 @@ const Navbar = () => {
               >
                 Join Us
               </a>
+              <button
+                type="button"
+                onClick={() => { setIsToggleOpen(false); navigate("/internship"); }}
+                className="lg:px-2 lg:py-1 lg:mr-2 mr-1 hover:text-green-600 transition-colors duration-200 whitespace-nowrap"
+              >
+                Internship
+              </button>
               <a 
                 href="/CertificateCheck" 
                 onClick={() => navigate("/CertificateCheck")}

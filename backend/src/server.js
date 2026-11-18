@@ -9,6 +9,7 @@ const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const userManagementRoutes = require('./routes/userManagementRoutes');
 const applicationsRoutes = require('./routes/applicationsRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const projectsRoutes = require('./routes/projectsRoutes');
 const cors = require("cors")
 const careersRoutes = require('./routes/careersRoutes');
@@ -39,6 +40,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin/users', userManagementRoutes);
 app.use('/api/applications', applicationsRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use('/api/projects', projectsRoutes);
 app.use('/api/careers', careersRoutes);
 app.use('/api/lessons', lessonsRoutes);
