@@ -43,14 +43,14 @@ const publicPages = [
   {
     test: (path) => path === '/',
     path: '/',
-    title: 'HBLab | Technology, training, and studio in Rubavu',
-    description: 'High-Technology Builder Lab Ltd in Rubavu, Gisenyi. Professional training, internships, software, websites, and HB Studio.',
+    title: 'HBLab | Training center in Rubavu',
+    description: 'HBLab is a training center in Rubavu, Gisenyi. Professional courses in software, networking, multimedia, electronics, accounting, and electrical technology, plus internships and HB Studio.',
   },
   {
     test: (path) => path === '/training' || path === '/get-started',
     path: '/training',
-    title: 'Professional Training in Rubavu | HBLab',
-    description: 'Join HBLab training in software, networking, computer systems, multimedia, electronics, accounting, and electrical technology.',
+    title: 'Courses at a Training Center in Rubavu | HBLab',
+    description: 'Join a class at HBLab, a training center in Rubavu. Software, networking, computer systems, multimedia, electronics, accounting, and electrical technology.',
   },
   {
     test: (path) => path === '/internship',
@@ -157,9 +157,10 @@ export function applyPageMeta(pathname) {
     '@context': 'https://schema.org',
     '@graph': [
       {
-        '@type': 'Organization',
+        '@type': ['Organization', 'EducationalOrganization'],
         name: 'High-Technology Builder Lab Ltd',
         alternateName: ['HBLab', 'HB-Lab'],
+        description: 'Training center in Rubavu, Gisenyi. Professional courses, internships, software, and HB Studio.',
         url: `${SITE}/`,
         email: 'info@hblab.rw',
         telephone: '+250789028283',

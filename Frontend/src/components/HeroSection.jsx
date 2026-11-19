@@ -7,7 +7,7 @@ import heroFilm from "../assets/hblab-hero.mp4";
 
 const checks = [
   "Software, multimedia, and networks",
-  "Professional training in Rubavu",
+  "Training center in Rubavu",
   "Internships with the HBLab team",
 ];
 
@@ -66,7 +66,7 @@ const HeroSection = () => {
         transition={{ duration: 0.6, delay: 0.15 }}
         className="mx-auto mt-6 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg"
       >
-        Gain hands-on experience in Software Development, Multimedia, Networking, and Computer Systems with HBLab.
+        HBLab is a training center in Rubavu. Gain hands-on experience in Software Development, Multimedia, Networking, and Computer Systems.
       </motion.p>
       <motion.ul
         initial={{ opacity: 0 }}

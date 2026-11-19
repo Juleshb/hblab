@@ -33,9 +33,9 @@ function studioDocument() {
     transformIndexHtml(html) {
       if (String(process.env.VITE_SITE || '').toLowerCase() !== 'studio') return html
       return html
-        .replaceAll('HBLab | Technology, training, and studio in Rubavu', 'HB Studio | Photography, video, and podcasts')
+        .replaceAll('HBLab | Training center in Rubavu', 'HB Studio | Photography, video, and podcasts')
         .replaceAll(
-          'High-Technology Builder Lab Ltd in Rubavu, Gisenyi. Professional training, internships, software, websites, and HB Studio.',
+          'HBLab is a training center in Rubavu, Gisenyi. Professional courses in software, networking, multimedia, electronics, accounting, and electrical technology, plus internships and HB Studio.',
           'Film, photography, podcasts, and live coverage from HB Studio, a product of HBLab.'
         )
         .replaceAll('https://hblab.rw/', 'https://studio.hblab.rw/')

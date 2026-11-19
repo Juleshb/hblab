@@ -726,12 +726,12 @@ const InternshipRegister = ({ program = 'internship' }) => {
           <div>
             <p className="text-sm text-gray-500">{training ? 'Training' : 'Internship'}</p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-gray-950 sm:text-3xl">
-              {application ? 'Application number' : showLookup ? 'Track application' : training ? 'Training registration' : 'Internship application'}
+              {application ? 'Application number' : showLookup ? 'Track application' : training ? 'Training center in Rubavu' : 'Internship application'}
             </h1>
             {!application && !showLookup ? (
               <p className="mt-1 text-sm text-gray-500">
                 {training
-                  ? `Training is a class you join to learn a skill. Registration fee ${FEE}.`
+                  ? `Training is a class you join at our training center in Rubavu. Registration fee ${FEE}.`
                   : `An internship is work experience at HBLab. It is not a training class. Application fee ${FEE}.`}
               </p>
             ) : null}

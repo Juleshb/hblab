@@ -39,7 +39,7 @@ const AboutUs = () => {
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#b7e0d2]">About</p>
         <h1 className="mt-3 text-3xl font-black leading-tight sm:text-4xl">High-Technology Builder Lab Ltd</h1>
         <p className="mt-5 text-base leading-7 text-[#d7ebe4] sm:text-lg">
-          HBLab Ltd is a private technology and multimedia company in Rubavu, Gisenyi. We build digital solutions, produce multimedia through HB Studio, and train young professionals with practical skills.
+          HBLab Ltd is a private technology and multimedia company and a training center in Rubavu, Gisenyi. We build digital solutions, produce multimedia through HB Studio, and train young professionals with practical skills.
         </p>
       </div>
 

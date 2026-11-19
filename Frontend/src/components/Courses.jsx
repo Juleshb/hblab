@@ -114,9 +114,9 @@ const Courses = () => {
     <div className="bg-[#f4f7f6] text-green-950">
       <div className="mx-auto w-full max-w-6xl px-6 pb-6 pt-20 text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-green-700">Training</p>
-        <h1 className="mt-3 text-3xl font-black sm:text-4xl">Professional Training</h1>
+        <h1 className="mt-3 text-3xl font-black sm:text-4xl">Training center in Rubavu</h1>
         <p className="mx-auto mt-4 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-          Comprehensive IT training programs designed to equip you with industry-ready skills and hands-on experience.
+          Professional courses in software, networking, computer systems, multimedia, electronics, accounting, and electrical technology.
         </p>
       </div>
 
