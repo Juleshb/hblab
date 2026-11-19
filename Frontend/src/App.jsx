@@ -7,12 +7,12 @@ import Draft from './components/Footer'
 import LeadershipTeam from './components/LeadershipTeam'
 import StudioHero from './components/Studio/StudioHero'
 import StudioPortfolio from './components/Studio/StudioPortfolio'
-import GetStartedForm from "./components/GetStartedForm";
 import TermsAndConditions from './components/Terms&Conditions'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import Carrier from './components/Carrier'
 import ApplyCarrier from './components/ApplyCarrier'
 import InternshipRegister from './components/InternshipRegister'
+import LetterCheck from './components/LetterCheck'
 import AddCarrier from './components/AddCarrier'
 import AdminCarrier from './components/AdminCarrier'
 import LoginForm from './components/LoginForm'
@@ -30,6 +30,7 @@ import TrainersManagement from './components/Admin/TrainersManagement'
 import CareersManagement from './components/Admin/CareersManagement'
 import CertificatesManagement from './components/Admin/CertificatesManagement'
 import ApplicationsManagement from './components/Admin/ApplicationsManagement'
+import ContactMessages from './components/Admin/ContactMessages'
 import ProjectsManagement from './components/Admin/ProjectsManagement'
 import SettingsManagement from './components/Admin/SettingsManagement'
 import StudioWorks from './components/Admin/StudioWorks'
@@ -86,11 +87,12 @@ const App = () => {
         <Route path='/leadership' element={<LeadershipTeam/>}/>
         <Route path='/studio' element={<StudioHero/>}/>
         <Route path='/portfolio' element={<StudioPortfolio/>}/>
-        <Route path="/get-started" element={<GetStartedForm />} />
+        <Route path="/get-started" element={<InternshipRegister program="training" />} />
         <Route path="/terms-of-use" element={<TermsAndConditions />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/carrier" element={<Carrier />} />
         <Route path="/internship" element={<InternshipRegister />} />
+        <Route path="/letter/:code" element={<LetterCheck />} />
         <Route path="/apply/:id" element={<ApplyCarrier />} />
         <Route path="/LoginForm" element={<LoginForm />} />
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
@@ -108,6 +110,7 @@ const App = () => {
           <Route path="careers" element={<CareersManagement />} />
           <Route path="certificates" element={<CertificatesManagement />} />
           <Route path="applications" element={<ApplicationsManagement />} />
+          <Route path="messages" element={<ContactMessages />} />
           <Route path="projects" element={<ProjectsManagement />} />
           <Route path="studio" element={<StudioWorks />} />
           <Route path="hbms" element={<HbmsLayout />}>

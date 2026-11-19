@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Icon } from '@iconify/react';
 
-const ApplicationModal = ({ application, isOpen, onClose, onStatusUpdate }) => {
+const ApplicationModal = ({ application, isOpen, onClose, onStatusUpdate, onCashPaid, onResendLetter }) => {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [letterNote, setLetterNote] = useState('');
 
   if (!isOpen || !application) return null;
 
@@ -20,10 +21,11 @@ const ApplicationModal = ({ application, isOpen, onClose, onStatusUpdate }) => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { color: 'bg-yellow-100 text-yellow-800', icon: 'carbon:time' },
-      approved: { color: 'bg-green-100 text-green-800', icon: 'carbon:checkmark' },
-      rejected: { color: 'bg-red-100 text-red-800', icon: 'carbon:close' },
-      under_review: { color: 'bg-blue-100 text-blue-800', icon: 'carbon:view' }
+      pending: { color: 'bg-yellow-100 text-yellow-800', icon: 'carbon:time', label: 'Pending' },
+      approved: { color: 'bg-green-100 text-green-800', icon: 'carbon:checkmark', label: 'Approved' },
+      rejected: { color: 'bg-red-100 text-red-800', icon: 'carbon:close', label: 'Rejected' },
+      under_review: { color: 'bg-blue-100 text-blue-800', icon: 'carbon:view', label: 'Under review' },
+      awaiting_payment: { color: 'bg-amber-100 text-amber-900', icon: 'carbon:currency', label: 'Waiting for payment' },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -31,7 +33,7 @@ const ApplicationModal = ({ application, isOpen, onClose, onStatusUpdate }) => {
     return (
       <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.color}`}>
         <Icon icon={config.icon} className="h-4 w-4 mr-2" />
-        {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
+        {config.label}
       </span>
     );
   };
@@ -123,15 +125,24 @@ const ApplicationModal = ({ application, isOpen, onClose, onStatusUpdate }) => {
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      {application.careerTitle === 'Internship' ? 'Track' : 'Department'}
+                      {application.careerTitle === 'Internship' ? 'Placement' : application.careerTitle === 'Training' ? 'Training' : 'Department'}
                     </label>
                     <p className="text-lg font-semibold text-gray-900 mt-1">{application.careerDepartment}</p>
                   </div>
+                  {application.applicationCode && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Application number</label>
+                      <p className="text-lg font-semibold text-gray-900 mt-1">{application.applicationCode}</p>
+                    </div>
+                  )}
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Application Status</label>
                     <div className="mt-2">
                       {getStatusBadge(application.status)}
                     </div>
+                    {application.status === 'awaiting_payment' && (
+                      <p className="mt-2 text-sm text-amber-800">Waiting for the 5,000 RWF fee. Approve and reject become available after the student pays.</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -151,7 +162,7 @@ const ApplicationModal = ({ application, isOpen, onClose, onStatusUpdate }) => {
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      {application.careerTitle === 'Internship' ? 'Field of study' : 'Experience Level'}
+                      {application.careerTitle === 'Internship' || application.careerTitle === 'Training' ? 'Field of study' : 'Experience Level'}
                     </label>
                     <p className="text-lg font-semibold text-gray-900 mt-1">{application.experienceLevel || 'Not specified'}</p>
                   </div>
@@ -166,7 +177,7 @@ const ApplicationModal = ({ application, isOpen, onClose, onStatusUpdate }) => {
                 <div>
                   <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                     <Icon icon="carbon:document-text" className="h-5 w-5 mr-2 text-orange-500" />
-                    {application.careerTitle === 'Internship' ? 'Motivation' : 'Cover Letter'}
+                    {application.careerTitle === 'Internship' || application.careerTitle === 'Training' ? 'Motivation' : 'Cover Letter'}
                   </h4>
                   
                   <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200">
@@ -200,7 +211,51 @@ const ApplicationModal = ({ application, isOpen, onClose, onStatusUpdate }) => {
             </div>
           </div>
 
-          {application.status === 'pending' && (
+          {application.status === 'awaiting_payment' && onCashPaid ? (
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <p className="mb-3 text-sm text-amber-900">This person has not paid on the phone yet. If they paid 5,000 RWF in cash at HBLab, record it. You can approve them after that.</p>
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsUpdating(true);
+                  try {
+                    await onCashPaid(application.id);
+                    onClose();
+                  } finally {
+                    setIsUpdating(false);
+                  }
+                }}
+                disabled={isUpdating}
+                className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
+              >
+                {isUpdating ? 'Saving...' : 'Paid by cash'}
+              </button>
+            </div>
+          ) : null}
+          {application.status === 'approved' && onResendLetter && (application.careerTitle === 'Internship' || application.careerTitle === 'Training') ? (
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <p className="mb-3 text-sm text-gray-600">Send the signed acceptance letter to this person again. The PDF is attached to the email.</p>
+              {letterNote ? <p className="mb-3 text-sm text-emerald-800">{letterNote}</p> : null}
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsUpdating(true);
+                  setLetterNote('');
+                  try {
+                    const sent = await onResendLetter(application.id);
+                    if (sent) setLetterNote('The acceptance letter was sent again.');
+                  } finally {
+                    setIsUpdating(false);
+                  }
+                }}
+                disabled={isUpdating}
+                className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50"
+              >
+                {isUpdating ? 'Sending...' : 'Send letter again'}
+              </button>
+            </div>
+          ) : null}
+          {(application.status === 'pending' || application.status === 'under_review') && (
             <div className="mt-8 pt-6 border-t border-gray-200">
               <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
                 <button

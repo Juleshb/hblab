@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../assets/context/AuthContext.jsx";
 import logo from "../assets/logo.png";
-import logoicon from "../assets/logo-icon.png";
-import { FaSearch } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
 import { Icon } from "@iconify/react";
 import { studioSiteHref } from "../site";
@@ -11,254 +9,313 @@ import { studioSiteHref } from "../site";
 const Navbar = () => {
   const [isToggleOpen, setIsToggleOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [openMenu, setOpenMenu] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const phoneNumber = "+250792445913";
+  const phoneNumber = "+250789028283";
+
+  const closeMenus = () => {
+    setOpenMenu(null);
+    setIsToggleOpen(false);
+    setShowUserMenu(false);
+    setShowSearch(false);
+  };
+
+  const scrollToId = (id) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+    const top = element.getBoundingClientRect().top + window.scrollY - 84;
+    window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+  };
+
+  const handleNavClick = (id) => {
+    closeMenus();
+    if (location.pathname !== "/") {
+      navigate("/", { state: { scrollTo: id } });
+    } else {
+      scrollToId(id);
+    }
+  };
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 8);
+    handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isToggleOpen && !event.target.closest('.mobile-menu')) {
-        setIsToggleOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isToggleOpen]);
-
-  // Handle navigation and scrolling
-  const handleNavClick = (id) => {
-    setIsToggleOpen(false); // Close mobile menu
-    if (location.pathname !== "/") {
-      navigate("/", { state: { scrollTo: id } });
-    } else {
-      scrollToSection(id);
-    }
-  };
-
-  // Scroll to the specific section
-  const scrollToSection = (id) => {
-    setTimeout(() => {
-      const element = document.getElementById(id);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }, 100);
-  };
-
-  // Scroll to section after navigating back to Home page
   useEffect(() => {
     if (location.state?.scrollTo) {
-      scrollToSection(location.state.scrollTo);
+      const id = location.state.scrollTo;
+      setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) {
+          const top = element.getBoundingClientRect().top + window.scrollY - 84;
+          window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+        }
+      }, 100);
     }
   }, [location]);
 
-  const handleLogout = () => {
-    logout();
-    setShowUserMenu(false);
-    setIsToggleOpen(false);
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.key === "Escape") closeMenus();
+    };
+    const onPointer = (event) => {
+      if (!event.target.closest("[data-nav-root]")) {
+        setOpenMenu(null);
+        setShowUserMenu(false);
+        setShowSearch(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onPointer);
+    };
+  }, []);
+
+  const openStudio = () => {
+    closeMenus();
+    const href = studioSiteHref();
+    if (href.startsWith("http")) window.location.assign(href);
+    else navigate(href);
+  };
+
+  const groups = [
+    {
+      id: "about",
+      label: "About",
+      active: location.pathname === "/leadership",
+      items: [
+        { label: "About us", detail: "Who HBLab is", scroll: "about-us" },
+        { label: "Leadership", detail: "The people at HBLab", scroll: "our-leadership" },
+        { label: "Contact", detail: "Talk to the team", scroll: "contact-us" },
+      ],
+    },
+    {
+      id: "programs",
+      label: "Programs",
+      active: ["/get-started", "/internship", "/CertificateCheck"].includes(location.pathname),
+      items: [
+        { label: "Training", detail: "Join a class in Rubavu", to: "/get-started" },
+        { label: "Internship", detail: "Work with the HBLab team", to: "/internship" },
+        { label: "Certificate", detail: "Check a certificate", to: "/CertificateCheck" },
+      ],
+    },
+    {
+      id: "services",
+      label: "Services",
+      items: [
+        { label: "Software and websites", detail: "Systems, shops, and sites", scroll: "service-development" },
+        { label: "HB Studio", detail: "Photo, video, and podcasts", scroll: "service-studio" },
+        { label: "Training", detail: "Practical digital skills", scroll: "service-courses" },
+        { label: "Consultancy", detail: "Strategy, setup, and problem-solving", scroll: "service-consultancy" },
+      ],
+    },
+    {
+      id: "studio",
+      label: "Studio",
+      active: location.pathname === "/portfolio" || location.pathname.startsWith("/studio"),
+      items: [
+        { label: "HB Studio", detail: "Video, photo, and podcasts", action: openStudio },
+        { label: "Portfolio", detail: "Work we have made", to: "/portfolio" },
+      ],
+    },
+  ];
+
+  const go = (item) => {
+    if (item.action) {
+      item.action();
+      return;
+    }
+    if (item.scroll) {
+      handleNavClick(item.scroll);
+      return;
+    }
+    closeMenus();
+    if (item.to) navigate(item.to);
   };
 
   const getDashboardLink = () => {
-    if (user?.role === 'ADMIN') {
-      return '/admin/dashboard';
-    } else if (user?.role === 'STUDENT') {
-      return '/student/dashboard';
-    }
-    return '/';
+    if (user?.role === "ADMIN") return "/admin/dashboard";
+    if (user?.role === "STUDENT") return "/student/dashboard";
+    return "/";
   };
 
-  const navLinks = [
-    { id: "home", label: "Home", onClick: () => handleNavClick("home") },
-    { id: "about-us", label: "About Us", onClick: () => handleNavClick("about-us") },
-    { id: "our-services", label: "Services", onClick: () => handleNavClick("our-services") },
-    { id: "contact-us", label: "Contact Us", onClick: () => handleNavClick("contact-us") },
-    { id: "join-us", label: "Join Us", onClick: () => { setIsToggleOpen(false); navigate("/get-started"); } },
-    { id: "certificate", label: "Certificate", onClick: () => { setIsToggleOpen(false); navigate("/CertificateCheck"); } },
-    { id: "carrier", label: "Carrier", onClick: () => { setIsToggleOpen(false); navigate("/Carrier"); } },
-  ];
+  const linkClass = (active) =>
+    `inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition ${
+      active ? "bg-white/80 text-emerald-900 shadow-sm" : "text-slate-800 hover:bg-white/60 hover:text-emerald-900"
+    }`;
 
   return (
-    <div className="w-full fixed z-50 top-0 left-0">
-      {/* WhatsApp Contact Button */}
+    <div className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5" data-nav-root>
       <a
         href={`https://wa.me/${phoneNumber}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-4 animate-bounce flex justify-between right-4 bg-green-900 text-3xl hover:bg-green-600 text-white py-2 px-4 p-6 rounded-full z-10"
+        className="fixed bottom-4 right-4 z-10 flex items-center gap-2 rounded-full bg-emerald-800 px-4 py-3 text-white shadow-lg hover:bg-emerald-700"
       >
-        <p className="text-sm m-2 lg:block hidden">Contact our support team</p>
-        <Icon icon="akar-icons:whatsapp-fill" />
+        <span className="hidden text-sm lg:block">Contact our support team</span>
+        <Icon icon="akar-icons:whatsapp-fill" className="text-2xl" />
       </a>
 
-      {/* Navbar */}
-      <div
-        className={`bg-gray-50 flex mt-0 lg:py-0 py-3 items-center ${
-          isScrolled
-            ? "bg-white text-green-900 shadow-md "
-            : "text-white lg:inset-0 bg-gradient-to-l from-green-900 to-transparent"
-        }`}
-      >
-        <nav className="flex lg:justify-center items-center grid lg:grid-cols-3 lg:py-3 gap-3 px-5 w-full lg:mx-[5%] mx-[5%]">
-          <div className="flex justify-between items-center w-full lg:w-auto lg:col-span-1 col-span-3">
-            <div id="logo">
-              <img src={logo} alt="Logo" className="w-36 hidden lg:block" />
-              <img src={logoicon} alt="Logo" className="w-8 block lg:hidden" />
-            </div>
-            <button className="lg:hidden" onClick={() => setIsToggleOpen(!isToggleOpen)}>
-              {isToggleOpen ? <HiX size={28} /> : <HiMenu size={28} />}
+      <header className="mx-auto max-w-7xl">
+        <nav className={`flex h-[4.25rem] items-center gap-2 rounded-full border border-white/70 px-3 shadow-[0_10px_40px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur-2xl ${isScrolled ? "bg-white/75" : "bg-white/50"}`}>
+          <button type="button" onClick={() => { closeMenus(); navigate("/"); }} className="shrink-0">
+            <img src={logo} alt="HBLab" className="h-10 w-auto" />
+          </button>
+
+          <div className="ml-4 hidden items-center gap-1 lg:flex">
+            <button type="button" onClick={() => handleNavClick("home")} className={linkClass(location.pathname === "/")}>
+              Home
             </button>
+            {groups.map((group) => (
+              <div
+                key={group.id}
+                className="relative"
+                onMouseEnter={() => setOpenMenu(group.id)}
+              >
+                <button
+                  type="button"
+                  aria-expanded={openMenu === group.id}
+                  onClick={() => setOpenMenu((current) => (current === group.id ? null : group.id))}
+                  className={linkClass(group.active || openMenu === group.id)}
+                >
+                  {group.label}
+                  <Icon icon="carbon:chevron-down" className={`text-base transition ${openMenu === group.id ? "rotate-180" : ""}`} />
+                </button>
+                {openMenu === group.id ? (
+                  <div className="absolute left-0 top-full z-50 w-64 pt-2">
+                    <div className="rounded-3xl border border-white/70 bg-white/70 p-2 shadow-[0_16px_40px_rgba(15,23,42,0.14)] backdrop-blur-2xl">
+                      {group.items.map((item) => (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={() => go(item)}
+                          className="flex w-full flex-col rounded-xl px-3 py-2 text-left hover:bg-emerald-50"
+                        >
+                          <span className="text-sm font-medium text-slate-900">{item.label}</span>
+                          <span className="text-xs text-slate-500">{item.detail}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ))}
+            <Link to="/carrier" onClick={closeMenus} className={linkClass(location.pathname === "/carrier")}>
+              Careers
+            </Link>
           </div>
 
-          {/* Navigation Links */}
-          <div
-            className={`col-span-2 flex flex-col lg:flex-row items-center lg:items-center gap-3 ${
-              isToggleOpen ? "" : "hidden"
-            } lg:flex lg:justify-center`}
-          >
-            <div
-              id="nav-links"
-              className={`flex flex-col lg:flex-row items-center lg:items-center lg:gap-4 gap-2 font-small text-xs ${
-                isScrolled ? "text-green-900" : "lg:text-white text-green-900"
-              }`}
-            >
-              <button 
-                onClick={() => handleNavClick("home")}
-                className="lg:px-2 lg:py-1 lg:mr-2 mr-1 hover:text-green-600 transition-colors duration-200 whitespace-nowrap"
-              >
-                Home
-              </button>
-              <button 
-                onClick={() => handleNavClick("about-us")}
-                className="lg:px-2 lg:py-1 lg:mr-2 mr-1 hover:text-green-600 transition-colors duration-200 whitespace-nowrap"
-              >
-                About Us
-              </button>
-              <button 
-                onClick={() => handleNavClick("our-services")}
-                className="lg:px-2 lg:py-1 lg:mr-2 mr-1 hover:text-green-600 transition-colors duration-200 whitespace-nowrap"
-              >
-                Services
-              </button>
-              <button 
-                onClick={() => handleNavClick("contact-us")}
-                className="lg:px-2 lg:py-1 lg:mr-2 mr-1 hover:text-green-600 transition-colors duration-200 whitespace-nowrap"
-              >
-                Contact Us
-              </button>
-              <a 
-                href="#" 
-                onClick={() => navigate("/get-started")}
-                className="lg:px-2 lg:py-1 lg:mr-2 mr-1 hover:text-green-600 transition-colors duration-200 whitespace-nowrap"
-              >
-                Join Us
-              </a>
-              <button
-                type="button"
-                onClick={() => { setIsToggleOpen(false); navigate("/internship"); }}
-                className="lg:px-2 lg:py-1 lg:mr-2 mr-1 hover:text-green-600 transition-colors duration-200 whitespace-nowrap"
-              >
-                Internship
-              </button>
-              <a 
-                href="/CertificateCheck" 
-                onClick={() => navigate("/CertificateCheck")}
-                className="lg:px-2 lg:py-1 lg:mr-2 mr-1 hover:text-green-600 transition-colors duration-200 whitespace-nowrap"
-              >
-                Certificate
-              </a>
-              <a 
-                href="/Carrier" 
-                onClick={() => navigate("/Carrier")}
-                className="lg:px-2 lg:py-1 lg:mr-2 mr-1 hover:text-green-600 transition-colors duration-200 whitespace-nowrap"
-              >
-                Carrier
-              </a>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsToggleOpen(false);
-                  const href = studioSiteHref();
-                  if (href.startsWith('http')) window.location.assign(href);
-                  else navigate(href);
-                }}
-                className="lg:px-2 lg:py-1 lg:mr-2 mr-1 font-semibold hover:text-green-600 transition-colors duration-200 whitespace-nowrap"
-              >
-                HB Studio
-              </button>
-            </div>
-
-            {/* Search Bar and Login Button Container */}
-            <div className="flex items-center gap-2 w-full lg:w-auto lg:justify-end">
-              {/* Search Bar */}
-              <div className="flex items-center rounded bg-gray-300 w-full lg:w-48 max-w-md p-1">
+          <div className="ml-auto hidden items-center gap-2 lg:flex">
+            {showSearch ? (
+              <div className="flex items-center rounded-full border border-white/70 bg-white/50 px-3 py-1.5">
                 <input
                   type="search"
-                  className="bg-transparent flex-grow outline-none placeholder-gray-600 p-1 text-xs"
-                  placeholder="Search..."
+                  autoFocus
+                  className="w-36 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                  placeholder="Search"
                 />
-                <button className="p-1 text-gray-600 hover:text-blue-600">
-                  <FaSearch size={14} />
+                <button type="button" onClick={() => setShowSearch(false)} className="text-slate-500" aria-label="Close search">
+                  <HiX size={16} />
                 </button>
               </div>
-              
-              {/* User Menu or Login Button */}
-              {user ? (
-                <div className="relative">
-                  <button 
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="bg-green-900 hover:bg-green-800 text-white px-3 py-1.5 rounded-sm h-[42px] flex items-center gap-2 text-xs"
-                  >
-                    <Icon icon="carbon:user" className="h-4 w-4" />
-                    <span className="hidden sm:inline">{user.name}</span>
-                  </button>
-                  
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                      <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                        <div className="font-medium">{user.name}</div>
-                        <div className="text-gray-500">{user.email}</div>
-                        <div className="text-xs text-gray-400 capitalize">{user.role?.toLowerCase()}</div>
-                      </div>
-                      <button
-                        onClick={() => navigate(getDashboardLink())}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Dashboard
-                      </button>
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Sign out
-                      </button>
+            ) : (
+              <button type="button" onClick={() => { setShowSearch(true); setOpenMenu(null); }} className="rounded-full p-2 text-slate-700 hover:bg-white/70" aria-label="Search">
+                <Icon icon="carbon:search" className="text-xl" />
+              </button>
+            )}
+            {user ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => { setShowUserMenu((open) => !open); setOpenMenu(null); }}
+                  className="inline-flex items-center gap-2 rounded-full bg-emerald-800 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-900"
+                >
+                  <Icon icon="carbon:user" className="text-base" />
+                  <span className="max-w-28 truncate">{user.name}</span>
+                </button>
+                {showUserMenu ? (
+                  <div className="absolute right-0 mt-3 w-56 rounded-3xl border border-white/70 bg-white/75 p-2 shadow-[0_16px_40px_rgba(15,23,42,0.14)] backdrop-blur-2xl">
+                    <div className="px-3 py-2">
+                      <p className="text-sm font-medium text-slate-900">{user.name}</p>
+                      <p className="truncate text-xs text-slate-500">{user.email}</p>
                     </div>
-                  )}
-                </div>
-              ) : (
-              <button 
-                onClick={() => navigate("/LoginForm")}
-                  className="bg-green-900 hover:bg-green-800 text-white px-3 py-1.5 rounded-sm h-[42px] flex items-center text-xs"
-              >
+                    <button type="button" onClick={() => { closeMenus(); navigate(getDashboardLink()); }} className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                      Dashboard
+                    </button>
+                    <button type="button" onClick={() => { logout(); closeMenus(); }} className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                      Sign out
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <button type="button" onClick={() => { closeMenus(); navigate("/LoginForm"); }} className="rounded-full bg-emerald-800 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-900">
                 Login
               </button>
+            )}
+          </div>
+
+          <button type="button" className="ml-auto rounded-full p-2 text-slate-800 hover:bg-white/70 lg:hidden" onClick={() => setIsToggleOpen((open) => !open)} aria-label="Menu">
+            {isToggleOpen ? <HiX size={24} /> : <HiMenu size={24} />}
+          </button>
+        </nav>
+
+        {isToggleOpen ? (
+          <div className="mt-2 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-3xl border border-white/70 bg-white/70 px-3 py-2 shadow-[0_16px_40px_rgba(15,23,42,0.14)] backdrop-blur-2xl lg:hidden">
+            <button type="button" onClick={() => handleNavClick("home")} className="block w-full rounded-xl px-3 py-3 text-left text-sm font-medium text-slate-800 hover:bg-slate-50">
+              Home
+            </button>
+            {groups.map((group) => (
+              <div key={group.id} className="border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setOpenMenu((current) => (current === group.id ? null : group.id))}
+                  className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-sm font-medium text-slate-800"
+                >
+                  {group.label}
+                  <Icon icon="carbon:chevron-down" className={`transition ${openMenu === group.id ? "rotate-180" : ""}`} />
+                </button>
+                {openMenu === group.id ? (
+                  <div className="mb-2 space-y-1 pl-3">
+                    {group.items.map((item) => (
+                      <button key={item.label} type="button" onClick={() => go(item)} className="block w-full rounded-xl px-3 py-2 text-left hover:bg-emerald-50">
+                        <span className="block text-sm font-medium text-slate-900">{item.label}</span>
+                        <span className="block text-xs text-slate-500">{item.detail}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+            <Link to="/carrier" onClick={closeMenus} className="block rounded-xl border-t border-slate-100 px-3 py-3 text-sm font-medium text-slate-800">
+              Careers
+            </Link>
+            <div className="mt-2 flex items-center gap-2">
+              <div className="flex flex-1 items-center rounded-full bg-slate-100 px-3 py-2">
+                <Icon icon="carbon:search" className="text-slate-400" />
+                <input type="search" className="ml-2 w-full bg-transparent text-sm outline-none" placeholder="Search" />
+              </div>
+              {user ? (
+                <button type="button" onClick={() => { closeMenus(); navigate(getDashboardLink()); }} className="rounded-full bg-emerald-800 px-4 py-2 text-sm font-medium text-white">
+                  Account
+                </button>
+              ) : (
+                <button type="button" onClick={() => { closeMenus(); navigate("/LoginForm"); }} className="rounded-full bg-emerald-800 px-4 py-2 text-sm font-medium text-white">
+                  Login
+                </button>
               )}
             </div>
           </div>
-        </nav>
-      </div>
+        ) : null}
+      </header>
     </div>
   );
 };

@@ -10,6 +10,9 @@ const AdminSidebar = ({ sidebarOpen, mobileSidebarOpen, toggleSidebar, toggleMob
   const [learningOpen, setLearningOpen] = useState(['lessons', 'progress'].includes(activeTab));
   const [hbmsOpen, setHbmsOpen] = useState(location.pathname.includes('/admin/hbms'));
   const { logout } = useAuth();
+  const applicationKind = new URLSearchParams(location.search).get('kind');
+  const onAllApplications = location.pathname.startsWith('/admin/applications') && !applicationKind;
+  const onInternships = applicationKind === 'internship';
 
   const handleLogout = () => {
     logout();
@@ -109,24 +112,65 @@ const AdminSidebar = ({ sidebarOpen, mobileSidebarOpen, toggleSidebar, toggleMob
                 )}
               </NavLink>
 
-              {/* Applications */}
               <NavLink
-                to="/admin/applications"
+                to="/admin/messages"
                 className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition-all duration-200 group text-xs ${
-                  isActive 
-                    ? 'bg-white/10 text-white shadow-lg border border-white/20' 
+                  isActive
+                    ? 'bg-white/10 text-white shadow-lg border border-white/20'
                     : 'text-green-100 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <div className={`p-1 rounded-lg mr-2 transition-all duration-200 ${
-                  activeTab === 'applications' 
-                    ? 'bg-white/20 text-white' 
+                  activeTab === 'messages'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-green-700/30 text-green-200 group-hover:bg-white/10 group-hover:text-white'
+                }`}>
+                  <Icon icon="carbon:email" className="h-4 w-4" />
+                </div>
+                <span className="font-medium">Contact messages</span>
+                {activeTab === 'messages' && (
+                  <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>
+                )}
+              </NavLink>
+
+              {/* Applications */}
+              <NavLink
+                to="/admin/applications"
+                className={() => `flex items-center px-3 py-2 rounded-lg transition-all duration-200 group text-xs ${
+                  onAllApplications
+                    ? 'bg-white/10 text-white shadow-lg border border-white/20'
+                    : 'text-green-100 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className={`p-1 rounded-lg mr-2 transition-all duration-200 ${
+                  onAllApplications
+                    ? 'bg-white/20 text-white'
                     : 'bg-green-700/30 text-green-200 group-hover:bg-white/10 group-hover:text-white'
                 }`}>
                   <Icon icon="carbon:view" className="h-4 w-4" />
                 </div>
                 <span className="font-medium">Applications</span>
-                {activeTab === 'applications' && (
+                {onAllApplications && (
+                  <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>
+                )}
+              </NavLink>
+              <NavLink
+                to="/admin/applications?kind=internship"
+                className={() => `flex items-center px-3 py-2 rounded-lg transition-all duration-200 group text-xs ${
+                  onInternships
+                    ? 'bg-white/10 text-white shadow-lg border border-white/20'
+                    : 'text-green-100 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className={`p-1 rounded-lg mr-2 transition-all duration-200 ${
+                  onInternships
+                    ? 'bg-white/20 text-white'
+                    : 'bg-green-700/30 text-green-200 group-hover:bg-white/10 group-hover:text-white'
+                }`}>
+                  <Icon icon="carbon:user-multiple" className="h-4 w-4" />
+                </div>
+                <span className="font-medium">Internships</span>
+                {onInternships && (
                   <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>
                 )}
               </NavLink>
@@ -375,25 +419,68 @@ const AdminSidebar = ({ sidebarOpen, mobileSidebarOpen, toggleSidebar, toggleMob
                 )}
               </NavLink>
 
-              {/* Applications */}
               <NavLink
-                to="/admin/applications"
+                to="/admin/messages"
                 className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition-all duration-200 group text-xs ${
-                  isActive 
-                    ? 'bg-white/10 text-white shadow-lg border border-white/20' 
+                  isActive
+                    ? 'bg-white/10 text-white shadow-lg border border-white/20'
                     : 'text-green-100 hover:bg-white/5 hover:text-white'
                 }`}
                 onClick={toggleMobileSidebar}
               >
                 <div className={`p-1 rounded-lg mr-2 transition-all duration-200 ${
-                  activeTab === 'applications' 
-                    ? 'bg-white/20 text-white' 
+                  activeTab === 'messages'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-green-700/30 text-green-200 group-hover:bg-white/10 group-hover:text-white'
+                }`}>
+                  <Icon icon="carbon:email" className="h-4 w-4" />
+                </div>
+                <span className="font-medium">Contact messages</span>
+                {activeTab === 'messages' && (
+                  <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>
+                )}
+              </NavLink>
+
+              {/* Applications */}
+              <NavLink
+                to="/admin/applications"
+                className={() => `flex items-center px-3 py-2 rounded-lg transition-all duration-200 group text-xs ${
+                  onAllApplications
+                    ? 'bg-white/10 text-white shadow-lg border border-white/20'
+                    : 'text-green-100 hover:bg-white/5 hover:text-white'
+                }`}
+                onClick={toggleMobileSidebar}
+              >
+                <div className={`p-1 rounded-lg mr-2 transition-all duration-200 ${
+                  onAllApplications
+                    ? 'bg-white/20 text-white'
                     : 'bg-green-700/30 text-green-200 group-hover:bg-white/10 group-hover:text-white'
                 }`}>
                   <Icon icon="carbon:view" className="h-4 w-4" />
                 </div>
                 <span className="font-medium">Applications</span>
-                {activeTab === 'applications' && (
+                {onAllApplications && (
+                  <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>
+                )}
+              </NavLink>
+              <NavLink
+                to="/admin/applications?kind=internship"
+                className={() => `flex items-center px-3 py-2 rounded-lg transition-all duration-200 group text-xs ${
+                  onInternships
+                    ? 'bg-white/10 text-white shadow-lg border border-white/20'
+                    : 'text-green-100 hover:bg-white/5 hover:text-white'
+                }`}
+                onClick={toggleMobileSidebar}
+              >
+                <div className={`p-1 rounded-lg mr-2 transition-all duration-200 ${
+                  onInternships
+                    ? 'bg-white/20 text-white'
+                    : 'bg-green-700/30 text-green-200 group-hover:bg-white/10 group-hover:text-white'
+                }`}>
+                  <Icon icon="carbon:user-multiple" className="h-4 w-4" />
+                </div>
+                <span className="font-medium">Internships</span>
+                {onInternships && (
                   <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>
                 )}
               </NavLink>

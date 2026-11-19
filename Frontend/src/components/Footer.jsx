@@ -30,8 +30,10 @@ function Footer() {
         >
           <p className="text-lg font-semibold mb-4">Support</p>
           <p className="text-sm">Rubavu, Gisenyi</p>
-          <a className="block text-sm mt-2" href="mailto:hblabltd@gmail.com">hblabltd@gmail.com</a>
-          <a className="block text-sm" href="tel:+250783224032">+250 789 028 283</a>
+          <a className="block text-sm mt-2" href="mailto:info@hblab.rw">info@hblab.rw</a>
+          <a className="block text-sm" href="mailto:studio@hblab.rw">studio@hblab.rw</a>
+          <a className="block text-sm" href="tel:+250789028283">+250 789 028 283</a>
+          <a className="block text-sm" href="tel:+250792697730">+250 792 697 730</a>
         </motion.div>
 
         {/* Quick Links */}

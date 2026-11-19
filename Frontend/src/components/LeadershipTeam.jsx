@@ -4,12 +4,18 @@ import avatar from '../assets/avatar.png';
 import jules from '../assets/nn.jpeg';
 import fab from '../assets/fab.jpeg';
 import gribert from '../assets/mubea.jpeg';
+import prince from '../assets/prince-mucyo.png';
+import kevine from '../assets/kevine-mugabire.png';
+import aimable from '../assets/aimable-niyomugabo.png';
 
 const teamMembers = [
   { name: "Jules HABARUREMA", role: "CEO & Founder", image: jules },
   { name: "Fabrice MBARUSHIMANA", role: "Full Stack Software Engineer", image: fab },
-  { name: "Ferdinand KWIZERA", role: "IT Project Manager", image: avatar },
-  { name: "Gilbert HABARUREMA", role: "UX/UI (Project Design)", image: gribert }
+  { name: "Ferdinand KWIZERA", role: "IT Support and Training Coordinator", image: avatar },
+  { name: "Gilbert HABARUREMA", role: "UX/UI (Project Design)", image: gribert },
+  { name: "Prince MUCYO", role: "Developer", image: prince },
+  { name: "Kevine MUGABIRE", role: "Marketing Manager", image: kevine },
+  { name: "Aimable NIYOMUGABO", role: "Project Manager", image: aimable },
 ];
 
 const LeadershipTeam = () => {
@@ -38,7 +44,7 @@ const LeadershipTeam = () => {
 
         {/* Team Members Grid */}
         <motion.div 
-          className="grid mt-4 lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-12 max-w-4xl"
+          className="mt-4 grid max-w-5xl grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-4"
           initial="hidden"
           animate="visible"
           variants={{
@@ -62,7 +68,7 @@ const LeadershipTeam = () => {
               <motion.img
                 src={member.image}
                 alt={member.name}
-                className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md"
+                className="h-32 w-32 rounded-full border-4 border-white object-cover object-top shadow-md"
                 whileHover={{ scale: 1.1, rotate: 2 }}
               />
               <p className="font-bold mt-4">{member.name}</p>

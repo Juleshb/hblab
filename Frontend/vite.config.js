@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-const apiOrigin = 'https://api.hblab.rw'
+const productionApi = 'https://api.hblab.rw'
 
 function studioDocument() {
   return {
@@ -21,7 +21,9 @@ function studioDocument() {
 }
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => {
+  const apiOrigin = command === 'serve' ? 'http://127.0.0.1:3000' : productionApi
+  return {
   plugins: [react(), tailwindcss(), studioDocument()],
   define: {
     'import.meta.env.VITE_BACKEND_URL': JSON.stringify(apiOrigin),
@@ -35,14 +37,15 @@ export default defineConfig({
       '/api': {
         target: apiOrigin,
         changeOrigin: true,
-        secure: true,
+        secure: apiOrigin.startsWith('https'),
         ws: true,
       },
       '/uploads': {
         target: apiOrigin,
         changeOrigin: true,
-        secure: true,
+        secure: apiOrigin.startsWith('https'),
       }
     }
   },
+  }
 })

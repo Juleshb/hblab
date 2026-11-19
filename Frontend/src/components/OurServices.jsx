@@ -1,5 +1,5 @@
 import React from "react";
-import { FaCode, FaLaptop, FaCog } from "react-icons/fa";
+import { FaCode, FaCog, FaHandshake, FaLaptop } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 const OurServices = () => {
@@ -13,12 +13,12 @@ const OurServices = () => {
           transition={{ duration: 1 }}
         >
           <h1 className="lg:text-3xl text-2xl md:font-bold font-black mb-8 lg:w-full text-center">
-            Other Services
+            Our services
           </h1>
         </motion.div>
 
         {/* Services Grid */}
-        <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 lg:gap-10 gap-3">
+        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {/* Service 1 - Web & Mobile Development */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -26,16 +26,18 @@ const OurServices = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.2 }}
             whileHover={{ scale: 1.05 }}
-            className="flex flex-col bg-teal-100 px-5 py-5 mx-auto lg:py-10 rounded-lg h-full w-full md:w-80 text-center shadow-lg"
+            id="service-development"
+            className="flex h-full w-full flex-col rounded-lg bg-teal-100 px-5 py-5 text-center shadow-lg lg:py-10"
           >
             <div className="flex justify-center">
               <FaCode size={50} />
             </div>
-            <h3 className="font-black text-xl p-2">Web & Mobile Development</h3>
+            <h3 className="font-black text-xl p-2">Software and websites</h3>
             <ul className="list-disc text-black pl-7 text-left">
-              <li>Crafting captivating landing pages</li>
-              <li>Building robust e-commerce websites</li>
-              <li>Developing dynamic full-stack web & mobile applications</li>
+              <li>Management, school, and hotel systems</li>
+              <li>E-commerce and custom business applications</li>
+              <li>Corporate, school, NGO, and government websites</li>
+              <li>Databases, APIs, and website support</li>
             </ul>
           </motion.div>
 
@@ -46,16 +48,18 @@ const OurServices = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.4 }}
             whileHover={{ scale: 1.05 }}
-            className="flex flex-col bg-blue-200 px-5 py-5 mx-auto lg:py-10 rounded-lg h-full w-full md:w-80 text-center shadow-lg"
+            id="service-studio"
+            className="flex h-full w-full flex-col rounded-lg bg-blue-200 px-5 py-5 text-center shadow-lg lg:py-10"
           >
             <div className="flex justify-center">
               <FaLaptop size={50} />
             </div>
-            <h3 className="font-black text-xl p-2">IT Services</h3>
+            <h3 className="font-black text-xl p-2">HB Studio</h3>
             <ul className="list-disc text-black pl-7 text-left">
-              <li>Providing reliable IT support and CCTV operations</li>
-              <li>Designing tailored IT business solutions</li>
-              <li>Expertly managing network design and administration</li>
+              <li>Corporate, event, product, and graduation photography</li>
+              <li>Corporate, event, promotional, and documentary video</li>
+              <li>Live streaming for conferences, churches, and graduations</li>
+              <li>Podcast recording, video podcasts, and editing</li>
             </ul>
           </motion.div>
 
@@ -66,17 +70,41 @@ const OurServices = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.6 }}
             whileHover={{ scale: 1.05 }}
-            className="flex flex-col bg-blue-100 px-5 py-5 mx-auto lg:py-10 rounded-lg h-full w-full md:w-80 text-center shadow-lg"
+            id="service-courses"
+            className="flex h-full w-full flex-col rounded-lg bg-blue-100 px-5 py-5 text-center shadow-lg lg:py-10"
           >
             <div className="flex justify-center">
               <FaCog size={50} />
             </div>
-            <h3 className="font-black text-xl p-2">Online & Offline Courses</h3>
+            <h3 className="font-black text-xl p-2">Mobile, design, and training</h3>
             <ul className="list-disc text-black pl-7 text-left">
-              <li>Software Development (Front-End and Back-End)</li>
-              <li>UI/UX Design and Graphic Design</li>
-              <li>Hardware and Video Production</li>
-              <li>Comprehensive IT training to enhance skills</li>
+              <li>Android apps, progressive web apps, and cross-platform apps</li>
+              <li>UI and UX design, wireframes, and prototypes</li>
+              <li>Training in software, networks, multimedia, electronics, accounting, and electrical work</li>
+              <li>Internships for TVET, university students, and graduates</li>
+            </ul>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            whileHover={{ scale: 1.05 }}
+            id="service-consultancy"
+            className="flex h-full w-full flex-col rounded-lg bg-green-100 px-5 py-5 text-center shadow-lg lg:py-10"
+          >
+            <div className="flex justify-center">
+              <FaHandshake size={50} />
+            </div>
+            <h3 className="font-black text-xl p-2">Consultancy</h3>
+            <p className="mb-3 text-left text-sm text-black">
+              Expert IT consulting services to help organizations optimize their technology infrastructure and strategy.
+            </p>
+            <ul className="list-disc text-black pl-7 text-left">
+              <li>IT Strategy and Policy Development</li>
+              <li>Implementation Solutions</li>
+              <li>Technical Problem-Solving</li>
             </ul>
           </motion.div>
         </div>

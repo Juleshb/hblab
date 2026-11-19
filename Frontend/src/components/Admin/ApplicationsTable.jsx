@@ -20,7 +20,8 @@ const ApplicationsTable = ({ applications, loading, onView, onStatusUpdate, onDe
       app.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.careerTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.status?.toLowerCase().includes(searchTerm.toLowerCase())
+      app.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.applicationCode?.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
       let aValue = a[sortField];
@@ -38,10 +39,11 @@ const ApplicationsTable = ({ applications, loading, onView, onStatusUpdate, onDe
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { color: 'bg-yellow-100 text-yellow-800', icon: 'carbon:time' },
-      approved: { color: 'bg-green-100 text-green-800', icon: 'carbon:checkmark' },
-      rejected: { color: 'bg-red-100 text-red-800', icon: 'carbon:close' },
-      under_review: { color: 'bg-blue-100 text-blue-800', icon: 'carbon:view' }
+      pending: { color: 'bg-yellow-100 text-yellow-800', icon: 'carbon:time', label: 'Pending' },
+      approved: { color: 'bg-green-100 text-green-800', icon: 'carbon:checkmark', label: 'Approved' },
+      rejected: { color: 'bg-red-100 text-red-800', icon: 'carbon:close', label: 'Rejected' },
+      under_review: { color: 'bg-blue-100 text-blue-800', icon: 'carbon:view', label: 'Under review' },
+      awaiting_payment: { color: 'bg-amber-100 text-amber-900', icon: 'carbon:currency', label: 'Waiting for payment' },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -49,7 +51,7 @@ const ApplicationsTable = ({ applications, loading, onView, onStatusUpdate, onDe
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
         <Icon icon={config.icon} className="h-3 w-3 mr-1" />
-        {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
+        {config.label}
       </span>
     );
   };
@@ -201,6 +203,9 @@ const ApplicationsTable = ({ applications, loading, onView, onStatusUpdate, onDe
                         <div className="text-sm text-gray-500">
                           {application.email}
                         </div>
+                        {application.applicationCode && (
+                          <div className="text-xs font-medium text-gray-700">{application.applicationCode}</div>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -224,7 +229,7 @@ const ApplicationsTable = ({ applications, loading, onView, onStatusUpdate, onDe
                         <Icon icon="carbon:view" className="h-4 w-4" />
                       </button>
                       
-                      {application.status === 'pending' && (
+                      {(application.status === 'pending' || application.status === 'under_review') && (
                         <>
                           <button
                             onClick={() => onStatusUpdate(application.id, 'approved')}

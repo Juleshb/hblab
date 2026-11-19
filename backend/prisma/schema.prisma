@@ -96,6 +96,7 @@ model CareerApplication {
   coverLetter     String?
   resumeUrl       String?
   status          ApplicationStatus @default(pending)
+  applicationCode String?  @unique
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   userId          Int?
@@ -149,6 +150,7 @@ enum ApplicationStatus {
   approved
   rejected
   under_review
+  awaiting_payment
 }
 
 enum ProjectStatus {
@@ -1269,5 +1271,34 @@ model StudioWork {
 
   @@index([published, sortOrder])
   @@index([category])
+}
+
+model ContactMessage {
+  id        Int            @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String         @default("")
+  message   String
+  status    String         @default("open")
+  readAt    DateTime?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  replies   ContactReply[]
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+model ContactReply {
+  id        Int            @id @default(autoincrement())
+  messageId Int
+  message   ContactMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  fromEmail String
+  subject   String
+  body      String
+  sentById  Int?
+  createdAt DateTime       @default(now())
+
+  @@index([messageId])
 }
  

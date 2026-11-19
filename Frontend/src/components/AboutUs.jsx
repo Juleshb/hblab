@@ -1,6 +1,17 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { FaAward, FaBalanceScale, FaBookOpen, FaBriefcase, FaHeart, FaLightbulb, FaUsers } from "react-icons/fa";
 import kids from "../assets/nn.jpg";
+
+const coreValues = [
+  { label: "Innovation", icon: FaLightbulb },
+  { label: "Excellence", icon: FaAward },
+  { label: "Integrity", icon: FaBalanceScale },
+  { label: "Professionalism", icon: FaBriefcase },
+  { label: "Teamwork", icon: FaUsers },
+  { label: "Customer satisfaction", icon: FaHeart },
+  { label: "Continuous learning", icon: FaBookOpen },
+];
 
 const AboutUs = () => {
   const [showMore, setShowMore] = useState(false);
@@ -15,7 +26,7 @@ const AboutUs = () => {
           transition={{ duration: 1 }}
           className="p-4 text-start"
         >
-          <label className="lg:text-3xl text-2xl md:font-bold font-black mb-8 lg:w-full text-center">Invest in your career growth</label>
+          <label className="lg:text-3xl text-2xl md:font-bold font-black mb-8 lg:w-full text-center">High-Technology Builder Lab Ltd</label>
         </motion.div>
 
         {/* Subtitle */}
@@ -26,8 +37,7 @@ const AboutUs = () => {
           className="flex"
         >
           <p className="break-words text-black p-4">
-            The technology industry is evolving faster than ever, so HB-Lab
-            provides the support and resources you need to stay one step ahead.
+            HBLab Ltd is a private technology and multimedia company in Rubavu, Gisenyi. We build digital solutions, produce multimedia through HB Studio, and train young professionals with practical skills.
           </p>
         </motion.div>
 
@@ -51,16 +61,42 @@ const AboutUs = () => {
             className="flex flex-col lg:py-10 py-3 rounded-lg h-full w-full"
           >
             <div className="flex flex-col my-auto gap-5">
-              <h1 className="font-black lg:text-2xl text-xl">Thrive with HB-Lab</h1>
-              <p className="font-small lg:text-start lg:w-3/4 w-full leading-relaxed text-black h-full flex items-center">
-                Access carefully curated programs designed to help you network,
-                develop your skills, and improve your quality of life. From
-                mentorship to events and training opportunities, you'll have the
-                chance to meet like-minded peers, problem-solve, and collaborate
-                with global tech experts.
+              <h1 className="font-black lg:text-2xl text-xl">Our mission</h1>
+              <p className="font-small lg:text-start w-full leading-relaxed text-black">
+                To provide innovative technology solutions, high-quality multimedia services, and practical skills programs that create value for businesses, institutions, and communities.
+              </p>
+              <p className="font-small lg:text-start w-full leading-relaxed text-black">
+                Our vision is to become a leading technology, multimedia, and professional training company in Rwanda and across Africa. Chief Executive Officer: HABARUREMA Jules.
               </p>
             </div>
           </motion.div>
+        </div>
+
+        <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            ["Legal name", "High-Technology Builder Lab Ltd"],
+            ["Head office", "Rubavu, Gisenyi, Rwanda"],
+            ["Status", "Private limited company"],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-2xl bg-white p-4 shadow-sm">
+              <p className="text-xs uppercase tracking-wide text-green-800">{label}</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="px-4">
+          <h2 className="text-xl font-black">Core values</h2>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {coreValues.map(({ label, icon: Icon }) => (
+              <div key={label} className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-900 text-white">
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="text-sm font-semibold text-green-900">{label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Features Section */}
@@ -76,7 +112,7 @@ const AboutUs = () => {
             <div className="w-[1px] h-24 bg-gradient-to-b from-black to-transparent lg:inline hidden"></div>
             <div className="flex flex-col my-auto px-2">
               <h1 className="font-bold text-xl">Training</h1>
-              <p className="text-black">We'll help you upskill in advanced technologies so you can land your ideal role.</p>
+              <p className="text-black">Practical classes in software, networking, computer systems, multimedia, electronics, accounting, and electrical technology.</p>
             </div>
           </motion.div>
 
@@ -90,8 +126,8 @@ const AboutUs = () => {
           >
             <div className="w-[1px] h-24 bg-gradient-to-b from-black to-transparent lg:inline hidden"></div>
             <div className="flex flex-col my-auto px-2">
-              <h1 className="font-bold text-xl">Events</h1>
-              <p className="text-black">Gain insights from leaders who will take you behind the scenes at their top global companies.</p>
+              <h1 className="font-bold text-xl">HB Studio</h1>
+              <p className="text-black">Photography, video, live streaming, and podcast production for companies, schools, and events.</p>
             </div>
           </motion.div>
 
@@ -105,8 +141,8 @@ const AboutUs = () => {
           >
             <div className="w-[1px] h-24 bg-gradient-to-b from-black to-transparent lg:inline hidden"></div>
             <div className="flex flex-col my-auto px-2">
-              <h1 className="font-bold text-xl">Mentorship</h1>
-              <p className="text-black">Receive peer-to-peer support and guidance from HB-Lab experts and community members, 24/7.</p>
+              <h1 className="font-bold text-xl">Internship</h1>
+              <p className="text-black">Workplace experience, mentorship, and real projects for TVET students, university students, and recent graduates.</p>
             </div>
           </motion.div>
 
@@ -120,8 +156,8 @@ const AboutUs = () => {
           >
             <div className="w-[1px] h-24 bg-gradient-to-b from-black to-transparent lg:inline hidden"></div>
             <div className="flex flex-col my-auto px-2">
-              <h1 className="font-bold text-xl">Perks</h1>
-              <p className="text-black">Access opportunities and more from our trusted partners.</p>
+              <h1 className="font-bold text-xl">Who we serve</h1>
+              <p className="text-black">Government, schools, TVET, NGOs, private companies, religious organizations, and small businesses.</p>
             </div>
           </motion.div>
 
@@ -135,8 +171,8 @@ const AboutUs = () => {
           >
             <div className="w-[1px] h-24 bg-gradient-to-b from-black to-transparent lg:inline hidden"></div>
             <div className="flex flex-col my-auto px-2">
-              <h1 className="font-bold text-xl">Wellness</h1>
-              <p className="text-black">Join wellness sessions, including virtual meditation, yoga, and community health initiatives.</p>
+              <h1 className="font-bold text-xl">Why HBLab</h1>
+              <p className="text-black">An experienced team, practical solutions, and services that can grow with the client.</p>
             </div>
           </motion.div>
 
@@ -150,8 +186,8 @@ const AboutUs = () => {
           >
             <div className="w-[1px] h-24 bg-gradient-to-b from-black to-transparent lg:inline hidden"></div>
             <div className="flex flex-col my-auto px-2">
-              <h1 className="font-bold text-xl">Meet-ups</h1>
-              <p className="text-black">Connect with like-minded technologists at quarterly, in-person events in your region.</p>
+              <h1 className="font-bold text-xl">Partnerships</h1>
+              <p className="text-black">Skills programs, internships, software, multimedia, digital innovation, and youth employment.</p>
             </div>
           </motion.div>
         </div>

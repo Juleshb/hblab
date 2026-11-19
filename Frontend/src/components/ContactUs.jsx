@@ -1,7 +1,38 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { FormModal, SuccessModal, ErrorModal } from "./ClientModal";
-import LoadingSpinner from "./LoadingSpinner";
+import { FiClock, FiMail, FiMapPin, FiPhone, FiSend } from "react-icons/fi";
+import { SuccessModal, ErrorModal } from "./ClientModal";
+import { apiOrigin } from "../apiOrigin";
+
+const contactItems = [
+  {
+    icon: FiMapPin,
+    label: "Head office",
+    lines: [
+      { text: "Rubavu, Gisenyi, Western Province, Rwanda" },
+    ],
+  },
+  {
+    icon: FiPhone,
+    label: "Phone",
+    lines: [
+      { text: "+250 789 028 283", href: "tel:+250789028283" },
+      { text: "+250 792 697 730", href: "tel:+250792697730" },
+    ],
+  },
+  {
+    icon: FiMail,
+    label: "Email",
+    lines: [
+      { text: "info@hblab.rw", href: "mailto:info@hblab.rw" },
+      { text: "studio@hblab.rw", href: "mailto:studio@hblab.rw" },
+      { text: "hblabltd@gmail.com", href: "mailto:hblabltd@gmail.com" },
+    ],
+  },
+];
+
+const fieldClass =
+  "w-full rounded-2xl border border-green-200 bg-green-50 px-4 py-3.5 text-sm text-green-900 outline-none transition placeholder:text-green-400 focus:border-green-600 focus:bg-white focus:ring-4 focus:ring-green-600/15 disabled:opacity-60";
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({
@@ -17,18 +48,16 @@ const ContactUs = () => {
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
 
-  // Handle input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await fetch("https://hblab-be.onrender.com/contact", {
+      const response = await fetch(`${apiOrigin}/api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -40,14 +69,14 @@ const ContactUs = () => {
         setModalTitle("Message Sent Successfully!");
         setModalMessage("Thank you for contacting us. We'll get back to you soon.");
         setShowModal(true);
-        setFormData({ name: "", email: "", phone: "", message: "" }); // Clear form
+        setFormData({ name: "", email: "", phone: "", message: "" });
       } else {
         setModalType("error");
         setModalTitle("Failed to Send Message");
         setModalMessage(data.message || "Something went wrong. Please try again.");
         setShowModal(true);
       }
-    } catch (error) {
+    } catch {
       setModalType("error");
       setModalTitle("Network Error");
       setModalMessage("Please check your connection and try again.");
@@ -57,258 +86,198 @@ const ContactUs = () => {
     }
   };
 
-  const handleModalClose = () => {
-    setShowModal(false);
-  };
-
-  // Show loading spinner if loading
-  if (loading) {
-    return <LoadingSpinner message="Sending your message..." />;
-  }
-
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
-      className="flex items-center justify-center mx-auto w-full text-[#2e6b57]"
+      className="mx-auto w-full max-w-6xl text-green-600"
     >
-      <div className="flex flex-col items-center gap-5 max-w-screen-xl mx-auto px-5">
-        <motion.h1 
-          initial={{ y: 20, opacity: 0 }} 
-          animate={{ y: 0, opacity: 1 }} 
-          transition={{ duration: 0.6 }}
-          className="lg:text-3xl text-2xl md:font-bold font-black mb-8 lg:w-full text-center"
-        >
-          Contact Us
-        </motion.h1>
-
-        <section className="w-full">
-          <motion.div 
-            initial={{ y: 50, opacity: 0 }} 
-            animate={{ y: 0, opacity: 1 }} 
-            transition={{ duration: 0.8 }}
-            className="mx-auto max-w-4xl"
-          >
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              {/* Contact Information */}
-              <motion.div 
-                initial={{ x: -50, opacity: 0 }} 
-                animate={{ x: 0, opacity: 1 }} 
-                transition={{ duration: 0.6 }}
-                className="rounded-lg p-8 text-white lg:p-12 shadow-2xl"
-                style={{ background: "linear-gradient(135deg, #2e6b57 0%, #1a3d31 100%)" }}
-              >
-                <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
-                
-                <div className="space-y-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                      <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">Address</h3>
-                      <p className="text-green-100">Kigali, Rwanda</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                      <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">Phone</h3>
-                      <p className="text-green-100">+250 788 123 456</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                      <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">Email</h3>
-                      <p className="text-green-100">info@hblab.rw</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-8 pt-8 border-t border-white/20">
-                  <h3 className="font-semibold text-lg mb-4">Business Hours</h3>
-                  <div className="space-y-2 text-green-100">
-                    <p>Monday - Friday: 8:00 AM - 6:00 PM</p>
-                    <p>Saturday: 9:00 AM - 4:00 PM</p>
-                    <p>Sunday: Closed</p>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Contact Form */}
-              <motion.div 
-                initial={{ x: 50, opacity: 0 }} 
-                animate={{ x: 0, opacity: 1 }} 
-                transition={{ duration: 0.6 }}
-                className="rounded-2xl bg-white p-8 shadow-2xl border border-gray-100 lg:p-12"
-              >
-                <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Send us a Message</h2>
-                  <p className="text-gray-600">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                      <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <input 
-                        className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 focus:border-[#2e6b57] transition-all duration-200" 
-                        placeholder="Your full name" 
-                        type="text" 
-                        id="name" 
-                        value={formData.name} 
-                        onChange={handleChange} 
-                        required 
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                        Email Address
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                          </svg>
-                        </div>
-                        <input 
-                          className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 focus:border-[#2e6b57] transition-all duration-200" 
-                          placeholder="your@email.com" 
-                          type="email" 
-                          id="email" 
-                          value={formData.email} 
-                          onChange={handleChange} 
-                          required 
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-                        Phone Number
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                          </svg>
-                        </div>
-                        <input 
-                          className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 focus:border-[#2e6b57] transition-all duration-200" 
-                          placeholder="+250 788 123 456" 
-                          type="tel" 
-                          id="phone" 
-                          value={formData.phone} 
-                          onChange={handleChange} 
-                          required 
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Message
-                    </label>
-                    <div className="relative">
-                      <div className="absolute top-4 left-4 flex items-start pointer-events-none">
-                        <svg className="h-5 w-5 text-gray-400 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                      </div>
-                      <textarea 
-                        className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#2e6b57]/30 focus:border-[#2e6b57] transition-all duration-200 resize-none" 
-                        placeholder="Tell us how we can help you..." 
-                        rows="5" 
-                        id="message" 
-                        value={formData.message} 
-                        onChange={handleChange} 
-                        required
-                      ></textarea>
-                    </div>
-                  </div>
-
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ duration: 0.3 }}
-                    className="w-full py-4 px-6 bg-[#2e6b57] hover:bg-[#1a3d31] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                      type="submit"
-                  >
-                    Send Message →
-                    </motion.button>
-                </form>
-              </motion.div>
-            </div>
-          </motion.div>
-        </section>
+      <div className="mb-8 text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-green-600">Contact</p>
+        <h1 className="mt-2 text-3xl font-black text-green-900 sm:text-4xl">Talk with HBLab</h1>
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-green-800 sm:text-base">
+          Send a message about training, an internship, or a project. We reply from the Rubavu office.
+        </p>
       </div>
 
-      {/* Success Modal */}
+      <div className="overflow-hidden rounded-[2rem] border border-green-200 bg-white shadow-[0_24px_70px_rgba(26,61,49,0.08)]">
+        <div className="grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+          <aside className="relative bg-green-600 px-6 py-8 text-white sm:px-8 sm:py-10">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/10" />
+            <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-black/10" />
+
+            <div className="relative">
+              <h2 className="text-2xl font-black">Get in touch</h2>
+              <p className="mt-2 max-w-sm text-sm leading-6 text-green-50">
+                High-Technology Builder Lab Ltd. Chief Executive Officer: HABARUREMA Jules.
+              </p>
+
+              <div className="mt-8 space-y-3">
+                {contactItems.map(({ icon: Icon, label, lines }) => (
+                  <div key={label} className="rounded-2xl bg-white/10 px-4 py-3 backdrop-blur-sm">
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15">
+                        <Icon className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-green-100">{label}</p>
+                        {lines.map((line) =>
+                          line.href ? (
+                            <a key={line.text} href={line.href} className="mt-0.5 block text-sm text-white hover:underline">
+                              {line.text}
+                            </a>
+                          ) : (
+                            <p key={line.text} className="mt-0.5 text-sm text-white">{line.text}</p>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-2xl bg-white/10 px-4 py-4">
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <FiClock className="h-4 w-4" aria-hidden="true" />
+                  Business hours
+                </div>
+                <div className="mt-3 space-y-1 text-sm text-green-50">
+                  <p>Monday to Friday, 8:00 AM – 6:00 PM</p>
+                  <p>Saturday, 9:00 AM – 4:00 PM</p>
+                  <p>Sunday, closed</p>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <form onSubmit={handleSubmit} className="bg-white px-6 py-8 sm:px-8 sm:py-10">
+            <div className="mb-6">
+              <h2 className="text-2xl font-black text-green-900">Send a message</h2>
+              <p className="mt-2 text-sm leading-6 text-green-800">
+                Tell us what you need. The fields marked with a star are required.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="name" className="mb-1.5 block text-sm font-semibold text-green-900">
+                  Full name <span className="text-green-600">*</span>
+                </label>
+                <input
+                  className={fieldClass}
+                  placeholder="Your full name"
+                  type="text"
+                  id="name"
+                  autoComplete="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-green-900">
+                    Email <span className="text-green-600">*</span>
+                  </label>
+                  <input
+                    className={fieldClass}
+                    placeholder="you@email.com"
+                    type="email"
+                    id="email"
+                    autoComplete="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={loading}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="phone" className="mb-1.5 block text-sm font-semibold text-green-900">
+                    Phone <span className="text-green-600">*</span>
+                  </label>
+                  <input
+                    className={fieldClass}
+                    placeholder="0788 000 000"
+                    type="tel"
+                    id="phone"
+                    autoComplete="tel"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    disabled={loading}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="message" className="mb-1.5 block text-sm font-semibold text-green-900">
+                  Message <span className="text-green-600">*</span>
+                </label>
+                <textarea
+                  className={`${fieldClass} resize-none`}
+                  placeholder="Training, internship, software, or studio work"
+                  rows="6"
+                  id="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-green-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-wait disabled:opacity-70"
+              >
+                <FiSend className="h-4 w-4" aria-hidden="true" />
+                {loading ? "Sending…" : "Send message"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       {showModal && modalType === "success" && (
         <SuccessModal
           isOpen={showModal}
-          onClose={handleModalClose}
+          onClose={() => setShowModal(false)}
           title={modalTitle}
           subtitle={modalMessage}
         >
-          <div className="text-center py-4">
-            <p className="text-gray-700 mb-6">
+          <div className="py-4 text-center">
+            <p className="mb-6 text-gray-700">
               We've received your message and will get back to you within 24 hours.
             </p>
             <button
-              onClick={handleModalClose}
-              className="px-6 py-2 bg-[#2e6b57] hover:bg-[#1a3d31] text-white font-medium rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+              onClick={() => setShowModal(false)}
+              className="rounded-full bg-green-600 px-6 py-2 font-medium text-white hover:bg-green-800"
             >
-              Thank You
+              Thank you
             </button>
           </div>
         </SuccessModal>
       )}
 
-      {/* Error Modal */}
       {showModal && modalType === "error" && (
         <ErrorModal
           isOpen={showModal}
-          onClose={handleModalClose}
+          onClose={() => setShowModal(false)}
           title={modalTitle}
           subtitle={modalMessage}
         >
-          <div className="text-center py-4">
-            <p className="text-gray-700 mb-6">
+          <div className="py-4 text-center">
+            <p className="mb-6 text-gray-700">
               Please try again or contact us directly if the problem persists.
             </p>
             <button
-              onClick={handleModalClose}
-              className="px-6 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+              onClick={() => setShowModal(false)}
+              className="rounded-full bg-red-600 px-6 py-2 font-medium text-white"
             >
-              Try Again
+              Try again
             </button>
           </div>
         </ErrorModal>

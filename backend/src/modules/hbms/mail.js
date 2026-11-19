@@ -121,7 +121,7 @@ function letter({ eyebrow, accent = LEAF, title, intro, details = [], actionLabe
 </html>`;
 }
 
-async function sendMail({ to, subject, text, html }) {
+async function sendMail({ to, subject, text, html, attachments: extra = [] }) {
   const mailer = transport();
   if (!mailer) return false;
   const recipients = [...new Set((Array.isArray(to) ? to : [to])
@@ -129,9 +129,10 @@ async function sendMail({ to, subject, text, html }) {
     .filter((item) => item.includes('@')))];
   if (!recipients.length) return false;
   const logo = logoFile();
-  const attachments = fs.existsSync(logo)
-    ? [{ filename: 'hblab.png', path: logo, cid: 'hblab-mark' }]
-    : [];
+  const attachments = [
+    ...(fs.existsSync(logo) ? [{ filename: 'hblab.png', path: logo, cid: 'hblab-mark' }] : []),
+    ...extra,
+  ];
   await mailer.sendMail({
     from: process.env.SMTP_FROM || `HBLab <${process.env.SMTP_USER}>`,
     to: recipients,

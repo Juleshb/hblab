@@ -19,6 +19,7 @@ const app = express();
 const uploadRoutes = require('./routes/uploadRoutes');
 const hbmsRoutes = require('./modules/hbms');
 const studioRoutes = require('./routes/studioRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 const studioWorks = require('./routes/studioWorks');
 const { ensureHbmsSeed } = require('./modules/hbms/seed');
 const { startDeadlineReminders } = require('./modules/hbms/reminders');
@@ -48,6 +49,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/hbms', hbmsRoutes);
 app.use('/api/studio', studioWorks);
 app.use('/api/studio', studioRoutes);
+app.use('/api/contact', contactRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
