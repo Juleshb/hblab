@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { motion } from "framer-motion";
 import bambe from "../assets/bambe.png";
 import coopedhu from "../assets/COOPEDHU.png";
@@ -28,48 +27,61 @@ const logos = [
   { src: heroine, name: "La Heroine" },
 ];
 
-const CompaniesTrustUs = () => {
-  const [isHovered, setIsHovered] = useState(false);
+const rows = [
+  { direction: "right", items: logos.slice(0, 6) },
+  { direction: "left", items: logos.slice(6) },
+];
+
+const MarqueeRow = ({ items, direction }) => {
+  const strip = [...items, ...items, ...items];
 
   return (
-    <div className="flex flex-col items-center justify-center mx-auto w-full text-green-900 overflow-hidden py-10">
-      {/* Title */}
-      <div className="flex justify-center items-center w-full">
-        <h1 className="lg:text-3xl text-2xl md:font-bold font-black mb-8 lg:w-full text-center">
-          Trusted companies
-        </h1>
-      </div>
-
-      {/* Moving Logos */}
-      <div 
-        className="relative w-full max-w-6xl overflow-hidden"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <motion.div
-          className="flex w-max space-x-10"
-          animate={{ x: isHovered ? "0%" : ["0%", "-50%"] }}
-          transition={{
-            repeat: Infinity,
-            duration: 36,
-            ease: "linear",
-          }}
+    <div className="flex gap-5 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
+      {[0, 1].map((copy) => (
+        <div
+          key={copy}
+          className={`flex shrink-0 items-center gap-5 ${direction === "right" ? "marquee-right" : "marquee-left"}`}
         >
-          {[...logos, ...logos].map((logo, index) => (
-            <div
-              key={`${logo.name}-${index}`}
-              className="flex h-20 w-40 items-center justify-center"
-            >
-              <motion.img
+          {strip.map((logo, index) => (
+            <div key={`${logo.name}-${copy}-${index}`} className="flex h-16 w-40 shrink-0 items-center justify-center">
+              <img
                 src={logo.src}
-                alt={logo.name}
-                className="h-16 w-full object-contain"
-                whileHover={{ filter: "grayscale(0%)" }}
+                alt={copy === 0 && index < items.length ? logo.name : ""}
+                className="h-12 w-full object-contain"
               />
             </div>
           ))}
-        </motion.div>
-      </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const CompaniesTrustUs = () => {
+  return (
+    <div className="w-full overflow-hidden py-16 text-green-950">
+      <motion.div
+        initial={{ opacity: 0, y: -30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.6 }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="px-6 text-center"
+      >
+        <h1 className="text-lg font-semibold sm:text-xl">Trusted companies</h1>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: -30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.4 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="mt-8 flex flex-col gap-5"
+        aria-label="Trusted companies"
+      >
+        {rows.map((row) => (
+          <MarqueeRow key={row.direction} items={row.items} direction={row.direction} />
+        ))}
+      </motion.div>
     </div>
   );
 };

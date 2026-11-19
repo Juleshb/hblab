@@ -1,72 +1,56 @@
-import React from "react";
-import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import Logo from "../assets/logo-white.png";
 import { Icon } from "@iconify/react";
 
 function Footer() {
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      transition={{ duration: 0.8 }}
-      className="bg-green-900 w-full flex justify-center"
-    >
-      <div className="p-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-20 text-white w-full max-w-6xl">
-        <motion.div 
-          initial={{ x: -50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col items-center lg:items-start text-center lg:text-left"
-        >
-          <img src={Logo} alt="Logo" className="lg:w-full w-32 mb-4 p-2" />
-        </motion.div>
+    <footer className="bg-green-950 text-white">
+      <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-16 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <img src={Logo} alt="HBLab" className="h-12 w-auto" />
+          <p className="mt-4 max-w-xs text-sm leading-6 text-green-100">
+            High-Technology Builder Lab Ltd. Technology, multimedia, and professional training in Rubavu, Gisenyi.
+          </p>
+        </div>
 
-        {/* Support */}
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-center lg:text-left"
-        >
-          <p className="text-lg font-semibold mb-4">Support</p>
-          <p className="text-sm">Rubavu, Gisenyi</p>
-          <a className="block text-sm mt-2" href="mailto:info@hblab.rw">info@hblab.rw</a>
-          <a className="block text-sm" href="mailto:studio@hblab.rw">studio@hblab.rw</a>
-          <a className="block text-sm" href="tel:+250789028283">+250 789 028 283</a>
-          <a className="block text-sm" href="tel:+250792697730">+250 792 697 730</a>
-        </motion.div>
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-green-200">Visit</p>
+          <p className="mt-4 text-sm">Rubavu, Gisenyi, Rwanda</p>
+          <a className="mt-2 block text-sm text-green-50 hover:underline" href="mailto:info@hblab.rw">info@hblab.rw</a>
+          <a className="block text-sm text-green-50 hover:underline" href="mailto:studio@hblab.rw">studio@hblab.rw</a>
+          <a className="mt-2 block text-sm text-green-50 hover:underline" href="tel:+250789028283">+250 789 028 283</a>
+          <a className="block text-sm text-green-50 hover:underline" href="tel:+250792697730">+250 792 697 730</a>
+        </div>
 
-        {/* Quick Links */}
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center lg:text-left"
-        >
-          <p className="text-lg font-semibold mb-4">Quick Links</p>
-          <p className="text-sm mb-2">Privacy Policy</p>
-          <p className="text-sm mb-2">Terms of Use</p>
-          <p className="text-sm mb-2">FAQ</p>
-          <p className="text-sm">Contact</p>
-        </motion.div>
-
-        {/* Get in Touch */}
-        <motion.div 
-          initial={{ x: 50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="flex flex-col items-center lg:items-start text-center lg:text-left"
-        >
-          <p className="text-lg font-semibold mb-4">Get in touch with us!</p>
-          <div className="flex justify-center lg:justify-start space-x-3">
-            <a href="https://www.instagram.com/hblabrw"><Icon icon="proicons:instagram" width="24" height="24" /></a>
-            <a href="https://x.com/HabaruremaJules"><Icon icon="line-md:twitter-x-alt" width="24" height="24" /></a>
-            <a href="https://www.linkedin.com/company/hb-lab/"><Icon icon="ri:linkedin-fill" width="24" height="24" /></a>
-            <a href="https://www.tiktok.com/@hblabrw"><Icon icon="ic:sharp-tiktok" width="24" height="24" /></a>
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-green-200">Company</p>
+          <div className="mt-4 space-y-2 text-sm">
+            <Link className="block text-green-50 hover:underline" to="/training">Professional training</Link>
+            <Link className="block text-green-50 hover:underline" to="/internship">Internship</Link>
+            <Link className="block text-green-50 hover:underline" to="/certificate">Certificate check</Link>
+            <Link className="block text-green-50 hover:underline" to="/studio">HB Studio</Link>
+            <Link className="block text-green-50 hover:underline" to="/leadership">Leadership</Link>
+            <Link className="block text-green-50 hover:underline" to="/careers">Careers</Link>
+            <a className="block text-green-50 hover:underline" href="/#contact-us">Contact</a>
+            <Link className="block text-green-50 hover:underline" to="/privacy-policy">Privacy Policy</Link>
+            <Link className="block text-green-50 hover:underline" to="/terms-of-use">Terms of Use</Link>
           </div>
-        </motion.div>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-green-200">Follow</p>
+          <div className="mt-4 flex gap-3">
+            <a href="https://www.instagram.com/hblabrw" aria-label="Instagram" className="rounded-full border border-white/20 p-2 hover:bg-white/10"><Icon icon="proicons:instagram" width="20" height="20" /></a>
+            <a href="https://x.com/HabaruremaJules" aria-label="X" className="rounded-full border border-white/20 p-2 hover:bg-white/10"><Icon icon="line-md:twitter-x-alt" width="20" height="20" /></a>
+            <a href="https://www.linkedin.com/company/hb-lab/" aria-label="LinkedIn" className="rounded-full border border-white/20 p-2 hover:bg-white/10"><Icon icon="ri:linkedin-fill" width="20" height="20" /></a>
+            <a href="https://www.tiktok.com/@hblabrw" aria-label="TikTok" className="rounded-full border border-white/20 p-2 hover:bg-white/10"><Icon icon="ic:sharp-tiktok" width="20" height="20" /></a>
+          </div>
+        </div>
       </div>
-    </motion.div>
+      <div className="border-t border-white/10 px-6 py-4 text-center text-xs text-green-200">
+        High-Technology Builder Lab Ltd
+      </div>
+    </footer>
   );
 }
 

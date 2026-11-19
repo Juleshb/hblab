@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /student
+Disallow: /chat
+Disallow: /LoginForm
+Disallow: /SignUpForm
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /dashboard
+Disallow: /apply
+Disallow: /letter
+
+Sitemap: https://hblab.rw/sitemap.xml

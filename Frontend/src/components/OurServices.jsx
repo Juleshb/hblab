@@ -1,127 +1,133 @@
-import React from "react";
-import { FaCode, FaCog, FaHandshake, FaLaptop } from "react-icons/fa";
 import { motion } from "framer-motion";
+import software from "../assets/service-software.jpg";
+import studio from "../assets/service-studio.jpg";
+import training from "../assets/service-training.jpg";
+import consultancy from "../assets/service-consultancy.jpg";
+
+const services = [
+  {
+    id: "service-development",
+    label: "Software",
+    title: "Software and websites",
+    text: "Systems, shops, and websites for schools, companies, and institutions.",
+    image: software,
+    items: [
+      "Management, school, and hotel systems",
+      "E-commerce and custom business applications",
+      "Corporate, school, NGO, and government websites",
+      "Databases, APIs, and website support",
+    ],
+  },
+  {
+    id: "service-studio",
+    label: "Studio",
+    title: "HB Studio",
+    text: "Photography, video, live streaming, and podcasts for companies, schools, and events.",
+    image: studio,
+    items: [
+      "Corporate, event, product, and graduation photography",
+      "Corporate, event, promotional, and documentary video",
+      "Live streaming for conferences, churches, and graduations",
+      "Podcast recording, video podcasts, and editing",
+    ],
+  },
+  {
+    id: "service-courses",
+    label: "Training",
+    title: "Mobile, design, and training",
+    text: "Apps, design, and practical classes, plus internships for students and graduates.",
+    image: training,
+    items: [
+      "Android apps, progressive web apps, and cross-platform apps",
+      "UI and UX design, wireframes, and prototypes",
+      "Training in software, networks, multimedia, electronics, accounting, and electrical work",
+      "Internships for TVET, university students, and graduates",
+    ],
+  },
+  {
+    id: "service-consultancy",
+    label: "Consultancy",
+    title: "Consultancy",
+    text: "Expert IT consulting services to help organizations optimize their technology infrastructure and strategy.",
+    image: consultancy,
+    items: [
+      "IT Strategy and Policy Development",
+      "Implementation Solutions",
+      "Technical Problem-Solving",
+    ],
+  },
+];
+
+const Arrow = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+    <path d="M15 0C16.657 0 18 1.343 18 3V15C18 16.657 16.657 18 15 18H3C1.343 18 0 16.657 0 15V3C0 1.343 1.343 0 3 0H15ZM7.001 6.066L10.247 9.313L7 12.561L8.065 13.627L12.379 9.313L8.067 5L7.001 6.066Z" fill="currentColor" />
+  </svg>
+);
 
 const OurServices = () => {
+  const requestService = () => {
+    const element = document.getElementById("contact-us");
+    if (!element) return;
+    const top = element.getBoundingClientRect().top + window.scrollY - 120;
+    window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+  };
+
   return (
-    <div className="flex items-center justify-center mx-auto w-full text-green-900">
-      <div className="flex flex-col items-center gap-5 max-w-screen-xl mx-auto px-5">
-        {/* Title */}
+    <div className="bg-green-50/60 px-6 py-20">
+      <div className="mx-auto w-full max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.6 }}
+          transition={{ duration: 0.6 }}
+          className="mx-auto max-w-3xl text-center"
         >
-          <h1 className="lg:text-3xl text-2xl md:font-bold font-black mb-8 lg:w-full text-center">
-            Our services
-          </h1>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-green-700">What we do</p>
+          <h1 className="mt-3 text-3xl font-black text-green-950 sm:text-4xl">Our services</h1>
+          <p className="mt-4 text-base leading-7 text-slate-600">
+            Software, studio production, practical training, and consulting for schools, companies, and institutions.
+          </p>
         </motion.div>
 
-        {/* Services Grid */}
-        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {/* Service 1 - Web & Mobile Development */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            whileHover={{ scale: 1.05 }}
-            id="service-development"
-            className="flex h-full w-full flex-col rounded-lg bg-teal-100 px-5 py-5 text-center shadow-lg lg:py-10"
-          >
-            <div className="flex justify-center">
-              <FaCode size={50} />
-            </div>
-            <h3 className="font-black text-xl p-2">Software and websites</h3>
-            <ul className="list-disc text-black pl-7 text-left">
-              <li>Management, school, and hotel systems</li>
-              <li>E-commerce and custom business applications</li>
-              <li>Corporate, school, NGO, and government websites</li>
-              <li>Databases, APIs, and website support</li>
-            </ul>
-          </motion.div>
-
-          {/* Service 2 - IT Services */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            whileHover={{ scale: 1.05 }}
-            id="service-studio"
-            className="flex h-full w-full flex-col rounded-lg bg-blue-200 px-5 py-5 text-center shadow-lg lg:py-10"
-          >
-            <div className="flex justify-center">
-              <FaLaptop size={50} />
-            </div>
-            <h3 className="font-black text-xl p-2">HB Studio</h3>
-            <ul className="list-disc text-black pl-7 text-left">
-              <li>Corporate, event, product, and graduation photography</li>
-              <li>Corporate, event, promotional, and documentary video</li>
-              <li>Live streaming for conferences, churches, and graduations</li>
-              <li>Podcast recording, video podcasts, and editing</li>
-            </ul>
-          </motion.div>
-
-          {/* Service 3 - Online & Offline Courses */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            whileHover={{ scale: 1.05 }}
-            id="service-courses"
-            className="flex h-full w-full flex-col rounded-lg bg-blue-100 px-5 py-5 text-center shadow-lg lg:py-10"
-          >
-            <div className="flex justify-center">
-              <FaCog size={50} />
-            </div>
-            <h3 className="font-black text-xl p-2">Mobile, design, and training</h3>
-            <ul className="list-disc text-black pl-7 text-left">
-              <li>Android apps, progressive web apps, and cross-platform apps</li>
-              <li>UI and UX design, wireframes, and prototypes</li>
-              <li>Training in software, networks, multimedia, electronics, accounting, and electrical work</li>
-              <li>Internships for TVET, university students, and graduates</li>
-            </ul>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            whileHover={{ scale: 1.05 }}
-            id="service-consultancy"
-            className="flex h-full w-full flex-col rounded-lg bg-green-100 px-5 py-5 text-center shadow-lg lg:py-10"
-          >
-            <div className="flex justify-center">
-              <FaHandshake size={50} />
-            </div>
-            <h3 className="font-black text-xl p-2">Consultancy</h3>
-            <p className="mb-3 text-left text-sm text-black">
-              Expert IT consulting services to help organizations optimize their technology infrastructure and strategy.
-            </p>
-            <ul className="list-disc text-black pl-7 text-left">
-              <li>IT Strategy and Policy Development</li>
-              <li>Implementation Solutions</li>
-              <li>Technical Problem-Solving</li>
-            </ul>
-          </motion.div>
+        <div className="mt-12 flex flex-col gap-5 md:gap-72">
+          {services.map((service, index) => (
+            <article
+              key={service.id}
+              id={service.id}
+              style={{ zIndex: index + 1 }}
+              className="grid items-center gap-8 rounded-3xl bg-white p-6 shadow-[0_16px_50px_rgba(19,45,36,0.08)] sm:p-8 md:sticky md:top-28 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-10"
+            >
+              <div>
+                <span className="inline-flex rounded bg-green-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-green-700">
+                  {service.label}
+                </span>
+                <h3 className="mt-4 max-w-md text-3xl font-black leading-tight text-green-950 sm:text-4xl">
+                  {service.title}
+                </h3>
+                <p className="mt-3 max-w-md text-sm leading-6 text-slate-600 sm:text-base">{service.text}</p>
+                <ul className="mt-4 space-y-2">
+                  {service.items.map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm leading-6 text-slate-600">
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={requestService}
+                  className="mt-6 inline-flex items-center gap-3 text-sm font-semibold text-green-700 hover:text-green-900"
+                >
+                  Request this service
+                  <Arrow />
+                </button>
+              </div>
+              <div className="overflow-hidden rounded-2xl bg-green-50">
+                <img src={service.image} alt="" className="aspect-[4/3] w-full object-cover" />
+              </div>
+            </article>
+          ))}
         </div>
-
-        {/* Request Service Button */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            className="mt-4 py-3 px-5 bg-transparent border-2 rounded border-green-900 text-green-900 text-sm hover:bg-green-900 hover:text-white hover:font-semibold"
-          >
-            Request service &rarr;
-          </motion.button>
-        </motion.div>
       </div>
     </div>
   );

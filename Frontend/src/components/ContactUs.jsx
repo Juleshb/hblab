@@ -32,7 +32,7 @@ const contactItems = [
 ];
 
 const fieldClass =
-  "w-full rounded-2xl border border-green-200 bg-green-50 px-4 py-3.5 text-sm text-green-900 outline-none transition placeholder:text-green-400 focus:border-green-600 focus:bg-white focus:ring-4 focus:ring-green-600/15 disabled:opacity-60";
+  "w-full rounded-2xl border border-green-100 bg-white px-4 py-3.5 text-sm text-green-950 outline-none transition placeholder:text-slate-400 focus:border-green-600 focus:ring-4 focus:ring-green-600/10 disabled:opacity-60";
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({
@@ -91,24 +91,24 @@ const ContactUs = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
-      className="mx-auto w-full max-w-6xl text-green-600"
+      className="mx-auto w-full max-w-6xl px-6 py-20 text-green-950"
     >
-      <div className="mb-8 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-green-600">Contact</p>
-        <h1 className="mt-2 text-3xl font-black text-green-900 sm:text-4xl">Talk with HBLab</h1>
+      <div className="mb-10 text-center">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-green-700">Contact</p>
+        <h1 className="mt-3 text-3xl font-black sm:text-4xl">Talk with HBLab</h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-green-800 sm:text-base">
           Send a message about training, an internship, or a project. We reply from the Rubavu office.
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-[2rem] border border-green-200 bg-white shadow-[0_24px_70px_rgba(26,61,49,0.08)]">
+      <div className="overflow-hidden rounded-[2rem] border border-green-100 bg-white">
         <div className="grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-          <aside className="relative bg-green-600 px-6 py-8 text-white sm:px-8 sm:py-10">
+          <aside className="relative bg-green-950 px-6 py-8 text-white sm:px-8 sm:py-10">
             <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/10" />
             <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-black/10" />
 
             <div className="relative">
-              <h2 className="text-2xl font-black">Get in touch</h2>
+              <h2 className="text-2xl font-black sm:text-3xl">Get in touch</h2>
               <p className="mt-2 max-w-sm text-sm leading-6 text-green-50">
                 High-Technology Builder Lab Ltd. Chief Executive Officer: HABARUREMA Jules.
               </p>
@@ -153,7 +153,7 @@ const ContactUs = () => {
 
           <form onSubmit={handleSubmit} className="bg-white px-6 py-8 sm:px-8 sm:py-10">
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-green-900">Send a message</h2>
+              <h2 className="text-2xl font-black sm:text-3xl text-green-950">Send a message</h2>
               <p className="mt-2 text-sm leading-6 text-green-800">
                 Tell us what you need. The fields marked with a star are required.
               </p>
@@ -231,7 +231,7 @@ const ContactUs = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-green-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-wait disabled:opacity-70"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-green-950 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-wait disabled:opacity-70"
               >
                 <FiSend className="h-4 w-4" aria-hidden="true" />
                 {loading ? "Sending…" : "Send message"}

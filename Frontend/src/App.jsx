@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { applyBrand, brandForLocation, isStudioHost } from './site'
+import { applyPageMeta, isStudioHost } from './site'
 import ProtectedRoute from './components/ProtectedRoute'
 import ContainerPage from './components/ContainerPage'
 import Draft from './components/Footer'
@@ -71,7 +71,7 @@ const App = () => {
   const studioHost = isStudioHost();
 
   useEffect(() => {
-    applyBrand(brandForLocation(location.pathname));
+    applyPageMeta(location.pathname);
   }, [location.pathname]);
 
   return (
@@ -87,9 +87,11 @@ const App = () => {
         <Route path='/leadership' element={<LeadershipTeam/>}/>
         <Route path='/studio' element={<StudioHero/>}/>
         <Route path='/portfolio' element={<StudioPortfolio/>}/>
+        <Route path="/training" element={<InternshipRegister program="training" />} />
         <Route path="/get-started" element={<InternshipRegister program="training" />} />
         <Route path="/terms-of-use" element={<TermsAndConditions />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/careers" element={<Carrier />} />
         <Route path="/carrier" element={<Carrier />} />
         <Route path="/internship" element={<InternshipRegister />} />
         <Route path="/letter/:code" element={<LetterCheck />} />
@@ -99,6 +101,7 @@ const App = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/SignUpForm" element={<SignUpForm />} />
+        <Route path="/certificate" element={<CertificateCheck />} />
         <Route path="/CertificateCheck" element={<CertificateCheck />}/>
         <Route path="/modal-demo" element={<ModalDemo />} />
         {/* Protected routes - Admin only, nested under /admin */}

@@ -2,6 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../assets/context/AuthContext.jsx";
 import logo from "../assets/logo.png";
+import aboutPortrait from "../assets/about-portrait.jpg";
+import leaderPhoto from "../assets/nn.jpeg";
+import serviceSoftware from "../assets/service-software.jpg";
+import serviceStudio from "../assets/service-studio.jpg";
+import serviceTraining from "../assets/service-training.jpg";
+import serviceConsultancy from "../assets/service-consultancy.jpg";
+import studioBanner from "../assets/hb-studio.jpg";
 import { HiMenu, HiX } from "react-icons/hi";
 import { Icon } from "@iconify/react";
 import { studioSiteHref } from "../site";
@@ -27,7 +34,7 @@ const Navbar = () => {
   const scrollToId = (id) => {
     const element = document.getElementById(id);
     if (!element) return;
-    const top = element.getBoundingClientRect().top + window.scrollY - 84;
+    const top = element.getBoundingClientRect().top + window.scrollY - 120;
     window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
   };
 
@@ -53,7 +60,7 @@ const Navbar = () => {
       setTimeout(() => {
         const element = document.getElementById(id);
         if (element) {
-          const top = element.getBoundingClientRect().top + window.scrollY - 84;
+          const top = element.getBoundingClientRect().top + window.scrollY - 120;
           window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
         }
       }, 100);
@@ -92,29 +99,29 @@ const Navbar = () => {
       label: "About",
       active: location.pathname === "/leadership",
       items: [
-        { label: "About us", detail: "Who HBLab is", scroll: "about-us" },
-        { label: "Leadership", detail: "The people at HBLab", scroll: "our-leadership" },
-        { label: "Contact", detail: "Talk to the team", scroll: "contact-us" },
+        { label: "About us", detail: "A technology and multimedia company in Rubavu, Gisenyi.", cta: "Read about HBLab", image: aboutPortrait, scroll: "about-us" },
+        { label: "Leadership", detail: "The people who lead training, software, and studio work.", cta: "Meet the team", image: leaderPhoto, scroll: "our-leadership" },
+        { label: "Contact", detail: "Write to the Rubavu office. We reply from info@hblab.rw.", cta: "Talk with HBLab", scroll: "contact-us" },
       ],
     },
     {
       id: "programs",
       label: "Programs",
-      active: ["/get-started", "/internship", "/CertificateCheck"].includes(location.pathname),
+      active: ["/training", "/get-started", "/internship", "/certificate", "/CertificateCheck"].includes(location.pathname),
       items: [
-        { label: "Training", detail: "Join a class in Rubavu", to: "/get-started" },
-        { label: "Internship", detail: "Work with the HBLab team", to: "/internship" },
-        { label: "Certificate", detail: "Check a certificate", to: "/CertificateCheck" },
+        { label: "Training", detail: "Classes in software, networks, multimedia, electronics, accounting, and electrical work.", cta: "Join a training", image: serviceTraining, to: "/training" },
+        { label: "Internship", detail: "Workplace experience and real projects with the HBLab team.", cta: "Apply for an internship", image: serviceSoftware, to: "/internship" },
+        { label: "Certificate", detail: "Confirm a certificate that HBLab has issued.", cta: "Check a certificate", to: "/certificate" },
       ],
     },
     {
       id: "services",
       label: "Services",
       items: [
-        { label: "Software and websites", detail: "Systems, shops, and sites", scroll: "service-development" },
-        { label: "HB Studio", detail: "Photo, video, and podcasts", scroll: "service-studio" },
-        { label: "Training", detail: "Practical digital skills", scroll: "service-courses" },
-        { label: "Consultancy", detail: "Strategy, setup, and problem-solving", scroll: "service-consultancy" },
+        { label: "Software and websites", detail: "Systems, shops, and websites for schools, companies, and institutions.", cta: "See this service", image: serviceSoftware, scroll: "service-development" },
+        { label: "HB Studio", detail: "Photography, video, live streaming, and podcasts.", cta: "See this service", image: serviceStudio, scroll: "service-studio" },
+        { label: "Training", detail: "Practical classes and internships for students and graduates.", cta: "See this service", image: serviceTraining, scroll: "service-courses" },
+        { label: "Consultancy", detail: "IT strategy, implementation, and technical problem-solving.", cta: "See this service", image: serviceConsultancy, scroll: "service-consultancy" },
       ],
     },
     {
@@ -122,8 +129,8 @@ const Navbar = () => {
       label: "Studio",
       active: location.pathname === "/portfolio" || location.pathname.startsWith("/studio"),
       items: [
-        { label: "HB Studio", detail: "Video, photo, and podcasts", action: openStudio },
-        { label: "Portfolio", detail: "Work we have made", to: "/portfolio" },
+        { label: "HB Studio", detail: "Photo, video, live streaming, and podcast production.", cta: "Open HB Studio", image: studioBanner, action: openStudio },
+        { label: "Portfolio", detail: "Films, photos, and productions the studio has made.", cta: "See the portfolio", image: serviceStudio, to: "/portfolio" },
       ],
     },
   ];
@@ -148,24 +155,37 @@ const Navbar = () => {
   };
 
   const linkClass = (active) =>
-    `inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition ${
-      active ? "bg-white/80 text-emerald-900 shadow-sm" : "text-slate-800 hover:bg-white/60 hover:text-emerald-900"
+    `inline-flex items-center gap-1 px-3 py-2 text-sm font-medium transition ${
+      active ? "text-green-800" : "text-slate-700 hover:text-green-800"
     }`;
 
   return (
-    <div className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5" data-nav-root>
+    <div className="fixed inset-x-0 top-0 z-50" data-nav-root>
       <a
         href={`https://wa.me/${phoneNumber}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-4 right-4 z-10 flex items-center gap-2 rounded-full bg-emerald-800 px-4 py-3 text-white shadow-lg hover:bg-emerald-700"
+        className="fixed bottom-4 right-4 z-10 flex items-center gap-2 rounded-full bg-green-950 px-4 py-3 text-white shadow-lg hover:bg-green-800"
       >
         <span className="hidden text-sm lg:block">Contact our support team</span>
         <Icon icon="akar-icons:whatsapp-fill" className="text-2xl" />
       </a>
 
-      <header className="mx-auto max-w-7xl">
-        <nav className={`flex h-[4.25rem] items-center gap-2 rounded-full border border-white/70 px-3 shadow-[0_10px_40px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur-2xl ${isScrolled ? "bg-white/75" : "bg-white/50"}`}>
+      <div className="bg-green-950 text-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-center gap-3 px-4 py-2 text-center text-xs sm:text-sm">
+          <span className="sm:hidden">Training and internships in Rubavu.</span>
+          <span className="hidden sm:inline">Professional training and internships in Rubavu, Gisenyi.</span>
+          <button type="button" onClick={() => navigate("/training")} className="shrink-0 font-semibold text-green-100 underline-offset-2 hover:underline">
+            Join a training
+          </button>
+        </div>
+      </div>
+
+      <header
+        className={`relative border-b bg-white ${isScrolled || openMenu ? "border-green-100 shadow-sm" : "border-transparent"}`}
+        onMouseLeave={() => setOpenMenu(null)}
+      >
+        <nav className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:px-6">
           <button type="button" onClick={() => { closeMenus(); navigate("/"); }} className="shrink-0">
             <img src={logo} alt="HBLab" className="h-10 w-auto" />
           </button>
@@ -189,33 +209,16 @@ const Navbar = () => {
                   {group.label}
                   <Icon icon="carbon:chevron-down" className={`text-base transition ${openMenu === group.id ? "rotate-180" : ""}`} />
                 </button>
-                {openMenu === group.id ? (
-                  <div className="absolute left-0 top-full z-50 w-64 pt-2">
-                    <div className="rounded-3xl border border-white/70 bg-white/70 p-2 shadow-[0_16px_40px_rgba(15,23,42,0.14)] backdrop-blur-2xl">
-                      {group.items.map((item) => (
-                        <button
-                          key={item.label}
-                          type="button"
-                          onClick={() => go(item)}
-                          className="flex w-full flex-col rounded-xl px-3 py-2 text-left hover:bg-emerald-50"
-                        >
-                          <span className="text-sm font-medium text-slate-900">{item.label}</span>
-                          <span className="text-xs text-slate-500">{item.detail}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
               </div>
             ))}
-            <Link to="/carrier" onClick={closeMenus} className={linkClass(location.pathname === "/carrier")}>
+            <Link to="/careers" onClick={closeMenus} className={linkClass(location.pathname === "/careers" || location.pathname === "/carrier")}>
               Careers
             </Link>
           </div>
 
-          <div className="ml-auto hidden items-center gap-2 lg:flex">
+          <div className="ml-auto hidden items-center gap-1 lg:flex">
             {showSearch ? (
-              <div className="flex items-center rounded-full border border-white/70 bg-white/50 px-3 py-1.5">
+              <div className="flex items-center rounded-full border border-green-100 bg-green-50 px-3 py-1.5">
                 <input
                   type="search"
                   autoFocus
@@ -227,7 +230,7 @@ const Navbar = () => {
                 </button>
               </div>
             ) : (
-              <button type="button" onClick={() => { setShowSearch(true); setOpenMenu(null); }} className="rounded-full p-2 text-slate-700 hover:bg-white/70" aria-label="Search">
+              <button type="button" onClick={() => { setShowSearch(true); setOpenMenu(null); }} className="rounded-full p-2 text-slate-700 hover:bg-green-50" aria-label="Search">
                 <Icon icon="carbon:search" className="text-xl" />
               </button>
             )}
@@ -236,13 +239,13 @@ const Navbar = () => {
                 <button
                   type="button"
                   onClick={() => { setShowUserMenu((open) => !open); setOpenMenu(null); }}
-                  className="inline-flex items-center gap-2 rounded-full bg-emerald-800 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-900"
+                  className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-slate-800 hover:bg-green-50"
                 >
                   <Icon icon="carbon:user" className="text-base" />
                   <span className="max-w-28 truncate">{user.name}</span>
                 </button>
                 {showUserMenu ? (
-                  <div className="absolute right-0 mt-3 w-56 rounded-3xl border border-white/70 bg-white/75 p-2 shadow-[0_16px_40px_rgba(15,23,42,0.14)] backdrop-blur-2xl">
+                  <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-green-100 bg-white p-2 shadow-[0_18px_50px_rgba(19,45,36,0.12)]">
                     <div className="px-3 py-2">
                       <p className="text-sm font-medium text-slate-900">{user.name}</p>
                       <p className="truncate text-xs text-slate-500">{user.email}</p>
@@ -257,19 +260,54 @@ const Navbar = () => {
                 ) : null}
               </div>
             ) : (
-              <button type="button" onClick={() => { closeMenus(); navigate("/LoginForm"); }} className="rounded-full bg-emerald-800 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-900">
+              <button type="button" onClick={() => { closeMenus(); navigate("/LoginForm"); }} className="px-3 py-2 text-sm font-medium text-slate-700 hover:text-green-800">
                 Login
               </button>
             )}
+            <button type="button" onClick={() => { closeMenus(); navigate("/training"); }} className="ml-2 rounded-full bg-green-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-800">
+              Join a training
+            </button>
           </div>
 
-          <button type="button" className="ml-auto rounded-full p-2 text-slate-800 hover:bg-white/70 lg:hidden" onClick={() => setIsToggleOpen((open) => !open)} aria-label="Menu">
+          {openMenu ? (
+            <div className="absolute inset-x-0 top-full hidden border-t border-green-100 bg-white shadow-[0_24px_60px_rgba(19,45,36,0.12)] lg:block">
+              <div className={`mx-auto grid max-w-7xl ${groups.find((group) => group.id === openMenu)?.items.length === 4 ? "grid-cols-4" : groups.find((group) => group.id === openMenu)?.items.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                {groups.find((group) => group.id === openMenu)?.items.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => go(item)}
+                    className="border-r border-green-100 px-6 py-8 text-left last:border-r-0 hover:bg-green-50/60"
+                  >
+                    <span className="inline-flex rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-green-700">
+                      {groups.find((group) => group.id === openMenu)?.label}
+                    </span>
+                    <span className="mt-4 block text-xl font-black leading-tight text-green-950">{item.label}</span>
+                    <span className="mt-2 block min-h-16 text-sm leading-6 text-slate-600">{item.detail}</span>
+                    {item.image ? (
+                      <img src={item.image} alt="" className="mt-5 aspect-[16/10] w-full rounded-2xl object-cover" />
+                    ) : (
+                      <span className="mt-5 flex aspect-[16/10] w-full items-end rounded-2xl bg-[radial-gradient(circle_at_top,#2e6b57,#16382e)] p-5 text-lg font-black text-white">
+                        {item.label}
+                      </span>
+                    )}
+                    <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-green-700">
+                      {item.cta}
+                      <Icon icon="carbon:arrow-right" className="text-base" />
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <button type="button" className="ml-auto rounded-full p-2 text-slate-800 hover:bg-green-50 lg:hidden" onClick={() => setIsToggleOpen((open) => !open)} aria-label="Menu">
             {isToggleOpen ? <HiX size={24} /> : <HiMenu size={24} />}
           </button>
         </nav>
 
         {isToggleOpen ? (
-          <div className="mt-2 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-3xl border border-white/70 bg-white/70 px-3 py-2 shadow-[0_16px_40px_rgba(15,23,42,0.14)] backdrop-blur-2xl lg:hidden">
+          <div className="max-h-[calc(100vh-7rem)] overflow-y-auto border-t border-green-100 bg-white px-4 py-2 shadow-lg lg:hidden">
             <button type="button" onClick={() => handleNavClick("home")} className="block w-full rounded-xl px-3 py-3 text-left text-sm font-medium text-slate-800 hover:bg-slate-50">
               Home
             </button>
@@ -295,7 +333,7 @@ const Navbar = () => {
                 ) : null}
               </div>
             ))}
-            <Link to="/carrier" onClick={closeMenus} className="block rounded-xl border-t border-slate-100 px-3 py-3 text-sm font-medium text-slate-800">
+            <Link to="/careers" onClick={closeMenus} className="block rounded-xl border-t border-slate-100 px-3 py-3 text-sm font-medium text-slate-800">
               Careers
             </Link>
             <div className="mt-2 flex items-center gap-2">
@@ -304,14 +342,17 @@ const Navbar = () => {
                 <input type="search" className="ml-2 w-full bg-transparent text-sm outline-none" placeholder="Search" />
               </div>
               {user ? (
-                <button type="button" onClick={() => { closeMenus(); navigate(getDashboardLink()); }} className="rounded-full bg-emerald-800 px-4 py-2 text-sm font-medium text-white">
+                <button type="button" onClick={() => { closeMenus(); navigate(getDashboardLink()); }} className="rounded-full border border-green-200 px-4 py-2 text-sm font-medium text-green-950">
                   Account
                 </button>
               ) : (
-                <button type="button" onClick={() => { closeMenus(); navigate("/LoginForm"); }} className="rounded-full bg-emerald-800 px-4 py-2 text-sm font-medium text-white">
+                <button type="button" onClick={() => { closeMenus(); navigate("/LoginForm"); }} className="rounded-full border border-green-200 px-4 py-2 text-sm font-medium text-green-950">
                   Login
                 </button>
               )}
+              <button type="button" onClick={() => { closeMenus(); navigate("/training"); }} className="rounded-full bg-green-950 px-4 py-2 text-sm font-semibold text-white">
+                Join
+              </button>
             </div>
           </div>
         ) : null}
