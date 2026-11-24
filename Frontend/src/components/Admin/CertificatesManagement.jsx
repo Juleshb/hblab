@@ -6,12 +6,14 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Icon } from '@iconify/react';
 import { apiOrigin } from '../../apiOrigin';
+import CertificateExcelImport from './CertificateExcelImport';
 // import HBLCertificate from '../HBLCertificate'; // If needed for row rendering
 
 const CertificatesManagement = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedCertificate, setSelectedCertificate] = useState(null);
   const [certificates, setCertificates] = useState([]);
@@ -197,13 +199,22 @@ const CertificatesManagement = () => {
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Certificates Management</h1>
                 <p className="text-gray-600 mt-1 text-xs sm:text-sm">Manage and generate certificates for your students</p>
               </div>
-              <button
-                onClick={() => setShowGenerator(true)}
-                className="inline-flex items-center px-3 sm:px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl text-xs sm:text-sm"
-              >
-                <Icon icon="carbon:add" className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
-                Generate Certificate
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setShowImport(true)}
+                  className="inline-flex items-center px-3 sm:px-4 py-2 border border-green-200 bg-white text-green-800 rounded-lg hover:bg-green-50 font-medium text-xs sm:text-sm"
+                >
+                  <Icon icon="carbon:document" className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
+                  Upload Excel
+                </button>
+                <button
+                  onClick={() => setShowGenerator(true)}
+                  className="inline-flex items-center px-3 sm:px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl text-xs sm:text-sm"
+                >
+                  <Icon icon="carbon:add" className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
+                  Generate Certificate
+                </button>
+              </div>
             </div>
           </div>
 
@@ -368,6 +379,12 @@ const CertificatesManagement = () => {
         </main>
       </div>
         {/* Certificate Generator Modal */}
+        {showImport && (
+          <CertificateExcelImport
+            onClose={() => setShowImport(false)}
+            onCreated={(created) => setCertificates((prev) => [...created].reverse().concat(prev))}
+          />
+        )}
         {showGenerator && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowGenerator(false)} />
